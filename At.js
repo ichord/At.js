@@ -25,6 +25,61 @@
         tpl_id : "#at-view",
         running : false,
         pos: 0,
+        getAtOffset: function() {
+            $inputor = this.$inputor;
+            Mirror = function($origin) {
+                this.init($origin);
+            }
+            Mirror.prototype = {
+                $mirror: null,
+                css : ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth', 'wordWrap', 'fontSize', 'lineHeight', 'overflowX'],
+                init: function($origin) {
+                    $mirror =  $('<div></div>');
+                    var css = {
+                        opacity: 0, 
+                        position: 'absolute', 
+                        left: 0,
+                        top:0, 
+                        zIndex: -20000
+                    }
+                    $.each(this.css,function(i,p){
+                        css[p] = $origin.css(p);
+                    });
+                    $mirror.css(css);
+                    $('body').append($mirror);
+                    this.$mirror = $mirror;
+                },
+                setContent: function(html) {
+                    this.$mirror.html(html);
+                },
+                getFlagPos:function() {
+                    return this.$mirror.find("span#flag").position();
+                }
+            };
+            mirror = $inputor.data("mirror");
+            if (mirror == undefined) {
+                mirror = new Mirror($inputor);
+                $inputor.data("mirror",mirror);
+            }
+            start_range = $inputor.val().slice(0,this.pos);
+            end_range = $inputor.val().slice(this.pos);
+            html = "<span>"+start_range+"</span>";
+            html += "<span id='flag'>"+end_range+"</span>";
+            mirror.setContent(html);
+
+            offset = $inputor.offset();
+            at_offset = mirror.getFlagPos();
+            line_height = $inputor.css("line-height");
+            line_height = isNaN(line_height) ? 20 : line_height;
+            y = offset.top + at_offset.top + line_height - $(window).scrollTop();
+            x = offset.left + at_offset.left;
+
+            return {'top':y,'left':x};
+        },
+        rePosition:function() {
+            offset = this.getAtOffset();
+            $(this.tpl_id).offset({'top':0,'left':0}).offset(offset);
+        },
         getKey: function() {
             $inputor = this.$inputor;
             text = $inputor.val()
@@ -91,7 +146,7 @@
                     return true
             }
         },
-        onViewReady : function() {
+        onViewReady : function($view) {
             var at = this;
             this.$inputor.bind("keydown",function(e) {
                 return at.onkeydown(e);
@@ -100,6 +155,7 @@
                 if (e.keyCode == 40 || e.keyCode == 38)
                     return false;
             });
+            this.rePosition($view);
         },
         onViewLoad: function($view) {
             at = this;
@@ -116,22 +172,25 @@
         },
         display: function(show) {
             show = show == false ? show : true;
-            if (this.running == show == true)
+            if (this.running == show == true) {
                 return;
+            }
+            $view = $(this.tpl_id);
             if (!show) {
                 this.$inputor.unbind();
-            } else
-                this.onViewReady();
-            this.running = show;
-            $view = $(this.tpl_id);
-            return show ? $view.show() : $view.hide();
+                $view.hide();
+            } else {
+                $view.show();
+                this.onViewReady($view);
+            }
+            return this.running = show;
         },
         loadView: function(name_list) {
             $at_view = $(this.tpl_id);
             //TODO init
             this.cur_li_idx = 0;
             if ($at_view.length == 0) {
-                tpl = "<div id='"+this.tpl_id.slice(1)+"'><h2>你想@谁?</h2><ul id='"+this.tpl_id+"-ul'></ul></div>";
+                tpl = "<div id='"+this.tpl_id.slice(1)+"' class='at_view'><strong>你想@谁?</strong><ul id='"+this.tpl_id+"-ul'></ul></div>";
                 $at_view = $(tpl);
                 $('body').append($at_view);
                 $at_view = $(this.tpl_id);
@@ -139,9 +198,9 @@
             }
             if ($at_view.length) {
                 li_tpl = "";
-                for (i = 0; i < name_list.length; i++) {
-                    li_tpl += "<li>" + name_list[i] + "</li>";
-                }
+                $.each(name_list,function(i,name){
+                    li_tpl += "<li>" + name + "</li>";
+                });
                 $at_view.find('ul').empty().append($(li_tpl));
                 $(this.tpl_id + " li:eq(0)").addClass("cur");
                 this.display();
@@ -165,6 +224,7 @@
             At.loadView(nicknames);
         }
     }
+    
     $.fn.atWho = function () {
         $inputor = $(this).find('textarea:first-child');
         this.keyup(function(){
