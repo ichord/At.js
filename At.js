@@ -1,7 +1,7 @@
 /* 
     Implement Twitter/Weibo @ mentions
 
-    Copyright (C) 2012 @chord.luo
+    Copyright (C) 2012 chord.luo@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@
         $inputor : null,
         tpl_id : "#at-view",
         running : false,
+        lenght : 0,
         pos: 0,
-        getAtOffset: function() {
-            $inputor = this.$inputor;
+        getAtOffset: function($inputor) {
             Mirror = function($origin) {
                 this.init($origin);
             }
@@ -76,9 +76,9 @@
 
             return {'top':y,'left':x};
         },
-        rePosition:function() {
-            offset = this.getAtOffset();
-            $(this.tpl_id).offset({'top':0,'left':0}).offset(offset);
+        rePosition:function($view) {
+            offset = this.getAtOffset(this.$inputor);
+            $view.offset({'top':0,'left':0}).offset(offset);
         },
         getKey: function() {
             $inputor = this.$inputor;
@@ -95,7 +95,7 @@
                 this.pos = start - 1;
                 key = {'text':word, 'start':start, 'end':end};
             } else
-                this.display(false);
+                this.hide();
             this.cache['key'] = key;
             return key;
         },
@@ -139,25 +139,14 @@
                     if (last_idx <= 0) return false;
                     $cur_li = $(this.tpl_id + " li:eq("+this.cur_li_idx+")");
                     this.choose($cur_li);
-                    this.display(false);
+                    this.hide();
                     return false;
                     break;
                 default:
                     return true
             }
         },
-        onViewReady : function($view) {
-            var at = this;
-            this.$inputor.bind("keydown",function(e) {
-                return at.onkeydown(e);
-            })
-            .bind("keyup",function(e) {
-                if (e.keyCode == 40 || e.keyCode == 38)
-                    return false;
-            });
-            this.rePosition($view);
-        },
-        onViewLoad: function($view) {
+        onViewLoaded: function($view) {
             at = this;
             $view.click(function(e) {
                 e.target.tagName == "LI" && at.choose($(e.target))
@@ -170,41 +159,48 @@
                 }
             })
         },
-        display: function(show) {
-            show = show == false ? show : true;
-            if (this.running == show == true) {
-                return;
-            }
-            $view = $(this.tpl_id);
-            if (!show) {
-                this.$inputor.unbind();
-                $view.hide();
-            } else {
-                $view.show();
-                this.onViewReady($view);
-            }
-            return this.running = show;
+        show: function(){
+            if (this.running)
+                return true;
+            var at = this;
+            this.$inputor.bind("keydown",function(e) {
+                return at.onkeydown(e);
+            })
+            .bind("keyup",function(e) {
+                //upword or downword
+                if (e.keyCode == 40 || e.keyCode == 38)
+                    return false;
+            });
+            $view = $(this.tpl_id).show();
+            this.rePosition($view);
+            this.running = true;
+        },
+        hide: function() {
+            this.$inputor.unbind();
+            $(this.tpl_id).hide();
+            this.running = false;
         },
         loadView: function(name_list) {
             $at_view = $(this.tpl_id);
-            //TODO init
+            //init
             this.cur_li_idx = 0;
             if ($at_view.length == 0) {
-                tpl = "<div id='"+this.tpl_id.slice(1)+"' class='at_view'><strong>你想@谁?</strong><ul id='"+this.tpl_id+"-ul'></ul></div>";
+                tpl = "<div id='"+this.tpl_id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.tpl_id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
                 $('body').append($at_view);
-                $at_view = $(this.tpl_id);
-                this.onViewLoad($at_view);
+                //$at_view = $(this.tpl_id);
+                this.onViewLoaded($at_view);
             }
-            if ($at_view.length) {
-                li_tpl = "";
-                $.each(name_list,function(i,name){
-                    li_tpl += "<li>" + name + "</li>";
-                });
-                $at_view.find('ul').empty().append($(li_tpl));
-                $(this.tpl_id + " li:eq(0)").addClass("cur");
-                this.display();
-            }
+
+            //update data;
+            li_tpl = "";
+            $.each(name_list,function(i,name){
+                li_tpl += "<li>" + name + "</li>";
+            });
+            $at_view.find('ul:first').html(li_tpl);
+            $(this.tpl_id + " li:eq(0)").addClass("cur");
+            this.show();
+            this.length = name_list.length;
             return $at_view;
         },
         run: function($inputor) {
@@ -225,8 +221,9 @@
         }
     }
     
-    $.fn.atWho = function () {
-        $inputor = $(this).find('textarea:first-child');
+    $.fn.atWho = function (options) {
+        //At.init(options);
+        $inputor = $(this).find('textarea:first');
         this.keyup(function(){
             At.run($inputor);
         })

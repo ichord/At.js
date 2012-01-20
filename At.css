@@ -1,0 +1,24 @@
+#at-view .cur {
+    background: #3366FF;
+    color: white;
+    font-weight:bold;
+}
+#at-view {
+    /* border: 1px solid #C8C8C8; */
+    position:absolute;
+}
+#at-view ul {
+    width: 100px;
+    list-style:none;
+    padding:0;
+    margin:auto;
+}
+#at-view ul li {
+    padding: 0 14px;
+    /* border-top: 1px solid #C8C8C8; */
+}
+#at-view span {
+    font-size:13px;
+    color: gray;
+    /* padding-left: 5px; */
+}
