@@ -111,13 +111,21 @@
             this.settings = $.extend({
                 'url':"#",
                 'param':{},
-                'key_name':"keyword"
+                'key_name':"keyword",
+                'debug_data':[]
             },options);
         },
         run: function($inputor) {
             this.$inputor = $inputor;
             key = this.getKey();
             if (!key) return;
+
+            //debug
+            data = this.settings['debug_data'];
+            if($.isArray(data) && data.length != 0) {
+                this.runWithData(key,data);
+                return;
+            }
 
             url = this.settings['url'];
             params = this.settings['param'];
@@ -129,26 +137,12 @@
                     At.view.load(data);
             });
         },
-        test: function($inputor) {
-            this.$inputor = $inputor;
-            key = this.getKey();
-            if (!key) return;
-
-            url = this.settings['url'];
-            params = this.settings['param'];
-            params[this.settings['key_name']] = key.text;
-
-            console.log(params);
-            data = {
-                'a':['asee','asabc','asthree'],
-                'b':['bone','btwo','bthreeeeeeeeee'],
-                'c':['cone','ctwo','cthreeeeeeeeee'],
-                'd':['done','dtwo','dthreeeeeeeeee'],
-                'e':['eone','etwo','ethreeeeeeeeee']
-            };
-            nicknames = data[key.text];
-            nicknames = nicknames ? nicknames : [];
-            At.view.load(nicknames);
+        runWithData:function(key,data) {
+            names = $.map(data,function(name) {
+                match = name.match((new RegExp(key.text,"i")));
+                return match ? name : null;
+            });
+            At.view.load(names);
         }
     };
 
@@ -190,17 +184,19 @@
             }
         },
         onLoaded: function($view) {
-            at = this;
             $view.click(function(e) {
-                e.target.tagName == "LI" && at.choose($(e.target))
-            });
-            $view.mousemove(function(e) {
+                e.target.tagName == "LI" && At.choose($(e.target));
+            })
+            .mousemove(function(e) {
                 if (e.target.tagName == "LI") {
-                    $(this).find("li:eq(" + at.cur_li_idx + ")").removeClass("cur");
+                    $(this).find("li.cur").removeClass("cur");
                     $(e.target).addClass("cur");
-                    at.cur_li_idx = $(this).find("li").index(e.target)
+                    At.cur_li_idx = $(this).find("li").index(e.target)
                 }
             })
+            .blur(function(e){
+                view.hide();
+            });
         },
         rePosition:function() {
             $(this.id).offset({'top':0,'left':0}).offset(At.offset());
@@ -223,13 +219,13 @@
         },
         hide: function() {
             At.$inputor.unbind();
+            this.cur_li_idx = 0;
             $(this.id).hide();
             this.running = false;
         },
         load: function(name_list) {
             $at_view = $(this.id);
-            //init
-            this.cur_li_idx = 0;
+
             if ($at_view.length == 0) {
                 tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
@@ -256,11 +252,9 @@
         $inputor = $(this).find('textarea:first');
         this.keyup(function(){
             At.run($inputor);
-            //At.test($inputor);
         })
         .mouseup(function(){
             At.run($inputor);
-            //At.test($inputor);
         });
         return this;
     }
