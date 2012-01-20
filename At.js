@@ -20,13 +20,12 @@
 (function($) {
     At = {
         cache : {},
-        cur_li_idx : 0,
+        settings: {},
         $inputor : null,
-        tpl_id : "#at-view",
-        running : false,
         lenght : 0,
         pos: 0,
-        getAtOffset: function($inputor) {
+        offset: function() {
+            $inputor = this.$inputor;
             Mirror = function($origin) {
                 this.init($origin);
             }
@@ -76,10 +75,6 @@
 
             return {'top':y,'left':x};
         },
-        rePosition:function($view) {
-            offset = this.getAtOffset(this.$inputor);
-            $view.offset({'top':0,'left':0}).offset(offset);
-        },
         getKey: function() {
             $inputor = this.$inputor;
             text = $inputor.val()
@@ -95,7 +90,7 @@
                 this.pos = start - 1;
                 key = {'text':word, 'start':start, 'end':end};
             } else
-                this.hide();
+                this.view.hide();
             this.cache['key'] = key;
             return key;
         },
@@ -108,21 +103,69 @@
             $inputor.val(text);
             this.$inputor.caretPos(start_str.length + str.length);
         },
-        choose: function(Li) {
-            str = Li.text();
-            this.replaceStr(str+" ");
-            $(this.tpl_id).hide();
+        choose: function($li) {
+            this.replaceStr($li.text()+" ");
+            this.view.hide();
         },
+        init: function(options) {
+            this.settings = $.extend({
+                'url':"#",
+                'param':{},
+                'key_name':"keyword"
+            },options);
+        },
+        run: function($inputor) {
+            this.$inputor = $inputor;
+            key = this.getKey();
+            if (!key) return;
+
+            url = this.settings['url'];
+            params = this.settings['param'];
+            params[this.settings['key_name']] = key.text;
+
+            $.ajax(url,params,function(data){
+                data = $.parseJSON(data);
+                if ($.isArray(data))
+                    At.view.load(data);
+            });
+        },
+        test: function($inputor) {
+            this.$inputor = $inputor;
+            key = this.getKey();
+            if (!key) return;
+
+            url = this.settings['url'];
+            params = this.settings['param'];
+            params[this.settings['key_name']] = key.text;
+
+            console.log(params);
+            data = {
+                'a':['asee','asabc','asthree'],
+                'b':['bone','btwo','bthreeeeeeeeee'],
+                'c':['cone','ctwo','cthreeeeeeeeee'],
+                'd':['done','dtwo','dthreeeeeeeeee'],
+                'e':['eone','etwo','ethreeeeeeeeee']
+            };
+            nicknames = data[key.text];
+            nicknames = nicknames ? nicknames : [];
+            At.view.load(nicknames);
+        }
+    };
+
+    At.view = {
+        running : false,
+        cur_li_idx : 0,
+        id : '#at-view',
         onkeydown:function(e) {
-            last_idx = $(this.tpl_id).find("ul li").length - 1;
-            $(this.tpl_id + " ul li.cur").removeClass("cur");
+            last_idx = $(this.id).find("ul li").length - 1;
+            $(this.id + " ul li.cur").removeClass("cur");
             switch (e.keyCode) {
                 case 38:
                     if (last_idx <= 0) return false;
                     this.cur_li_idx--;
                     if (this.cur_li_idx < 0)
                         this.cur_li_idx = last_idx;
-                    $(this.tpl_id + " li:eq(" + this.cur_li_idx + ")")
+                    $(this.id + " li:eq(" + this.cur_li_idx + ")")
                         .addClass('cur');
                     return false;
                     break;
@@ -131,14 +174,14 @@
                     this.cur_li_idx++;
                     if (this.cur_li_idx > last_idx)
                         this.cur_li_idx = 0;
-                    $(this.tpl_id + " li:eq(" + this.cur_li_idx + ")")
+                    $(this.id + " li:eq(" + this.cur_li_idx + ")")
                         .addClass('cur');
                     return false;
                     break;
                 case 13:
                     if (last_idx <= 0) return false;
-                    $cur_li = $(this.tpl_id + " li:eq("+this.cur_li_idx+")");
-                    this.choose($cur_li);
+                    $cur_li = $(this.id + " li:eq("+this.cur_li_idx+")");
+                    At.choose($cur_li);
                     this.hide();
                     return false;
                     break;
@@ -146,7 +189,7 @@
                     return true
             }
         },
-        onViewLoaded: function($view) {
+        onLoaded: function($view) {
             at = this;
             $view.click(function(e) {
                 e.target.tagName == "LI" && at.choose($(e.target))
@@ -159,37 +202,40 @@
                 }
             })
         },
+        rePosition:function() {
+            $(this.id).offset({'top':0,'left':0}).offset(At.offset());
+        },
         show: function(){
             if (this.running)
                 return true;
-            var at = this;
-            this.$inputor.bind("keydown",function(e) {
-                return at.onkeydown(e);
+            var view = this;
+            At.$inputor.bind("keydown",function(e) {
+                return view.onkeydown(e);
             })
             .bind("keyup",function(e) {
                 //upword or downword
                 if (e.keyCode == 40 || e.keyCode == 38)
-                    return false;
+                return false;
             });
-            $view = $(this.tpl_id).show();
+            $view = $(this.id).show();
             this.rePosition($view);
             this.running = true;
         },
         hide: function() {
-            this.$inputor.unbind();
-            $(this.tpl_id).hide();
+            At.$inputor.unbind();
+            $(this.id).hide();
             this.running = false;
         },
-        loadView: function(name_list) {
-            $at_view = $(this.tpl_id);
+        load: function(name_list) {
+            $at_view = $(this.id);
             //init
             this.cur_li_idx = 0;
             if ($at_view.length == 0) {
-                tpl = "<div id='"+this.tpl_id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.tpl_id.slice(1)+"-ul'></ul></div>";
+                tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
                 $('body').append($at_view);
-                //$at_view = $(this.tpl_id);
-                this.onViewLoaded($at_view);
+                $at_view = $(this.id);
+                this.onLoaded($at_view);
             }
 
             //update data;
@@ -198,37 +244,23 @@
                 li_tpl += "<li>" + name + "</li>";
             });
             $at_view.find('ul:first').html(li_tpl);
-            $(this.tpl_id + " li:eq(0)").addClass("cur");
+            $(this.id+ " li:eq(0)").addClass("cur");
             this.show();
             this.length = name_list.length;
             return $at_view;
-        },
-        run: function($inputor) {
-            this.$inputor = $inputor;
-            key = this.getKey();
-            if (!key) return;
-            params = {'keyword':key.text};
-            /*$.ajax(url,params,function(name_list){
-                At.loadView(name_list);
-            });*/
-            name_list = {
-                'as':['asee','asabc','asthree'],
-                'a':['aone','atwo','athree']
-            };
-            nicknames = name_list[key.text];
-            nicknames = nicknames ? nicknames : [];
-            At.loadView(nicknames);
         }
-    }
+    };
     
     $.fn.atWho = function (options) {
-        //At.init(options);
+        At.init(options);
         $inputor = $(this).find('textarea:first');
         this.keyup(function(){
             At.run($inputor);
+            //At.test($inputor);
         })
         .mouseup(function(){
             At.run($inputor);
+            //At.test($inputor);
         });
         return this;
     }
