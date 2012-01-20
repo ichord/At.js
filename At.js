@@ -60,10 +60,12 @@
                 mirror = new Mirror($inputor);
                 $inputor.data("mirror",mirror);
             }
+            console.log("at pos:"+this.pos);
             start_range = $inputor.val().slice(0,this.pos);
-            end_range = $inputor.val().slice(this.pos);
+            end_range = $inputor.val().slice(this.pos) - 1;
             html = "<span>"+start_range+"</span>";
-            html += "<span id='flag'>"+end_range+"</span>";
+            html += "<span id='flag'>@</span>";
+            html += "<span id=>"+end_range -1 +"</span>";
             mirror.setContent(html);
 
             offset = $inputor.offset();
@@ -73,11 +75,13 @@
             y = offset.top + at_offset.top + line_height - $(window).scrollTop();
             x = offset.left + at_offset.left;
 
+            console.log("left:"+at_offset.left);
+
             return {'top':y,'left':x};
         },
         getKey: function() {
             $inputor = this.$inputor;
-            text = $inputor.val()
+            text = $inputor.val();
             caret_pos = $inputor.caretPos();
 
             subtext = text.slice(0,caret_pos);
@@ -119,7 +123,6 @@
             this.$inputor = $inputor;
             key = this.getKey();
             if (!key) return;
-
             //debug
             data = this.settings['debug_data'];
             if($.isArray(data) && data.length != 0) {
@@ -151,11 +154,12 @@
         cur_li_idx : 0,
         id : '#at-view',
         onkeydown:function(e) {
+            if (!this.running) return true;
             last_idx = $(this.id).find("ul li").length - 1;
             $(this.id + " ul li.cur").removeClass("cur");
             switch (e.keyCode) {
                 case 38:
-                    if (last_idx <= 0) return false;
+                    if (last_idx <= 0) return true;
                     this.cur_li_idx--;
                     if (this.cur_li_idx < 0)
                         this.cur_li_idx = last_idx;
@@ -164,7 +168,7 @@
                     return false;
                     break;
                 case 40:
-                    if (last_idx <= 0) return false;
+                    if (last_idx <= 0) return true;
                     this.cur_li_idx++;
                     if (this.cur_li_idx > last_idx)
                         this.cur_li_idx = 0;
@@ -173,7 +177,7 @@
                     return false;
                     break;
                 case 13:
-                    if (last_idx <= 0) return false;
+                    if (last_idx < 0) return false;
                     $cur_li = $(this.id + " li:eq("+this.cur_li_idx+")");
                     At.choose($cur_li);
                     this.hide();
@@ -197,28 +201,23 @@
             .blur(function(e){
                 view.hide();
             });
+
+            view = this;
+            At.$inputor.bind("keydown",function(e) {
+                return view.onkeydown(e);
+            });
         },
         rePosition:function() {
+            console.log("running repos");
+            console.log(At.offset());
             $(this.id).offset({'top':0,'left':0}).offset(At.offset());
         },
         show: function(){
-            if (this.running)
-                return true;
-            var view = this;
-            At.$inputor.bind("keydown",function(e) {
-                return view.onkeydown(e);
-            })
-            .bind("keyup",function(e) {
-                //upword or downword
-                if (e.keyCode == 40 || e.keyCode == 38)
-                return false;
-            });
             $view = $(this.id).show();
             this.rePosition($view);
             this.running = true;
         },
         hide: function() {
-            At.$inputor.unbind();
             this.cur_li_idx = 0;
             $(this.id).hide();
             this.running = false;
@@ -249,9 +248,10 @@
     
     $.fn.atWho = function (options) {
         At.init(options);
-        $inputor = $(this).find('textarea:first');
-        this.keyup(function(){
-            At.run($inputor);
+        $inputor = $(this);
+        this.bind("keyup.inputor",function(e){
+            run = At.view.running && (e.keyCode == 40 || e.keyCode == 38);
+            if (!run) At.run($inputor);
         })
         .mouseup(function(){
             At.run($inputor);
