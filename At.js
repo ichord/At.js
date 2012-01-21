@@ -21,11 +21,16 @@
     At = {
         cache : {},
         settings: {},
+        // textarea, input.
         $inputor : null,
         lenght : 0,
+        /* @ position in inputor */
         pos: 0,
+        /* @ offset*/
         offset: function() {
             $inputor = this.$inputor;
+            /* 克隆(镜像) inputor. 用于获得@在输入框中的位置
+             * 复制它的大小形状相关的样式. */
             Mirror = function($origin) {
                 this.init($origin);
             }
@@ -60,7 +65,9 @@
                 mirror = new Mirror($inputor);
                 $inputor.data("mirror",mirror);
             }
-            console.log("at pos:"+this.pos);
+            /* 克隆完inputor后将原来的文本内容根据
+             * @的位置进行分块,以获取@块在inputor(输入框)里的position
+             * */
             start_range = $inputor.val().slice(0,this.pos);
             end_range = $inputor.val().slice(this.pos) - 1;
             html = "<span>"+start_range+"</span>";
@@ -68,22 +75,28 @@
             html += "<span id=>"+end_range -1 +"</span>";
             mirror.setContent(html);
 
+            /* 将inputor的 offset(相对于document)
+             * 和@在inputor里的position相加
+             * 就得到了@相对于document的offset.
+             * 当然,还要加上行高和滚动条的偏移量.
+             * */
             offset = $inputor.offset();
-            at_offset = mirror.getFlagPos();
+            at_pos = mirror.getFlagPos();
             line_height = $inputor.css("line-height");
             line_height = isNaN(line_height) ? 20 : line_height;
-            y = offset.top + at_offset.top + line_height - $(window).scrollTop();
-            x = offset.left + at_offset.left;
-
-            console.log("left:"+at_offset.left);
+            y = offset.top + at_pos.top + line_height - $(window).scrollTop();
+            x = offset.left + at_pos.left;
 
             return {'top':y,'left':x};
         },
         getKey: function() {
             $inputor = this.$inputor;
             text = $inputor.val();
+            //获得inputor中插入符的position.
             caret_pos = $inputor.caretPos();
 
+            /* 向在插入符前的的文本进行正则匹配
+             * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个*/
             subtext = text.slice(0,caret_pos);
             word = subtext.match(/@\w+$|@[^\x00-\xff]+$/);
             key = null;
@@ -149,18 +162,28 @@
         }
     };
 
+    /* 弹出的用户列表框相关的操作 */
     At.view = {
+        // 列表框是否显示中.
         running : false,
+        //当前高亮的条目
         cur_li_idx : 0,
         id : '#at-view',
+        /* 捕捉inputor的上下回车键.
+         * 在列表框做相应的操作,上下滚动,回车选择
+         * 返回 false 阻止冒泡事件以捕捉inputor对应的事件
+         * */
         onkeydown:function(e) {
+            // 当列表没显示时不捕捉inputor相关事件.
             if (!this.running) return true;
+
             last_idx = $(this.id).find("ul li").length - 1;
             $(this.id + " ul li.cur").removeClass("cur");
             switch (e.keyCode) {
                 case 38:
                     if (last_idx <= 0) return true;
                     this.cur_li_idx--;
+                    // 到达顶端时高亮效果跳到最后
                     if (this.cur_li_idx < 0)
                         this.cur_li_idx = last_idx;
                     $(this.id + " li:eq(" + this.cur_li_idx + ")")
@@ -177,6 +200,7 @@
                     return false;
                     break;
                 case 13:
+                    // 如果列表为空，则不捕捉回车事件
                     if (last_idx < 0) return false;
                     $cur_li = $(this.id + " li:eq("+this.cur_li_idx+")");
                     At.choose($cur_li);
@@ -202,14 +226,13 @@
                 view.hide();
             });
 
+            // 捕捉inputor事件
             view = this;
             At.$inputor.bind("keydown",function(e) {
                 return view.onkeydown(e);
             });
         },
         rePosition:function() {
-            console.log("running repos");
-            console.log(At.offset());
             $(this.id).offset({'top':0,'left':0}).offset(At.offset());
         },
         show: function(){
@@ -225,6 +248,7 @@
         load: function(name_list) {
             $at_view = $(this.id);
 
+            // 是否已经加载了列表视图
             if ($at_view.length == 0) {
                 tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
@@ -249,11 +273,12 @@
     $.fn.atWho = function (options) {
         At.init(options);
         $inputor = $(this);
-        this.bind("keyup.inputor",function(e){
+        this.bind("keyup",function(e) {
+            /* 当用户列表框显示时, 上下键不触发查询 */
             run = At.view.running && (e.keyCode == 40 || e.keyCode == 38);
             if (!run) At.run($inputor);
         })
-        .mouseup(function(){
+        .mouseup(function() {
             At.run($inputor);
         });
         return this;
