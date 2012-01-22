@@ -65,14 +65,23 @@
                 mirror = new Mirror($inputor);
                 $inputor.data("mirror",mirror);
             }
+            
+            /* 将inputor中字符转化成对应的html特殊字符
+             * 如 <,> 等, 包括换行符*/
+            function format(value) {
+                //html encode
+                value = $('<div/>').text(value).html();
+                return value.replace(/\r\n|\r|\n/g,"<br />");
+            } 
             /* 克隆完inputor后将原来的文本内容根据
              * @的位置进行分块,以获取@块在inputor(输入框)里的position
              * */
-            start_range = $inputor.val().slice(0,this.pos);
-            end_range = $inputor.val().slice(this.pos) - 1;
-            html = "<span>"+start_range+"</span>";
+            text = $inputor.val();
+            start_range = text.slice(0,this.pos);
+            end_range = text.slice(this.pos+1);
+            html = "<span>"+format(start_range)+"</span>";
             html += "<span id='flag'>@</span>";
-            html += "<span id=>"+end_range -1 +"</span>";
+            html += "<span>"+format(end_range)+"</span>";
             mirror.setContent(html);
 
             /* 将inputor的 offset(相对于document)
@@ -232,8 +241,8 @@
                 return view.onkeydown(e);
             });
         },
-        rePosition:function() {
-            $(this.id).offset({'top':0,'left':0}).offset(At.offset());
+        rePosition:function($view) {
+            $view.offset(At.offset());
         },
         show: function(){
             $view = $(this.id).show();

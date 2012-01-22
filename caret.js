@@ -17,11 +17,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+
+/* 本插件操作 textarea 或者 input 内的插入符
+ * 只实现了获得插入符在文本框中的位置，我设置
+ * 插入符的位置.
+ * */
 (function($) {
-    function getCaretPos($inputor) {
-        $inputor.focus();
-        inputor = $inputor.get(0);
-        if ("selection" in document) {
+    function getCaretPos(inputor) {
+        if ("selection" in document) { // IE
             range = inputor.createTextRange();
             sel_range = document.selection.createTextRange().duplicate();
             try {
@@ -35,20 +38,21 @@
         }
         return pos;
     }
-    function setCaretPos($inputor, pos) {
-        el = $inputor.get(0);
-        if ("selection" in document) {
-            range = el.createTextRange();
+    function setCaretPos(inputor, pos) {
+        if ("selection" in document) { //IE
+            range = inputor.createTextRange();
             range.move('character',pos);
             range.select();
         } else 
-            el.setSelectionRange(pos,pos);
+            inputor.setSelectionRange(pos,pos);
     }
     $.fn.caretPos = function(pos) {
+        inputor = this.get(0);
         if (pos) {
-            return setCaretPos(this,pos);
+            return setCaretPos(inputor,pos);
         } else {
-            return getCaretPos(this);
+            return getCaretPos(inputor);
         }
     }
 })(jQuery);
+ /*  */
