@@ -12,7 +12,7 @@ Implement Twitter/Weibo @ mentions
 
 ###usage
 ####ajax
-```
+``` javascript
 $('inputor').atWho(function(context){
     var url = "#",
     param = {'q':"Json"},
@@ -25,7 +25,7 @@ $('inputor').atWho(function(context){
 });
 ```
 ####static data
-```
+``` javascript
 names = ['one','two'];
 $('inputor').atWho({data:names});
 ```
