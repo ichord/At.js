@@ -19,6 +19,7 @@
 
 (function($) {
     At = {
+        keyword : "",
         cache : {},
         settings: {},
         // textarea, input.
@@ -83,7 +84,6 @@
             html = "<span>"+format(start_range)+"</span>";
             html += "<span id='flag'>@</span>";
             html += "<span>"+format(end_range)+"</span>";
-            console.log(html);
             mirror.setContent(html);
 
             /* 将inputor的 offset(相对于document)
@@ -118,6 +118,7 @@
                 end = start + word.length;
                 this.pos = start - 1;
                 key = {'text':word, 'start':start, 'end':end};
+                this.keyword = word;
             } else
                 this.view.hide();
             this.cache['key'] = key;
@@ -137,11 +138,16 @@
             this.view.hide();
         },
         init: function(options) {
+            opt = {};
+            if ($.isFunction(options))
+              opt['callback'] = options;
+            else
+              opt = options;
             this.settings = $.extend({
                 //must return array;
                 'callback': function(context) {return []},
                 'data':[]
-            },options);
+            },opt);
         },
         run: function($inputor) {
             this.$inputor = $inputor;
@@ -156,8 +162,8 @@
 
             callback = this.settings['callback'];
             if($.isFunction(callback)) {
-                names = callback.call(At);
-                At.view.load(names);
+                callback(At);
+                //At.view.load(names);
             }
         },
         runWithData:function(key,data) {

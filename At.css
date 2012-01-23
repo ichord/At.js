@@ -1,11 +1,12 @@
+#at-view {
+    border: 1px solid #C8C8C8;
+    position:absolute;
+    background:white;
+}
 #at-view .cur {
     background: #3366FF;
     color: white;
     font-weight:bold;
-}
-#at-view {
-    /* border: 1px solid #C8C8C8; */
-    position:absolute;
 }
 #at-view ul {
     /* width: 100px; */
@@ -20,5 +21,5 @@
 #at-view span {
     font-size:13px;
     color: gray;
-    /* padding-left: 5px; */
+    padding: 0 5px;
 }
