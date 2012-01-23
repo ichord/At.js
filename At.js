@@ -71,6 +71,7 @@
             function format(value) {
                 //html encode
                 value = $('<div/>').text(value).html();
+                value = value.replace(" ","&nbsp;");
                 return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
@@ -82,6 +83,7 @@
             html = "<span>"+format(start_range)+"</span>";
             html += "<span id='flag'>@</span>";
             html += "<span>"+format(end_range)+"</span>";
+            console.log(html);
             mirror.setContent(html);
 
             /* 将inputor的 offset(相对于document)
@@ -93,8 +95,9 @@
             at_pos = mirror.getFlagPos();
             line_height = $inputor.css("line-height");
             line_height = isNaN(line_height) ? 20 : line_height;
-            y = offset.top + at_pos.top + line_height - $(window).scrollTop();
-            x = offset.left + at_pos.left;
+            y = offset.top + at_pos.top + line_height
+                - $(window).scrollTop() - $inputor.scrollTop();
+            x = offset.left + at_pos.left - $inputor.scrollLeft();
 
             return {'top':y,'left':x};
         },
@@ -135,10 +138,9 @@
         },
         init: function(options) {
             this.settings = $.extend({
-                'url':"#",
-                'param':{},
-                'key_name':"keyword",
-                'debug_data':[]
+                //must return array;
+                'callback': function(context) {return []},
+                'data':[]
             },options);
         },
         run: function($inputor) {
@@ -146,21 +148,17 @@
             key = this.getKey();
             if (!key) return;
             //debug
-            data = this.settings['debug_data'];
+            data = this.settings['data'];
             if($.isArray(data) && data.length != 0) {
                 this.runWithData(key,data);
                 return;
             }
 
-            url = this.settings['url'];
-            params = this.settings['param'];
-            params[this.settings['key_name']] = key.text;
-
-            $.ajax(url,params,function(data){
-                data = $.parseJSON(data);
-                if ($.isArray(data))
-                    At.view.load(data);
-            });
+            callback = this.settings['callback'];
+            if($.isFunction(callback)) {
+                names = callback.call(At);
+                At.view.load(names);
+            }
         },
         runWithData:function(key,data) {
             names = $.map(data,function(name) {
@@ -255,6 +253,7 @@
             this.running = false;
         },
         load: function(name_list) {
+            if (!$.isArray(name_list)) return false;
             $at_view = $(this.id);
 
             // 是否已经加载了列表视图
