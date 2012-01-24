@@ -20,7 +20,7 @@ Implement Twitter/Weibo @ mentions
 ###usage
 ####ajax
 ``` javascript
-$('inputor').atWho(function(context){
+$('textarea').atWho(function(context){
     var url = "#",
     param = {'q':context.keyword},
     names = [];
@@ -34,5 +34,5 @@ $('inputor').atWho(function(context){
 ####static data
 ``` javascript
 names = ['one','two'];
-$('inputor').atWho({data:names});
+$('textarea').atWho({data:names});
 ```
