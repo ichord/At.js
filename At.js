@@ -195,8 +195,6 @@
 
             last_idx = $(this.id).find("ul li").length - 1;
             $(this.id + " ul li.cur").removeClass("cur");
-            console.log(e.keyCode);
-            console.log(last_idx);
             switch (e.keyCode) {
                 case 38:
                     if (last_idx < 0) return true;
@@ -239,15 +237,16 @@
                     $(e.target).addClass("cur");
                     At.cur_li_idx = $(this).find("li").index(e.target)
                 }
-            })
-            .blur(function(e){
-                view.hide();
             });
+            
 
             // 捕捉inputor事件
             view = this;
             At.$inputor.bind("keydown.at_select",function(e) {
                 return view.onkeydown(e);
+            })
+            .blur(function(e){
+                view.hide();
             });
         },
         rePosition:function($view) {
