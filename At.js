@@ -101,10 +101,6 @@
             y = offset.top + at_pos.top + line_height
                 - $inputor.scrollTop();
             x = offset.left + at_pos.left - $inputor.scrollLeft();
-            console.log($(window).scrollTop());
-            console.log(offset);
-            console.log(at_pos);
-            console.log({'top':y,'left':x});
 
             return {'top':y,'left':x};
         },
@@ -199,9 +195,11 @@
 
             last_idx = $(this.id).find("ul li").length - 1;
             $(this.id + " ul li.cur").removeClass("cur");
+            console.log(e.keyCode);
+            console.log(last_idx);
             switch (e.keyCode) {
                 case 38:
-                    if (last_idx <= 0) return true;
+                    if (last_idx < 0) return true;
                     this.cur_li_idx--;
                     // 到达顶端时高亮效果跳到最后
                     if (this.cur_li_idx < 0)
@@ -211,7 +209,7 @@
                     return false;
                     break;
                 case 40:
-                    if (last_idx <= 0) return true;
+                    if (last_idx < 0) return true;
                     this.cur_li_idx++;
                     if (this.cur_li_idx > last_idx)
                         this.cur_li_idx = 0;
@@ -248,7 +246,7 @@
 
             // 捕捉inputor事件
             view = this;
-            At.$inputor.bind("keydown",function(e) {
+            At.$inputor.bind("keydown.at_select",function(e) {
                 return view.onkeydown(e);
             });
         },
