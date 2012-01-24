@@ -22,13 +22,13 @@ Implement Twitter/Weibo @ mentions
 ``` javascript
 $('inputor').atWho(function(context){
     var url = "#",
-    param = {'q':"Json"},
+    param = {'q':context.keyword},
     names = [];
     $.ajax(url,param,function(data) {
         names = $.jsonParse(data);
+        //for now , just support plain text array.
+        context.view.load(names);
     });
-    //for now , just support plain text array.
-    return names;
 });
 ```
 ####static data

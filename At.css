@@ -1,7 +1,14 @@
 #at-view {
-    border: 1px solid #C8C8C8;
     position:absolute;
-    background:white;
+    top: 0;
+    left: 0;
+    display: none;
+    margin-top: 18px;
+    background: white;
+    border: 1px solid #DDD;
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    min-width: 180px;
 }
 #at-view .cur {
     background: #3366FF;
