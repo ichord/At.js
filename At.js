@@ -95,9 +95,16 @@
             at_pos = mirror.getFlagPos();
             line_height = $inputor.css("line-height");
             line_height = isNaN(line_height) ? 20 : line_height;
+            //FIXME: -$(window).scrollTop() get "wrong" offset.
+            // but is good for $inputor.scrollTop();
+            // jquey 1.7.1 fixed the scrollTop problem!?
             y = offset.top + at_pos.top + line_height
-                - $(window).scrollTop() - $inputor.scrollTop();
+                - $inputor.scrollTop();
             x = offset.left + at_pos.left - $inputor.scrollLeft();
+            console.log($(window).scrollTop());
+            console.log(offset);
+            console.log(at_pos);
+            console.log({'top':y,'left':x});
 
             return {'top':y,'left':x};
         },
