@@ -7,15 +7,14 @@ Implement Twitter/Weibo @ mentions
 * 性能优化
 * <del>浏览器兼容</del>
 * 适应输入框大小变化
-* caret.js fork
-    更多的文本框操作.插入, 替换等.
+* <del>caret.js fork 更多的文本框操作.插入, 替换等.</del> google rangy
 
 ###todo - en
 * <del> get the tail of @: match the key word after @</del>
 * <del> caret.js: set or get caret position in textarea or input element</del>
 * <del> let mention box dance with the "@"</del>
 * Let's dance beautifully!!! - performance optimite, css.
-* caret.js: more caret or textarea element handle.
+* <del>caret.js: more caret or textarea element handle.</del> google rangy
 * adapt the inputor(textare,input) size
 * <del>I hate IE! you know that.: test on IE6,7,8 and run good.</del>
 
