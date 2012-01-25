@@ -5,7 +5,7 @@ Implement Twitter/Weibo @ mentions
 * <del>caret.js: 对文本框内的光标进行操作.</del>
 * <del>列表框浮动到 @ 符号下.</del>
 * 性能优化
-* 浏览器兼容
+* <del>浏览器兼容</del>
 * 适应输入框大小变化
 * caret.js fork
     更多的文本框操作.插入, 替换等.
@@ -17,7 +17,7 @@ Implement Twitter/Weibo @ mentions
 * Let's dance beautifully!!! - performance optimite, css.
 * caret.js: more caret or textarea element handle.
 * adapt the inputor(textare,input) size
-* I hate IE! you know that.
+* <del>I hate IE! you know that.: test on IE6,7,8 and run good.</del>
 
 ###usage
 ####ajax
