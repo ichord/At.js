@@ -25,14 +25,18 @@
 (function($) {
     function getCaretPos(inputor) {
         if ("selection" in document) { // IE
-            range = inputor.createTextRange();
-            sel_range = document.selection.createTextRange().duplicate();
-            try {
-                range.setEndPoint("EndToStart",sel_range);
-            } catch (e) {
-                return 0;
-            }
-            pos = range.text.length
+            inputor.focus(); 
+
+            var range_sel = document.selection.createRange(); 
+            if (range_sel == null) { 
+              return 0; 
+            } 
+            var range = inputor.createTextRange(), 
+                range_clone = range.duplicate(); 
+            range_clone.moveToBookmark(range_sel.getBookmark()); 
+            range.setEndPoint('EndToStart',range_clone); 
+
+            pos = range.text.length; 
         } else {
             pos = inputor.selectionStart;
         }
@@ -47,7 +51,7 @@
             inputor.setSelectionRange(pos,pos);
     }
     $.fn.caretPos = function(pos) {
-        inputor = this.get(0);
+        var inputor = this[0];
         if (pos) {
             return setCaretPos(inputor,pos);
         } else {
@@ -55,4 +59,3 @@
         }
     }
 })(jQuery);
- /*  */
