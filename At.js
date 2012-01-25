@@ -71,8 +71,7 @@
              * 如 <,> 等, 包括换行符*/
             function format(value) {
                 //html encode
-                value = $('<div/>').text(value).html();
-                value = value.replace(" ","&nbsp;");
+                value = value.replace(/ /g,"&nbsp;");
                 return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
@@ -109,11 +108,10 @@
             text = $inputor.val();
             //获得inputor中插入符的position.
             caret_pos = $inputor.caretPos();
-
             /* 向在插入符前的的文本进行正则匹配
              * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个*/
             subtext = text.slice(0,caret_pos);
-            word = subtext.match(/@\w+$|@[^\x00-\xff]+$/);
+            word = subtext.match(/@\w+$|@[^\x00-\xff]+$/g);
             key = null;
             if (word) {
                 word = word.join("").slice(1);
@@ -184,6 +182,7 @@
         running : false,
         //当前高亮的条目
         cur_li_idx : 0,
+        timeout_id : null,
         id : '#at-view',
         /* 捕捉inputor的上下回车键.
          * 在列表框做相应的操作,上下滚动,回车选择
@@ -192,12 +191,14 @@
         onkeydown:function(e) {
             // 当列表没显示时不捕捉inputor相关事件.
             if (!this.running) return true;
-
             last_idx = $(this.id).find("ul li").length - 1;
+            if (last_idx < 0) { 
+                this.hide();
+                return true;
+            }
             $(this.id + " ul li.cur").removeClass("cur");
             switch (e.keyCode) {
                 case 38:
-                    if (last_idx < 0) return true;
                     this.cur_li_idx--;
                     // 到达顶端时高亮效果跳到最后
                     if (this.cur_li_idx < 0)
@@ -207,7 +208,6 @@
                     return false;
                     break;
                 case 40:
-                    if (last_idx < 0) return true;
                     this.cur_li_idx++;
                     if (this.cur_li_idx > last_idx)
                         this.cur_li_idx = 0;
@@ -217,7 +217,6 @@
                     break;
                 case 13:
                     // 如果列表为空，则不捕捉回车事件
-                    if (last_idx < 0) return false;
                     $cur_li = $(this.id + " li:eq("+this.cur_li_idx+")");
                     At.choose($cur_li);
                     this.hide();
@@ -245,8 +244,11 @@
             At.$inputor.bind("keydown.at_select",function(e) {
                 return view.onkeydown(e);
             })
-            .blur(function(e){
+            .scroll(function(e){
                 view.hide();
+            })
+            .blur(function(e){
+                view.timeout_id = setTimeout("view.hide()",200);
             });
         },
         rePosition:function($view) {
@@ -258,6 +260,8 @@
             this.running = true;
         },
         hide: function() {
+            if (!this.running)
+                return this.running;
             this.cur_li_idx = 0;
             $(this.id).hide();
             this.running = false;
