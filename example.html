@@ -7,11 +7,10 @@
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="caret.js" ></script>
         <script type="text/javascript" src="At.js"></script>
-        <script type="text/javascript" src="textinputs_jquery_src.js"></script>
         <script type="text/javascript">
             $(function(){
                     var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
-                    $('#inputor').atWho({'data':data});
+                    $("textarea").atWho({'data':data});
             });
         </script>
         <style type="text/css" media="screen">
@@ -22,6 +21,9 @@
                 margin:10px;
             }
             textarea {
+                width: 300px;
+            }
+            #inputor{
                 width:480px;
             }
         </style>
@@ -42,6 +44,9 @@
 
 @Jacob cob  sdfasjdkfljasdlkj @Ethan 
       @Ethan @sdfads 
+
+</textarea>
+<textarea name="Name" rows="8" cols="40">
 
 </textarea>
 </body>

@@ -1,27 +1,34 @@
 /* 
     Implement Twitter/Weibo @ mentions
 
-    Copyright (C) 2012 chord.luo@gmail.com
+    Copyright (c) 2012 chord.luo@gmail.com
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+*/
 
 (function($) {
     At = {
-        keyword : "",
-        cache : {},
+        keyword : {'text':"",'start':0,'stop':0},
+        _cache : {},
         settings: {},
+        inputor_map: {},
         // textarea, input.
         $inputor : null,
         lenght : 0,
@@ -103,6 +110,11 @@
 
             return {'top':y,'left':x};
         },
+        cache: function(key,value) {
+            if (value)
+                this._cache[key] = value;
+            return this._cache[key];
+        },
         getKey: function() {
             $inputor = this.$inputor;
             text = $inputor.val();
@@ -113,55 +125,108 @@
             subtext = text.slice(0,caret_pos);
             word = subtext.match(/@\w+$|@[^\x00-\xff]+$/g);
             key = null;
-            if (word) {
-                word = word.join("").slice(1);
-                start = caret_pos - word.length;
-                end = start + word.length;
-                this.pos = start - 1;
-                key = {'text':word, 'start':start, 'end':end};
-                this.keyword = word;
-            } else
+            if (!word) {
                 this.view.hide();
-            this.cache['key'] = key;
+                return null;
+            }
+            word = word.join("").slice(1);
+            start = caret_pos - word.length;
+            end = start + word.length;
+            this.pos = start - 1;
+            key = {'text':word, 'start':start, 'end':end};
+            this.keyword = key;
             return key;
+        },
+        /* 捕捉inputor的上下回车键.
+         * 在列表框做相应的操作,上下滚动,回车选择
+         * 返回 false 阻止冒泡事件以捕捉inputor对应的事件
+         * */
+        onkeydown:function(e) {
+            view = this.view;
+            // 当列表没显示时不捕捉inputor相关事件.
+            if (!view.running()) return true;
+            last_idx = $(view.id).find("ul li").length - 1;
+            switch (e.keyCode) {
+                case 38:
+                    // if put this line outside the switch
+                    // the view will flash when key down.
+                    $(view.id + " ul li.cur").removeClass("cur");
+                    view.cur_li_idx--;
+                    // 到达顶端时高亮效果跳到最后
+                    if (view.cur_li_idx < 0)
+                        view.cur_li_idx = last_idx;
+                    $(view.id + " li:eq(" + view.cur_li_idx + ")")
+                        .addClass('cur');
+                    return false;
+                    break;
+                case 40:
+                    $(view.id + " ul li.cur").removeClass("cur");
+                    view.cur_li_idx++;
+                    if (view.cur_li_idx > last_idx)
+                        view.cur_li_idx = 0;
+                    $(view.id + " li:eq(" + view.cur_li_idx + ")")
+                        .addClass('cur');
+                    return false;
+                    break;
+                case 13:
+                    $(view.id + " ul li.cur").removeClass("cur");
+                    // 如果列表为空，则不捕捉回车事件
+                    $cur_li = $(view.id + " li:eq("+view.cur_li_idx+")");
+                    this.choose($cur_li);
+                    view.hide();
+                    return false;
+                    break;
+                default:
+                    return true
+            }
         },
         replaceStr: function(str) {
             /* $inputor.replaceStr(str,start,end)*/
-            key = this.cache['key'];
+            key = this.keyword;
             source = this.$inputor.val();
             start_str = source.slice(0, key.start);
             text = start_str + str + source.slice(key.end);
-            $inputor.val(text);
+            this.$inputor.val(text);
             this.$inputor.caretPos(start_str.length + str.length);
         },
         choose: function($li) {
             this.replaceStr($li.text()+" ");
             this.view.hide();
         },
-        init: function(options) {
-            opt = {};
-            if ($.isFunction(options))
-              opt['callback'] = options;
-            else
-              opt = options;
-            this.settings = $.extend({
-                //must return array;
-                'callback': function(context) {return []},
-                'data':[]
-            },opt);
+        checkin: function($inputor) {
+            return $inputor.data('@-key');
+        },
+        reg: function($inputor) {
+            // 捕捉inputor事件
+            _key = "@-"+$.now();
+            this.inputor_map[_key] = $inputor.data("@-key",_key);
+            self = this;
+            $inputor.bind("keydown",function(e) {
+                return self.onkeydown(e);
+            })
+            .scroll(function(e){
+                self.view.hide();
+            })
+            .blur(function(e){
+                self.view.timeout_id = setTimeout("self.view.hide()",200);
+            });   
         },
         run: function($inputor) {
-            this.$inputor = $inputor;
+            var id = this.checkin($inputor);
+            if(!id) return false;
+            this.$inputor = this.inputor_map[id];
             key = this.getKey();
-            if (!key) return;
+            if (!key) return false;
             //debug
-            data = this.settings['data'];
+            data = settings['data'];
             if($.isArray(data) && data.length != 0) {
                 this.runWithData(key,data);
-                return;
+                return true;
             }
 
-            callback = this.settings['callback'];
+            if (data = this.cache(this.keyword.text))
+                return this.view.load(data);
+            callback = settings['callback'];
             if($.isFunction(callback)) {
                 callback(At);
                 //At.view.load(names);
@@ -178,53 +243,13 @@
 
     /* 弹出的用户列表框相关的操作 */
     At.view = {
-        // 列表框是否显示中.
-        running : false,
         //当前高亮的条目
         cur_li_idx : 0,
         timeout_id : null,
         id : '#at-view',
-        /* 捕捉inputor的上下回车键.
-         * 在列表框做相应的操作,上下滚动,回车选择
-         * 返回 false 阻止冒泡事件以捕捉inputor对应的事件
-         * */
-        onkeydown:function(e) {
-            // 当列表没显示时不捕捉inputor相关事件.
-            if (!this.running) return true;
-            last_idx = $(this.id).find("ul li").length - 1;
-            if (last_idx < 0) { 
-                this.hide();
-                return true;
-            }
-            $(this.id + " ul li.cur").removeClass("cur");
-            switch (e.keyCode) {
-                case 38:
-                    this.cur_li_idx--;
-                    // 到达顶端时高亮效果跳到最后
-                    if (this.cur_li_idx < 0)
-                        this.cur_li_idx = last_idx;
-                    $(this.id + " li:eq(" + this.cur_li_idx + ")")
-                        .addClass('cur');
-                    return false;
-                    break;
-                case 40:
-                    this.cur_li_idx++;
-                    if (this.cur_li_idx > last_idx)
-                        this.cur_li_idx = 0;
-                    $(this.id + " li:eq(" + this.cur_li_idx + ")")
-                        .addClass('cur');
-                    return false;
-                    break;
-                case 13:
-                    // 如果列表为空，则不捕捉回车事件
-                    $cur_li = $(this.id + " li:eq("+this.cur_li_idx+")");
-                    At.choose($cur_li);
-                    this.hide();
-                    return false;
-                    break;
-                default:
-                    return true
-            }
+        // 列表框是否显示中.
+        running :function() {
+            return $(this.id).is(":visible");
         },
         onLoaded: function($view) {
             $view.click(function(e) {
@@ -237,36 +262,22 @@
                     At.cur_li_idx = $(this).find("li").index(e.target)
                 }
             });
-            
-
-            // 捕捉inputor事件
-            view = this;
-            At.$inputor.bind("keydown.at_select",function(e) {
-                return view.onkeydown(e);
-            })
-            .scroll(function(e){
-                view.hide();
-            })
-            .blur(function(e){
-                view.timeout_id = setTimeout("view.hide()",200);
-            });
         },
         rePosition:function($view) {
             $view.offset(At.offset());
         },
         show: function(){
+            if (this.running()) return;
             $view = $(this.id).show();
             this.rePosition($view);
-            this.running = true;
         },
         hide: function() {
-            if (!this.running)
-                return this.running;
+            if (!this.running()) return;
             this.cur_li_idx = 0;
             $(this.id).hide();
-            this.running = false;
         },
         load: function(name_list) {
+            At.cache(At.keyword.text,name_list);
             if (!$.isArray(name_list)) return false;
             $at_view = $(this.id);
 
@@ -285,24 +296,38 @@
                 li_tpl += "<li>" + name + "</li>";
             });
             $at_view.find('ul:first').html(li_tpl);
-            $(this.id+ " li:eq(0)").addClass("cur");
             this.show();
+            $(this.id+ " ul li:eq(0)").addClass("cur");
             this.length = name_list.length;
             return $at_view;
         }
     };
+
+    function setSettings(options) {
+        opt = {};
+        if ($.isFunction(options))
+            opt['callback'] = options;
+        else
+            opt = options;
+        return $.extend({
+            //must return array;
+            'callback': function(context) {return []},
+            'data':[]
+        },opt);
+    }
     
     $.fn.atWho = function (options) {
-        At.init(options);
-        $inputor = $(this);
-        this.bind("keyup",function(e) {
-            /* 当用户列表框显示时, 上下键不触发查询 */
-            run = At.view.running && (e.keyCode == 40 || e.keyCode == 38);
-            if (!run) At.run($inputor);
-        })
-        .mouseup(function() {
-            At.run($inputor);
+        settings = setSettings(options);
+        return this.each(function() {
+            At.reg($inputor = $(this));
+            $inputor.bind("keyup",function(e) {
+                /* 当用户列表框显示时, 上下键不触发查询 */
+                run = At.view.running() && (e.keyCode == 40 || e.keyCode == 38);
+                if (!run) At.run($(this));
+            })
+            .mouseup(function() {
+                At.run($(this));
+            });
         });
-        return this;
     }
 })(jQuery);

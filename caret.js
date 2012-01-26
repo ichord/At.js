@@ -1,20 +1,26 @@
 /* 
-    Implement Twitter/Weibo @ mentions
+   Implement Twitter/Weibo @ mentions
 
-    Copyright (C) 2012 chord.luo@gmail.com
+   Copyright (c) 2012 chord.luo@gmail.com
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+   OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 
 */
 
@@ -26,40 +32,19 @@
     function getCaretPos(inputor) {
         if ("selection" in document) { // IE
             inputor.focus(); 
-            /*  
-            // this two implemention can't catch the "\r\n" char.
-            var range_sel = document.selection.createRange();
-            try {
-                var range = inputor.createTextRange(), 
-                    range_clone = range.duplicate();
-                range_clone.moveToBookmark(range_sel.getBookmark());
-                range.setEndPoint('EndToStart',range_clone);
-            } catch (e) {
-                return 0;
-            }
-    
-            var value = inputor.value;
-            try {
-                var range = document.selection.createRange ();
-                pos = -range.moveStart ('character', -value.length);
-            } catch (e) {
-                return 0;
-            }*/
-
-
             /*
-            * reference: http://tinyurl.com/86pyc4s
-            */
+             * reference: http://tinyurl.com/86pyc4s
+             */
             var start = 0, end = 0, normalizedValue, range,
-                    textInputRange, len, endRange;
+                textInputRange, len, endRange;
             var el = inputor;
             /* assume we select "HATE" in the inputor such as textarea -> { }.
-            *               start end-point.
-            *              /
-            * <  I really [HATE] IE   > between the brackets is the selection range.
-            *                   \
-            *                    end end-point.
-            */
+             *               start end-point.
+             *              /
+             * <  I really [HATE] IE   > between the brackets is the selection range.
+             *                   \
+             *                    end end-point.
+             */
             range = document.selection.createRange();
             pos = 0;
             // selection should in the inputor.
@@ -86,19 +71,19 @@
                 textInputRange.moveToBookmark(range.getBookmark());
                 // IE don't want to let "createTextRange" and "collapse" get together. It's so bad
                 endRange = el.createTextRange();
-                
+
                 /*  [--------------------->[] : if set false all end-point goto end.
                  * <  I really [[HATE] IE  []]>
                  */
                 endRange.collapse(false);
                 /*               ___VS____
-                *               /         \
-                * <   I really [[HATE] IE []]>
-                *                          \_endRange end-point.
-                *
-                * " > -1" mean the start end-point will be the same or right to the end end-point
-                * simplelly, all in the end.
-                */
+                 *               /         \
+                 * <   I really [[HATE] IE []]>
+                 *                          \_endRange end-point.
+                 *
+                 * " > -1" mean the start end-point will be the same or right to the end end-point
+                 * simplelly, all in the end.
+                 */
                 if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
                     // TextRange object will miss "\r\n". So, we count it ourself.
                     line_counter = normalizedValue.slice(0, start).split("\n").length -1;

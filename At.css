@@ -23,10 +23,12 @@
 }
 #at-view ul li {
     padding: 0 14px;
+    cursor: pointer;
     /* border-top: 1px solid #C8C8C8; */
 }
 #at-view span {
     font-size:13px;
     color: gray;
     padding: 3px 5px;
+    cursor: default;
 }
