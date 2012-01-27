@@ -24,11 +24,42 @@
 */
 
 (function($) {
+    /* 克隆(镜像) inputor. 用于获得@在输入框中的位置
+             * 复制它的大小形状相关的样式. */
+    Mirror = function($origin) {
+        this.init($origin);
+    }
+    Mirror.prototype = {
+        $mirror: null,
+        css : ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX'],
+        init: function($origin) {
+            $mirror =  $('<div></div>');
+            var css = {
+                opacity: 0, 
+                position: 'absolute', 
+                left: 0,
+                top:0, 
+                zIndex: -20000,
+                /* must use word-wrap rather than wordWrap. $.css not work for this property in ie*/
+                'word-wrap':'break-word'
+            }
+            $.each(this.css,function(i,p){
+                css[p] = $origin.css(p);
+            });
+            $mirror.css(css);
+            $('body').append($mirror);
+            this.$mirror = $mirror;
+        },
+        setContent: function(html) {
+            this.$mirror.html(html);
+        },
+        getFlagPos:function() {
+            return this.$mirror.find("span#flag").position();
+        }
+    };
     At = {
         keyword : {'text':"",'start':0,'stop':0},
         _cache : {},
-        settings: {},
-        inputor_map: {},
         // textarea, input.
         $inputor : null,
         lenght : 0,
@@ -37,37 +68,6 @@
         /* @ offset*/
         offset: function() {
             $inputor = this.$inputor;
-            /* 克隆(镜像) inputor. 用于获得@在输入框中的位置
-             * 复制它的大小形状相关的样式. */
-            Mirror = function($origin) {
-                this.init($origin);
-            }
-            Mirror.prototype = {
-                $mirror: null,
-                css : ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth', 'wordWrap', 'fontSize', 'lineHeight', 'overflowX'],
-                init: function($origin) {
-                    $mirror =  $('<div></div>');
-                    var css = {
-                        opacity: 0, 
-                        position: 'absolute', 
-                        left: 0,
-                        top:0, 
-                        zIndex: -20000
-                    }
-                    $.each(this.css,function(i,p){
-                        css[p] = $origin.css(p);
-                    });
-                    $mirror.css(css);
-                    $('body').append($mirror);
-                    this.$mirror = $mirror;
-                },
-                setContent: function(html) {
-                    this.$mirror.html(html);
-                },
-                getFlagPos:function() {
-                    return this.$mirror.find("span#flag").position();
-                }
-            };
             mirror = $inputor.data("mirror");
             if (mirror == undefined) {
                 mirror = new Mirror($inputor);
@@ -77,8 +77,15 @@
             /* 将inputor中字符转化成对应的html特殊字符
              * 如 <,> 等, 包括换行符*/
             function format(value) {
+                // return value;
                 //html encode
-                value = value.replace(/ /g,"&nbsp;");
+                // when translate space to html code we have to use sina wxb solution bottom;
+                // one of them;
+                // value = value.replace(/ /g,"&nbsp;");
+                rep_str = "<pre style='display:inline;'> </pre>";
+                if ($.browser.msie && $.browser.version <= 8)
+                    rep_str = "<span style='white-space:pre-wrap;'> </span>";
+                value = value.replace(/ /g,rep_str);
                 return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
@@ -111,6 +118,7 @@
             return {'top':y,'left':x};
         },
         cache: function(key,value) {
+            if (!settings['cache']) return null;
             if (value)
                 this._cache[key] = value;
             return this._cache[key];
@@ -193,31 +201,24 @@
             this.replaceStr($li.text()+" ");
             this.view.hide();
         },
-        checkin: function($inputor) {
-            return $inputor.data('@-key');
-        },
-        reg: function($inputor) {
+        reg: function(inputor) {
             // 捕捉inputor事件
-            _key = "@-"+$.now();
-            this.inputor_map[_key] = $inputor.data("@-key",_key);
-            self = this;
-            $inputor.bind("keydown",function(e) {
+            var self = this;
+            $(inputor).bind("keydown",function(e) {
                 return self.onkeydown(e);
             })
             .scroll(function(e){
                 self.view.hide();
             })
             .blur(function(e){
-                self.view.timeout_id = setTimeout("self.view.hide()",200);
+                self.view.timeout_id = setTimeout("At.view.hide()",100);
             });   
         },
-        run: function($inputor) {
-            var id = this.checkin($inputor);
-            if(!id) return false;
-            this.$inputor = this.inputor_map[id];
+        run: function(inputor) {
+            this.$inputor = $(inputor);
             key = this.getKey();
             if (!key) return false;
-            //debug
+            
             data = settings['data'];
             if($.isArray(data) && data.length != 0) {
                 this.runWithData(key,data);
@@ -267,8 +268,8 @@
             $view.offset(At.offset());
         },
         show: function(){
-            if (this.running()) return;
-            $view = $(this.id).show();
+            if (!this.running())
+                $view = $(this.id).show();
             this.rePosition($view);
         },
         hide: function() {
@@ -312,6 +313,7 @@
         return $.extend({
             //must return array;
             'callback': function(context) {return []},
+            'cache' : true,
             'data':[]
         },opt);
     }
@@ -319,14 +321,14 @@
     $.fn.atWho = function (options) {
         settings = setSettings(options);
         return this.each(function() {
-            At.reg($inputor = $(this));
-            $inputor.bind("keyup",function(e) {
+            At.reg(this);
+            $(this).bind("keyup",function(e) {
                 /* 当用户列表框显示时, 上下键不触发查询 */
                 run = At.view.running() && (e.keyCode == 40 || e.keyCode == 38);
-                if (!run) At.run($(this));
+                if (!run) At.run(this);
             })
-            .mouseup(function() {
-                At.run($(this));
+            .mouseup(function(e) {
+                At.run(this);
             });
         });
     }
