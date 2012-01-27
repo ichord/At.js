@@ -77,16 +77,11 @@
             /* 将inputor中字符转化成对应的html特殊字符
              * 如 <,> 等, 包括换行符*/
             function format(value) {
-                // return value;
                 //html encode
-                // when translate space to html code we have to use sina wxb solution bottom;
-                // one of them;
-                // value = value.replace(/ /g,"&nbsp;");
                 rep_str = "<pre style='display:inline;'> </pre>";
                 if ($.browser.msie && $.browser.version <= 8)
                     rep_str = "<span style='white-space:pre-wrap;'> </span>";
-                value = value.replace(/ /g,rep_str);
-                return value.replace(/\r\n|\r|\n/g,"<br />");
+                return value.replace(/ /g,rep_str).replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
              * @的位置进行分块,以获取@块在inputor(输入框)里的position
