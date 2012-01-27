@@ -78,9 +78,9 @@
              * 如 <,> 等, 包括换行符*/
             function format(value) {
                 //html encode
-                rep_str = "<pre style='display:inline;'> </pre>";
-                if ($.browser.msie && $.browser.version <= 8)
-                    rep_str = "<span style='white-space:pre-wrap;'> </span>";
+                rep_str = "<span style='white-space:pre-wrap;'> </span>";
+                if ($.browser.msie && $.browser.version < 8)
+                    rep_str = "<pre style='display:inline;'> </pre>";
                 return value.replace(/ /g,rep_str).replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
