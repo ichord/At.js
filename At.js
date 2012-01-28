@@ -81,6 +81,10 @@
              * NOTE: “\r\n” 用于ie的textarea.
              */
             function format(value) {
+                value = value.replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/`/g,'&#96;')
+                    .replace(/"/g,'&quot;');
                 if ($.browser.msie)
                     value = value.replace(/ /g,"<span> </span>");
                 return value.replace(/\r\n|\r|\n/g,"<br />");

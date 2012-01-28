@@ -77,7 +77,7 @@
                  * <  I really [[HATE] IE  []]>
                  */
                 endRange.collapse(false);
-                /*               ___VS____
+                /*                ___VS____
                  *               /         \
                  * <   I really [[HATE] IE []]>
                  *                          \_endRange end-point.

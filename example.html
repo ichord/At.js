@@ -32,19 +32,18 @@
     <div class="box"></div>
     <div class="box"></div>
     <textarea id="inputor" name="at" rows="8" cols="40">@Jacob @Jacob 
-@Jacob @Jacob      @Jacob 
-
-@Ethan     @Isabella s
-
-
-@Jacobn 
-
- asdfasdf  你好吗?@!！？！？ 哈哈$%#^%$ ￥#%@#￥% @Jacob 
-@Jacob 
-
-@Jacob cob  sdfasjdkfljasdlkj @Ethan 
-      @Ethan @sdfads 
-
+``` javascript
+$('textarea').atWho(function(context){
+    var url = "#",
+    param = {'q':context.keyword.text},
+    names = [];
+    $.ajax(url,param,function(data) {
+        names = $.jsonParse(data);
+        //for now , just support plain text array.
+        context.view.load(names);
+    });
+});
+```
 </textarea>
 <textarea name="Name" rows="8" cols="40">
 
