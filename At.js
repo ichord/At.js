@@ -40,8 +40,8 @@
                 left: 0,
                 top:0, 
                 zIndex: -20000,
-                /* must use word-wrap rather than wordWrap. $.css not work for this property in ie*/
-                'word-wrap':'break-word'
+                /* wrap long line as textarea do. not work in ie < 8 */
+                'white-space':'pre-wrap'
             }
             $.each(this.css,function(i,p){
                 css[p] = $origin.css(p);
@@ -74,14 +74,16 @@
                 $inputor.data("mirror",mirror);
             }
             
-            /* 将inputor中字符转化成对应的html特殊字符
-             * 如 <,> 等, 包括换行符*/
+            /* 为了将textarea中文字的排版模拟到镜像div中
+             * 我们需要做一些字符处理.由于div元素中不认多余的空格.
+             * 我们需要将多余的空格用元素块包裹.
+             × 换行符直接替换成<br/>就可以了.
+             * NOTE: “\r\n” 用于ie的textarea.
+             */
             function format(value) {
-                //html encode
-                rep_str = "<span style='white-space:pre-wrap;'> </span>";
-                if ($.browser.msie && $.browser.version < 8)
-                    rep_str = "<pre style='display:inline;'> </pre>";
-                return value.replace(/ /g,rep_str).replace(/\r\n|\r|\n/g,"<br />");
+                if ($.browser.msie)
+                    value = value.replace(/ /g,"<span> </span>");
+                return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
              * @的位置进行分块,以获取@块在inputor(输入框)里的position
