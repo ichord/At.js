@@ -49,8 +49,9 @@
             pos = 0;
             // selection should in the inputor.
             if (range && range.parentElement() == el) {
-                normalizedValue = el.value.replace(/\r\n/g, "\n");
-                /* "/r/n" is counted as two char.
+                normalizedValue = el.value;//.replace(/\r\n/g, "\n");
+                /* SOMETIME !!! 
+                 *"/r/n" is counted as two char.
                  * one line is two, two will be four. balalala.
                  * so we have to using the normalized one's length.;
                  */
@@ -86,12 +87,8 @@
                  */
                 if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
                     // TextRange object will miss "\r\n". So, we count it ourself.
-                    line_counter = normalizedValue.slice(0, start).split("\n").length -1;
-                    //alert($("</div>").text(normalizedValue).html());
-                    //alert(normalizedValue+":"+len);
-                    // I test it for million times and get this code. 
-                    // I don't konw show it work yet.
-                    start = end = len - line_counter;
+                    //line_counter = normalizedValue.slice(0, start).split("\n").length -1;
+                    start = end = len;
                 } else {
                     /*        I really |HATE] IE   ]> 
                      *               <-|
