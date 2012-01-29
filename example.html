@@ -10,7 +10,10 @@
         <script type="text/javascript">
             $(function(){
                     var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
-                    $("textarea").atWho({'data':data});
+                    data = $.map(data,function(value,i) {
+                        return {'id':i,'name':value};
+                        });
+                    $("textarea").atWho({'data':data,'debug':false});
             });
         </script>
         <style type="text/css" media="screen">

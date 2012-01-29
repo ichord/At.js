@@ -62,6 +62,8 @@
         _cache : {},
         // textarea, input.
         $inputor : null,
+        // prevent from duplicate binding.
+        inputor_keys: [],
         lenght : 0,
         /* @ position in inputor */
         pos: 0,
@@ -154,7 +156,7 @@
             view = this.view;
             // 当列表没显示时不捕捉inputor相关事件.
             if (!view.running()) return true;
-            last_idx = $(view.id).find("ul li").length - 1;
+            last_idx = view.items.length - 1;
             switch (e.keyCode) {
                 case 38:
                     // if put this line outside the switch
@@ -203,9 +205,16 @@
             this.view.hide();
         },
         reg: function(inputor) {
+            $inputor = $(inputor);
+            key = $inputor.data("@reg-key");
+            log("reg",inputor,key);
+            if ($.inArray(key,this.inputor_keys) >= 0)
+                return null;
+            key = "@-"+$.now();
+            this.inputor_keys[key];
             // 捕捉inputor事件
             var self = this;
-            $(inputor).bind("keydown",function(e) {
+            $inputor.bind("keydown",function(e) {
                 return self.onkeydown(e);
             })
             .scroll(function(e){
@@ -214,32 +223,42 @@
             .blur(function(e){
                 self.view.timeout_id = setTimeout("At.view.hide()",100);
             });   
+            return key;
         },
         run: function(inputor) {
             this.$inputor = $(inputor);
             key = this.getKey();
             if (!key) return false;
-            
-            data = settings['data'];
-            if($.isArray(data) && data.length != 0) {
-                this.runWithData(key,data);
-                return true;
+            /*
+             * 支持多渠道获得用户数据.
+             * 可以设置静态数据的同时从服务器动态获取.
+             * 获取级别从先到后: cache -> statis data -> ajax.
+             */
+            if (!isNil(names = this.cache(this.keyword.text))) {
+                log("cache data",names);
+                this.view.load(names);
             }
-
-            if (data = this.cache(this.keyword.text))
-                return this.view.load(data);
-            callback = settings['callback'];
-            if($.isFunction(callback)) {
-                callback(At);
-                //At.view.load(names);
+            else if (!isNil(names = this.runWithData(key,settings['data']))) {
+                log("statis data",names);
+                this.view.load(names);
+            } else {
+                callback = settings['callback'];
+                this.view.hide();
+                if($.isFunction(callback)) {
+                    callback(At);
+                }
             }
         },
         runWithData:function(key,data) {
-            names = $.map(data,function(name) {
-                match = name.match((new RegExp(key.text,"i")));
-                return match ? name : null;
-            });
-            At.view.load(names);
+            var items = null;
+            if($.isArray(data) && data.length != 0) {
+                items = $.map(data,function(item,i) {
+                    var name = item.name;
+                    match = name.match((new RegExp(key.text,"i")));
+                    return match ? item : null;
+                });
+            }
+            return items;
         }
     };
 
@@ -249,9 +268,16 @@
         cur_li_idx : 0,
         timeout_id : null,
         id : '#at-view',
+        //at view jquery object
+        jqo : null,
+        items : [],
         // 列表框是否显示中.
         running :function() {
             return $(this.id).is(":visible");
+        },
+        jqObject : function(o) {
+            if (!isNil(o)) this.jqo = o;
+            return isNil(this.jqo) ? $(this.id) : this.jqo;
         },
         onLoaded: function($view) {
             $view.click(function(e) {
@@ -278,32 +304,51 @@
             this.cur_li_idx = 0;
             $(this.id).hide();
         },
-        load: function(name_list) {
-            At.cache(At.keyword.text,name_list);
-            if (!$.isArray(name_list)) return false;
-            $at_view = $(this.id);
-
+        load: function(list) {
             // 是否已经加载了列表视图
-            if ($at_view.length == 0) {
+            if (isNil(this.jqObject())) {
                 tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
                 $('body').append($at_view);
-                $at_view = $(this.id);
+                this.jqObject($at_view = $(this.id));
                 this.onLoaded($at_view);
             }
+            return this.update(list);
+        },
+        clear: function(clear_all) {
+            if (clear_all == true)
+                this._cache = {};
+            this.items = [];
+            this.jqObject().find('ul').empty();
+        },
+        update: function(list) {
+            if (!$.isArray(list)) return false;
+            At.cache(At.keyword.text,list);
 
-            //update data;
-            li_tpl = "";
-            $.each(name_list,function(i,name){
-                li_tpl += "<li>" + name + "</li>";
+            $ul = this.jqObject().find('ul');
+            this.clear();
+            $.merge(this.items,list);
+            $.each(list,function(i,item) {
+                li_tpl = "<li id='"+item.id+"'>" + item.name + "</li>";
+                $ul.append(li_tpl);
             });
-            $at_view.find('ul:first').html(li_tpl);
             this.show();
-            $(this.id+ " ul li:eq(0)").addClass("cur");
-            this.length = name_list.length;
-            return $at_view;
+            $ul.find("li:eq(0)").addClass("cur");
         }
     };
+
+    function isNil(target) {
+        empty_array = $.isArray(target) && target.length == 0;
+        nil_jquery = target instanceof $ && target.length == 0;
+        return !target || $.isEmptyObject(target) 
+            || empty_array || nil_jquery || target === undefined;
+    }
+
+    function log() {
+        if (!settings['debug'] || $.browser.msie)
+            return;
+        console.log(arguments);
+    }
 
     function setSettings(options) {
         opt = {};
@@ -315,14 +360,16 @@
             //must return array;
             'callback': function(context) {return []},
             'cache' : true,
+            'debug' : false,
             'data':[]
         },opt);
     }
     
     $.fn.atWho = function (options) {
         settings = setSettings(options);
+        log("settings",settings);
         return this.each(function() {
-            At.reg(this);
+            if (!At.reg(this)) return;
             $(this).bind("keyup",function(e) {
                 /* 当用户列表框显示时, 上下键不触发查询 */
                 run = At.view.running() && (e.keyCode == 40 || e.keyCode == 38);

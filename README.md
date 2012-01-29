@@ -20,7 +20,9 @@ Implement Twitter/Weibo @ mentions
                  */
 		'cache' : true,
                  //see usage below.
-		'data':[]
+		'data':[],
+                // if set true it will issue running msg;
+                'debug':false
 	};
 ```
 
@@ -41,4 +43,13 @@ $('textarea').atWho(function(context){
 ``` javascript
 names = ['one','two'];
 $('textarea').atWho({data:names});
+```
+
+###both
+``` javascript
+names = ['one','two'];
+$('textarea').atWho({
+    'data': names,
+    'callback': function(c) { console.log(c);}
+    });
 ```
