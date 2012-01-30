@@ -123,6 +123,7 @@
         },
         cache: function(key,value) {
             if (!settings['cache']) return null;
+            log("cacheing",key,value);
             if (value)
                 this._cache[key] = value;
             return this._cache[key];
@@ -147,6 +148,7 @@
             this.pos = start - 1;
             key = {'text':word, 'start':start, 'end':end};
             this.keyword = key;
+            log("getKey",key);
             return key;
         },
         /* 捕捉inputor的上下回车键.
@@ -202,11 +204,16 @@
             this.$inputor.caretPos(start_str.length + str.length);
         },
         choose: function($li) {
-            this.replaceStr($li.text()+" ");
+            this.replaceStr($li.attr("data-insert")+" ");
             this.view.hide();
         },
         reg: function(inputor) {
             $inputor = $(inputor);
+
+            /* 防止对同一个inputor进行多次绑定
+             * 在每个已经绑定过的inputor设置一个key.
+             * 注册过的key将不再进行绑定
+             * */
             key = $inputor.data("@reg-key");
             log("reg",inputor,key);
             if ($.inArray(key,this.inputor_keys) >= 0)
@@ -237,13 +244,13 @@
              */
             if (!isNil(names = this.cache(this.keyword.text))) {
                 log("cache data",names);
-                this.view.load(names);
-            }
-            else if (!isNil(names = this.runWithData(key,settings['data']))) {
+                this.view.load(names,false);
+            } else if (!isNil(names = this.runWithData(key,settings['data']))) {
                 log("statis data",names);
-                this.view.load(names);
+                this.view.load(names,false);
             } else {
                 callback = settings['callback'];
+                log("callbacking",callback);
                 this.view.hide();
                 if($.isFunction(callback)) {
                     callback(At);
@@ -254,7 +261,8 @@
             var items = null;
             if($.isArray(data) && data.length != 0) {
                 items = $.map(data,function(item,i) {
-                    var name = item.name;
+                    //support plain object also
+                    var name = $.isPlainObject(item) ? item.name : item;
                     match = name.match((new RegExp(key.text,"i")));
                     return match ? item : null;
                 });
@@ -276,15 +284,23 @@
         running :function() {
             return $(this.id).is(":visible");
         },
+        evalTpl: function(tpl,map) {
+            if(isNil(tpl)) return;
+            el = tpl.replace(/\$\{([^\}]*)\}/g,function(tag,key,pos){
+                return map[key];
+            });
+            log("evalTpl",el);
+            return el;
+        },
         jqObject : function(o) {
             if (!isNil(o)) this.jqo = o;
             return isNil(this.jqo) ? $(this.id) : this.jqo;
         },
         onLoaded: function($view) {
-            $view.click(function(e) {
-                e.target.tagName == "LI" && At.choose($(e.target));
-            })
-            .mousemove(function(e) {
+            $view.find('li').live('click',function(e) {
+                At.choose($(this));
+            });
+            $view.mousemove(function(e) {
                 if (e.target.tagName == "LI") {
                     $(this).find("li.cur").removeClass("cur");
                     $(e.target).addClass("cur");
@@ -305,16 +321,16 @@
             this.cur_li_idx = 0;
             $(this.id).hide();
         },
-        load: function(list) {
+        load: function(list,cacheable) {
             // 是否已经加载了列表视图
             if (isNil(this.jqObject())) {
-                tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
+                tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span id='title'>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $at_view = $(tpl);
                 $('body').append($at_view);
                 this.jqObject($at_view = $(this.id));
                 this.onLoaded($at_view);
             }
-            return this.update(list);
+            return this.update(list,cacheable);
         },
         clear: function(clear_all) {
             if (clear_all == true)
@@ -322,16 +338,19 @@
             this.items = [];
             this.jqObject().find('ul').empty();
         },
-        update: function(list) {
+        update: function(list,cacheable) {
             if (!$.isArray(list)) return false;
-            At.cache(At.keyword.text,list);
+            if (cacheable != false) At.cache(At.keyword.text,list);
 
             $ul = this.jqObject().find('ul');
             this.clear();
             $.merge(this.items,list);
+            var tpl = settings['tpl'];
+            var self = this;
             $.each(list,function(i,item) {
-                li_tpl = "<li id='"+item.id+"'>" + item.name + "</li>";
-                $ul.append(li_tpl);
+                if (!$.isPlainObject)
+                    item = {'id':i,'name':item};
+                $ul.append(self.evalTpl(tpl,item));
             });
             this.show();
             $ul.find("li:eq(0)").addClass("cur");
@@ -362,6 +381,7 @@
             'callback': function(context) {return []},
             'cache' : true,
             'debug' : false,
+            'tpl' : "<li id='${id}' data-insert='${name}'>${name}</li>",
             'data':[]
         },opt);
     }
@@ -369,6 +389,7 @@
     $.fn.atWho = function (options) {
         settings = setSettings(options);
         log("settings",settings);
+        //At.view.evalTpl(settings.tpl,{'id':1,'name':'hello'});
         return this.each(function() {
             if (!At.reg(this)) return;
             $(this).bind("keyup",function(e) {

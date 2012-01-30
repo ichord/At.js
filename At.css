@@ -10,10 +10,19 @@
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
     min-width: 120px;
 }
+#at-view span#title {
+    font-size:13px;
+    color: gray;
+    padding: 3px 5px;
+    cursor: default;
+}
+
 #at-view .cur {
     background: #3366FF;
     color: white;
-    font-weight:bold;
+}
+#at-view .cur small {
+    color: white;
 }
 #at-view ul {
     /* width: 100px; */
@@ -22,13 +31,16 @@
     margin:auto;
 }
 #at-view ul li {
-    padding: 0 14px;
-    cursor: pointer;
+    display: block;
+    padding: 5px 10px;
+    border-bottom: 1px solid #DDD;
+    font-weight: bold;    cursor: pointer;
     /* border-top: 1px solid #C8C8C8; */
 }
-#at-view span {
-    font-size:13px;
-    color: gray;
-    padding: 3px 5px;
-    cursor: default;
+#at-view small {
+    font-size: smaller;
+    color: #777;
+    font-weight: normal;
 }
+
+

@@ -22,7 +22,10 @@ Implement Twitter/Weibo @ mentions
                  //see usage below.
 		'data':[],
                 // if set true it will issue running msg;
-                'debug':false
+                'debug':false,
+                // element render template
+                // the value will insert into textarea when you make a choose
+                'tpl' : "<li id='${index}' data-insert='${name}'>${name}</li>"
 	};
 ```
 
@@ -45,11 +48,27 @@ names = ['one','two'];
 $('textarea').atWho({data:names});
 ```
 
-###both
+####both
 ``` javascript
 names = ['one','two'];
 $('textarea').atWho({
     'data': names,
     'callback': function(c) { console.log(c);}
     });
+```
+
+####customs template
+code in example.html file
+``` javascript
+var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
+
+data = $.map(data,function(value,i) {
+        return {'id':i,'name':value,'email':value+"@email.com"};
+        });
+
+$("textarea").atWho({
+        'tpl': "<li id='${id}' data-insert='${name}'>${name}<small>${email}</small></li>",
+        'data':data,
+        'debug':true
+        });
 ```
