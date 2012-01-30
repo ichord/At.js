@@ -59,6 +59,7 @@ $('textarea').atWho({
 
 ####customs template
 code in example.html file
+
 ``` javascript
 var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
 

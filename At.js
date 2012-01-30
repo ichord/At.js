@@ -262,6 +262,7 @@
             if($.isArray(data) && data.length != 0) {
                 items = $.map(data,function(item,i) {
                     //support plain object also
+                    //FIXME config the match val name
                     var name = $.isPlainObject(item) ? item.name : item;
                     match = name.match((new RegExp(key.text,"i")));
                     return match ? item : null;
