@@ -59,6 +59,9 @@ $('textarea').atWho({
 
 ####customs template
 code in example.html file
+base template :
+
+```<li data-insert='${search_word}'>anything here</li>"```
 
 ``` javascript
 var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];

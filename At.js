@@ -262,8 +262,7 @@
             if($.isArray(data) && data.length != 0) {
                 items = $.map(data,function(item,i) {
                     //support plain object also
-                    //FIXME config the match val name
-                    var name = $.isPlainObject(item) ? item.name : item;
+                    var name = $.isPlainObject(item) ? item[this.search_word] : item;
                     match = name.match((new RegExp(key.text,"i")));
                     return match ? item : null;
                 });
@@ -288,6 +287,7 @@
         evalTpl: function(tpl,map) {
             if(isNil(tpl)) return;
             el = tpl.replace(/\$\{([^\}]*)\}/g,function(tag,key,pos){
+                console.log(arguments);
                 return map[key];
             });
             log("evalTpl",el);
@@ -390,7 +390,8 @@
     $.fn.atWho = function (options) {
         settings = setSettings(options);
         log("settings",settings);
-        //At.view.evalTpl(settings.tpl,{'id':1,'name':'hello'});
+        // just used in At.runWithData 
+        At.search_word = /data-insert=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
         return this.each(function() {
             if (!At.reg(this)) return;
             $(this).bind("keyup",function(e) {
