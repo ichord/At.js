@@ -40,6 +40,7 @@
                 left: 0,
                 top:0, 
                 zIndex: -20000,
+                'word-wrap':'break-word',
                 /* wrap long line as textarea do. not work in ie < 8 */
                 'white-space':'pre-wrap'
             }
