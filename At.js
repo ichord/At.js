@@ -60,6 +60,7 @@
     };
     At = {
         keyword : {'text':"",'start':0,'stop':0},
+        search_word: "",
         _cache : {},
         // textarea, input.
         $inputor : null,
@@ -259,10 +260,11 @@
         },
         runWithData:function(key,data) {
             var items = null;
+            var self = this;
             if($.isArray(data) && data.length != 0) {
                 items = $.map(data,function(item,i) {
                     //support plain object also
-                    var name = $.isPlainObject(item) ? item[this.search_word] : item;
+                    var name = $.isPlainObject(item) ? item[self.search_word] : item;
                     match = name.match((new RegExp(key.text,"i")));
                     return match ? item : null;
                 });
@@ -287,7 +289,6 @@
         evalTpl: function(tpl,map) {
             if(isNil(tpl)) return;
             el = tpl.replace(/\$\{([^\}]*)\}/g,function(tag,key,pos){
-                console.log(arguments);
                 return map[key];
             });
             log("evalTpl",el);
@@ -391,7 +392,8 @@
         settings = setSettings(options);
         log("settings",settings);
         // just used in At.runWithData 
-        At.search_word = /data-insert=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
+        var match = /data-insert=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
+        At.search_word = match[1];
         return this.each(function() {
             if (!At.reg(this)) return;
             $(this).bind("keyup",function(e) {
