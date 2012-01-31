@@ -89,8 +89,10 @@
                     .replace(/>/g, '&gt;')
                     .replace(/`/g,'&#96;')
                     .replace(/"/g,'&quot;');
-                if ($.browser.msie)
-                    value = value.replace(/ /g,"<span> </span>");
+                if (msie = $.browser.msie) {
+                    rep_str = msie < 8 ? "&nbsp;" : "<span> </span>"
+                    value = value.replace(/ /g,rep_str);
+                }
                 return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
@@ -137,17 +139,16 @@
             /* 向在插入符前的的文本进行正则匹配
              * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个*/
             subtext = text.slice(0,caret_pos);
-            word = subtext.match(/@\w+$|@[^\x00-\xff]+$/g);
+            // word = subtext.exec(/@(\w+)$|@[^\x00-\xff]+$/g);
+            matched = /@(\w+)$|@([^\x00-\xff]+)$/g.exec(subtext);
             key = null;
-            if (!word) {
+            if (matched && (word = matched[1]).length < 20) {
+                start = caret_pos - word.length;
+                end = start + word.length;
+                this.pos = start - 1;
+                key = {'text':word, 'start':start, 'end':end};
+            } else
                 this.view.hide();
-                return null;
-            }
-            word = word.join("").slice(1);
-            start = caret_pos - word.length;
-            end = start + word.length;
-            this.pos = start - 1;
-            key = {'text':word, 'start':start, 'end':end};
             this.keyword = key;
             log("getKey",key);
             return key;
@@ -350,7 +351,7 @@
             var tpl = settings['tpl'];
             var self = this;
             $.each(list,function(i,item) {
-                if (!$.isPlainObject)
+                if (!$.isPlainObject(item))
                     item = {'id':i,'name':item};
                 $ul.append(self.evalTpl(tpl,item));
             });
@@ -360,10 +361,14 @@
     };
 
     function isNil(target) {
-        empty_array = $.isArray(target) && target.length == 0;
-        nil_jquery = target instanceof $ && target.length == 0;
-        return !target || $.isEmptyObject(target) 
-            || empty_array || nil_jquery || target === undefined;
+        return !target
+        //empty_object =  
+        || ($.isPlainObject(target) && $.isEmptyObject(target))
+        //empty_array = 
+        || ($.isArray(target) && target.length == 0)
+        // nil_jquery = 
+        || (target instanceof $ && target.length == 0)
+        || target === undefined;
     }
 
     function log() {
