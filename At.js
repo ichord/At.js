@@ -253,7 +253,6 @@
             } else {
                 callback = settings['callback'];
                 log("callbacking",callback);
-                this.view.hide();
                 if($.isFunction(callback)) {
                     callback(At);
                 }
@@ -351,8 +350,10 @@
             var tpl = settings['tpl'];
             var self = this;
             $.each(list,function(i,item) {
-                if (!$.isPlainObject(item))
+                if (!$.isPlainObject(item)) {
                     item = {'id':i,'name':item};
+                    tpl = DEFAULT_TPL;
+                }
                 $ul.append(self.evalTpl(tpl,item));
             });
             this.show();
@@ -388,10 +389,12 @@
             'callback': function(context) {return []},
             'cache' : true,
             'debug' : false,
-            'tpl' : "<li id='${id}' data-insert='${name}'>${name}</li>",
+            'tpl' : DEFAULT_TPL,
             'data':[]
         },opt);
     }
+
+    DEFAULT_TPL = "<li id='${id}' data-insert='${name}'>${name}</li>";
     
     $.fn.atWho = function (options) {
         settings = setSettings(options);
