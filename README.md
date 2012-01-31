@@ -1,6 +1,12 @@
 Implement Twitter/Weibo @ mentions
 
-**tested in chrome firefox ie8**
+**support ie6,7. But problem in long word break**
+
+###Feature
+* support static data and dynamic data(ajax) at the same time
+    it will search the static data first. If not exist, searching by callabck then.
+* cacheable
+* decide which data should show yourself.
 
 ###usage
 
@@ -61,8 +67,7 @@ $('textarea').atWho({
 code in example.html file
 base template :
 
-    <li data-insert='${search_word}'>anything here</li>
-
+`<li data-insert='${search_word}'>anything here</li>`
 
 ``` javascript
 var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
