@@ -56,6 +56,9 @@
         },
         getFlagPos:function() {
             return this.$mirror.find("span#flag").position();
+        },
+        height: function() {
+          return this.$mirror.height();
         }
     };
     At = {
@@ -73,7 +76,7 @@
         offset: function() {
             $inputor = this.$inputor;
             mirror = $inputor.data("mirror");
-            if (mirror == undefined) {
+            if (isNil(mirror)) {
                 mirror = new Mirror($inputor);
                 $inputor.data("mirror",mirror);
             }
@@ -89,8 +92,8 @@
                     .replace(/>/g, '&gt;')
                     .replace(/`/g,'&#96;')
                     .replace(/"/g,'&quot;');
-                if (msie = $.browser.msie) {
-                    rep_str = msie < 8 ? "&nbsp;" : "<span> </span>"
+                if ($.browser.msie) {
+                    rep_str = parseInt($.browser.version) < 8 ? "&nbsp;" : "<span> </span>"
                     value = value.replace(/ /g,rep_str);
                 }
                 return value.replace(/\r\n|\r|\n/g,"<br />");
@@ -99,8 +102,8 @@
              * @的位置进行分块,以获取@块在inputor(输入框)里的position
              * */
             text = $inputor.val();
-            start_range = text.slice(0,this.pos);
-            end_range = text.slice(this.pos+1);
+            start_range = text.slice(0,this.pos - 1);
+            end_range = text.slice(this.pos + 1);
             html = "<span>"+format(start_range)+"</span>";
             html += "<span id='flag'>@</span>";
             html += "<span>"+format(end_range)+"</span>";
@@ -117,7 +120,7 @@
             line_height = isNaN(line_height) ? 20 : line_height;
             //FIXME: -$(window).scrollTop() get "wrong" offset.
             // but is good for $inputor.scrollTop();
-            // jquey 1.7.1 fixed the scrollTop problem!?
+            // jquey 1. + 07.1 fixed the scrollTop problem!?
             y = offset.top + at_pos.top + line_height
                 - $inputor.scrollTop();
             x = offset.left + at_pos.left - $inputor.scrollLeft();
@@ -145,7 +148,7 @@
             if (matched && (word = matched[1]).length < 20) {
                 start = caret_pos - word.length;
                 end = start + word.length;
-                this.pos = start - 1;
+                this.pos = start;
                 key = {'text':word, 'start':start, 'end':end};
             } else
                 this.view.hide();
@@ -162,7 +165,12 @@
             // 当列表没显示时不捕捉inputor相关事件.
             if (!view.running()) return true;
             last_idx = view.items.length - 1;
+            var return_val = false;
             switch (e.keyCode) {
+                case 27:
+                    this.choose();
+                    break;
+                // UP
                 case 38:
                     // if put this line outside the switch
                     // the view will flash when key down.
@@ -173,8 +181,8 @@
                         view.cur_li_idx = last_idx;
                     $(view.id + " li:eq(" + view.cur_li_idx + ")")
                         .addClass('cur');
-                    return false;
                     break;
+                // DOWN
                 case 40:
                     $(view.id + " ul li.cur").removeClass("cur");
                     view.cur_li_idx++;
@@ -182,19 +190,19 @@
                         view.cur_li_idx = 0;
                     $(view.id + " li:eq(" + view.cur_li_idx + ")")
                         .addClass('cur');
-                    return false;
                     break;
+                //TAB or ENTER
+                case 9:
                 case 13:
                     $(view.id + " ul li.cur").removeClass("cur");
                     // 如果列表为空，则不捕捉回车事件
                     $cur_li = $(view.id + " li:eq("+view.cur_li_idx+")");
                     this.choose($cur_li);
-                    view.hide();
-                    return false;
                     break;
                 default:
-                    return true
+                    return_val = true;
             }
+            return return_val;
         },
         replaceStr: function(str) {
             /* $inputor.replaceStr(str,start,end)*/
@@ -206,7 +214,8 @@
             this.$inputor.caretPos(start_str.length + str.length);
         },
         choose: function($li) {
-            this.replaceStr($li.attr("data-insert")+" ");
+            str = isNil($li) ? this.keyword.text+" " : $li.attr("data-insert")+" "; 
+            this.replaceStr(str);
             this.view.hide();
         },
         reg: function(inputor) {
@@ -402,12 +411,13 @@
         // just used in At.runWithData 
         var match = /data-insert=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
         At.search_word = match[1];
-        return this.each(function() {
+        return this.filter('textarea, input').each(function() {
             if (!At.reg(this)) return;
             $(this).bind("keyup",function(e) {
                 /* 当用户列表框显示时, 上下键不触发查询 */
-                run = At.view.running() && (e.keyCode == 40 || e.keyCode == 38);
-                if (!run) At.run(this);
+                var stop_key = e.keyCode == 40 || e.keyCode == 38;
+                run = !(At.view.running() && stop_key);
+                if (run) At.run(this);
             })
             .mouseup(function(e) {
                 At.run(this);

@@ -49,7 +49,7 @@
             pos = 0;
             // selection should in the inputor.
             if (range && range.parentElement() == el) {
-                normalizedValue = el.value;//.replace(/\r\n/g, "\n");
+                normalizedValue = el.value.replace(/\r\n/g, "\n");
                 /* SOMETIME !!! 
                  *"/r/n" is counted as two char.
                  * one line is two, two will be four. balalala.
