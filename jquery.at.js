@@ -358,7 +358,8 @@
             $.merge(this.items,list);
             var tpl = settings['tpl'];
             var self = this;
-            $.each(list,function(i,item) {
+            var list = unique(list,At.search_word);
+            $.each(list.splice(0,settings['limit']), function(i,item) {
                 if (!$.isPlainObject(item)) {
                     item = {'id':i,'name':item};
                     tpl = DEFAULT_TPL;
@@ -369,6 +370,23 @@
             $ul.find("li:eq(0)").addClass("cur");
         }
     };
+
+    /* maybe we can use $.unique. 
+     * But i don't know it will delete li element frequently or not.
+     * I think we should not change DOM element frequently.
+     * more, It seems batter not to call evalTpl function too much times.
+     * */
+    function unique(list,keyword) {
+        var record = [];
+        log(list,keyword);
+        return $.map(list,function(v,idx){
+            var value = $.isPlainObject(v) ? v[keyword] : v;
+            if ($.inArray(value,record) < 0) {
+                record.push(value);
+                return v;
+            }
+        });
+    }
 
     function isNil(target) {
         return !target
@@ -399,6 +417,7 @@
             'cache' : true,
             'debug' : false,
             'tpl' : DEFAULT_TPL,
+            'limit' : 5,
             'data':[]
         },opt);
     }

@@ -7,6 +7,8 @@ Implement Twitter/Weibo @ mentions
     it will search the static data first. If not exist, searching by callabck then.
 * cacheable
 * decide which data should show yourself.
+* press `TAB` or `ENTER` to insert.
+* press `UP` and `DOWN` to select.
 
 ###usage
 
