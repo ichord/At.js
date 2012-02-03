@@ -6,7 +6,7 @@ Implement Twitter/Weibo @ mentions
 * support static data and dynamic data(ajax) at the same time
     it will search the static data first. If not exist, searching by callabck then.
 * cacheable
-* decide which data should show yourself.
+* decide which data should show yourself(data template)
 * press `TAB` or `ENTER` to insert.
 * press `UP` and `DOWN` to select.
 
@@ -30,7 +30,8 @@ Implement Twitter/Weibo @ mentions
                  //see usage below.
 		'data':[],
                 // if set true it will issue running msg;
-                'debug':false,
+                'debug' : false,
+                'limit' : 5,
                 // element render template
                 // the value will insert into textarea when you make a choose
                 'tpl' : "<li id='${index}' data-insert='${name}'>${name}</li>"
