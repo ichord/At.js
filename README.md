@@ -5,6 +5,7 @@ Implement Twitter/Weibo @ mentions
 ###Feature
 * support static data and dynamic data(ajax) at the same time
     it will search the static data first. If not exist, searching by callabck then.
+* can bind multiple textarea
 * cacheable
 * decide which data should show yourself(data template)
 * press `TAB` or `ENTER` to insert.
@@ -27,13 +28,14 @@ Implement Twitter/Weibo @ mentions
 		 just set it false.
                  */
 		'cache' : true,
-                 //see usage below.
+                /* see usage below. */
 		'data':[],
-                // if set true it will issue running msg;
+                /* if set true it will issue running msg; */
                 'debug' : false,
                 'limit' : 5,
-                // element render template
-                // the value will insert into textarea when you make a choose
+                /* element render template
+                 * the value will insert into textarea when you make a choose
+                 */
                 'tpl' : "<li id='${index}' data-insert='${name}'>${name}</li>"
 	};
 ```
@@ -67,10 +69,7 @@ $('textarea').atWho({
 ```
 
 ####customs template
-code in example.html file
-base template :
-
-`<li data-insert='${search_word}'>anything here</li>`
+base template : `<li data-insert='${search_word}'>anything here</li>`
 
 ``` javascript
 var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
