@@ -73,17 +73,20 @@ base template :
 `<li data-keyname='${search_word}'>anything here</li>`
 
 ``` javascript
-var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
 
-data = $.map(data,function(value,i) {
-        return {'id':i,'name':value,'email':value+"@email.com"};
-        });
+    var emojis = $.map(emoji_list,function(value,i) {
+                        return {'id':i,'key':value+":",'name':value};
+                        });
 
-$("textarea").atWho("@",{
-        'tpl': "<li id='${id}' data-insert='${name}'>${name}<small>${email}</small></li>",
-        'data':data,
-        'debug':true
-        })
-        .atWho(":",{'data':['bowtie:','grin:']});
+                    $("textarea").atWho("@",{
+                        'tpl': "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>",
+                        'debug':true,
+                        'data':data
+                        })
+                    .atWho(":",{
+                        debug:true,
+                        'data':emojis,
+                        'tpl':"<li data-keyname='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
+                        });
 
 ```
