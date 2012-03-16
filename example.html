@@ -14,10 +14,15 @@
                         return {'id':i,'name':value,'email':value+"@email.com"};
                         });
                     $("textarea").atWho({
-                        'tpl': "<li id='${id}' data-insert='${name}'>${name} <small>${email}</small></li>",
-                        'data':data,
-                        'debug':true
-                        });
+                        'tpl': "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>",
+                        'debug':true,
+                        })
+                    .watching("@",function(cxt){
+                        return data;
+                        })
+                    .watching(":",function(cxt){
+                        return ['bowtie:','grin:']
+                        }).done();
             });
         </script>
         <style type="text/css" media="screen">

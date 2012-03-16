@@ -72,11 +72,13 @@
         lenght : 0,
         /* @ position in inputor */
         pos: 0,
+        flags:{},
+        theflag:null,
         /* @ offset*/
         offset: function() {
             $inputor = this.$inputor;
             mirror = $inputor.data("mirror");
-            if (isNil(mirror)) {
+            if (_isNil(mirror)) {
                 mirror = new Mirror($inputor);
                 $inputor.data("mirror",mirror);
             }
@@ -129,12 +131,12 @@
         },
         cache: function(key,value) {
             if (!settings['cache']) return null;
-            log("cacheing",key,value);
+            _log("cacheing",key,value);
             if (value)
                 this._cache[key] = value;
             return this._cache[key];
         },
-        getKey: function() {
+        getKeyname: function() {
             $inputor = this.$inputor;
             text = $inputor.val();
             //获得inputor中插入符的position.
@@ -143,8 +145,18 @@
              * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个*/
             subtext = text.slice(0,caret_pos);
             // word = subtext.exec(/@(\w+)$|@[^\x00-\xff]+$/g);
-            matched = /@(\w+)$|@([^\x00-\xff]+)$/g.exec(subtext);
+            self = this;
+            matched = null;
+            $.each(this.flags,function(flag,func) {
+                regexp = new RegExp(flag+'(\\w+)$|'+flag+'([^\\x00-\\xff]+)$','gi');
+                matched = regexp.exec(subtext);
+                if (!_isNil(matched)) {
+                    self.theflag = flag;
+                    return false;
+                }
+            });
             key = null;
+            _log("matched",matched)
             if (matched && (word = matched[1]).length < 20) {
                 start = caret_pos - word.length;
                 end = start + word.length;
@@ -152,8 +164,9 @@
                 key = {'text':word, 'start':start, 'end':end};
             } else
                 this.view.hide();
+
             this.keyword = key;
-            log("getKey",key);
+            _log("getKeyname",key);
             return key;
         },
         /* 捕捉inputor的上下回车键.
@@ -163,7 +176,7 @@
         onkeydown:function(e) {
             view = this.view;
             // 当列表没显示时不捕捉inputor相关事件.
-            if (!view.running()) return true;
+            if (!view.watching()) return true;
             last_idx = view.items.length - 1;
             var return_val = false;
             switch (e.keyCode) {
@@ -214,7 +227,7 @@
             this.$inputor.caretPos(start_str.length + str.length);
         },
         choose: function($li) {
-            str = isNil($li) ? this.keyword.text+" " : $li.attr("data-insert")+" "; 
+            str = _isNil($li) ? this.keyword.text+" " : $li.attr("data-keyname")+" "; 
             this.replaceStr(str);
             this.view.hide();
         },
@@ -226,7 +239,7 @@
              * 注册过的key将不再进行绑定
              * */
             key = $inputor.data("@reg-key");
-            log("reg",inputor,key);
+            _log("reg",inputor,key);
             if ($.inArray(key,this.inputor_keys) >= 0)
                 return null;
             key = "@-"+$.now();
@@ -244,30 +257,30 @@
             });   
             return key;
         },
-        run: function(inputor) {
+        watch: function(inputor) {
             this.$inputor = $(inputor);
-            key = this.getKey();
+            key = this.getKeyname();
             if (!key) return false;
             /*
              * 支持多渠道获得用户数据.
              * 可以设置静态数据的同时从服务器动态获取.
              * 获取级别从先到后: cache -> statis data -> ajax.
              */
-            if (!isNil(names = this.cache(this.keyword.text))) {
-                log("cache data",names);
+            if (!_isNil(names = this.cache(this.keyword.text))) {
+                _log("cache data",names);
                 this.view.load(names,false);
-            } else if (!isNil(names = this.runWithData(key,settings['data']))) {
-                log("statis data",names);
+            } else if (!_isNil(names = this.watchWithData(key))) {
+                _log("statis data",names);
                 this.view.load(names,false);
-            } else {
-                callback = settings['callback'];
-                log("callbacking",callback);
-                if($.isFunction(callback)) {
-                    callback(At);
-                }
-            }
+            } else if ($.isFunction(callback = settings['callback'])){
+                _log("callbacking",callback);
+                callback(At);
+            } else
+                this.view.hide();
         },
-        runWithData:function(key,data) {
+        watchWithData:function(key) {
+            data = this.flags[this.theflag].call(this);
+            _log("watch with data...",data);
             var items = null;
             var self = this;
             if($.isArray(data) && data.length != 0) {
@@ -278,6 +291,7 @@
                     return match ? item : null;
                 });
             }
+            _log("watch with data.item",items)
             return items;
         }
     };
@@ -288,24 +302,18 @@
         cur_li_idx : 0,
         timeout_id : null,
         id : '#at-view',
-        //at view jquery object
-        jqo : null,
         items : [],
         // 列表框是否显示中.
-        running :function() {
+        watching :function() {
             return $(this.id).is(":visible");
         },
         evalTpl: function(tpl,map) {
-            if(isNil(tpl)) return;
+            if(_isNil(tpl)) return;
             el = tpl.replace(/\$\{([^\}]*)\}/g,function(tag,key,pos){
                 return map[key];
             });
-            log("evalTpl",el);
+            _log("evalTpl",el);
             return el;
-        },
-        jqObject : function(o) {
-            if (!isNil(o)) this.jqo = o;
-            return isNil(this.jqo) ? $(this.id) : this.jqo;
         },
         onLoaded: function($view) {
             $view.find('li').live('click',function(e) {
@@ -323,23 +331,21 @@
             $view.offset(At.offset());
         },
         show: function(){
-            if (!this.running())
+            if (!this.watching())
                 $view = $(this.id).show();
             this.rePosition($view);
         },
         hide: function() {
-            if (!this.running()) return;
+            if (!this.watching()) return;
             this.cur_li_idx = 0;
             $(this.id).hide();
         },
         load: function(list,cacheable) {
             // 是否已经加载了列表视图
-            if (isNil(this.jqObject())) {
+            if (_isNil($(this.id))) {
                 tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span id='title'>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
-                $at_view = $(tpl);
-                $('body').append($at_view);
-                this.jqObject($at_view = $(this.id));
-                this.onLoaded($at_view);
+                $('body').append(tpl);
+                this.onLoaded($(this.id));
             }
             return this.update(list,cacheable);
         },
@@ -347,18 +353,18 @@
             if (clear_all == true)
                 this._cache = {};
             this.items = [];
-            this.jqObject().find('ul').empty();
+            $(this.id).find('ul').empty();
         },
         update: function(list,cacheable) {
             if (!$.isArray(list)) return false;
             if (cacheable != false) At.cache(At.keyword.text,list);
 
-            $ul = this.jqObject().find('ul');
+            $ul = $(this.id).find('ul');
             this.clear();
             $.merge(this.items,list);
             var tpl = settings['tpl'];
             var self = this;
-            var list = unique(list,At.search_word);
+            var list = _unique(list,At.search_word);
             $.each(list.splice(0,settings['limit']), function(i,item) {
                 if (!$.isPlainObject(item)) {
                     item = {'id':i,'name':item};
@@ -371,14 +377,14 @@
         }
     };
 
-    /* maybe we can use $.unique. 
+    /* maybe we can use $._unique. 
      * But i don't know it will delete li element frequently or not.
      * I think we should not change DOM element frequently.
      * more, It seems batter not to call evalTpl function too much times.
      * */
-    function unique(list,keyword) {
+    function _unique(list,keyword) {
         var record = [];
-        log(list,keyword);
+        _log(list,keyword);
         return $.map(list,function(v,idx){
             var value = $.isPlainObject(v) ? v[keyword] : v;
             if ($.inArray(value,record) < 0) {
@@ -388,7 +394,7 @@
         });
     }
 
-    function isNil(target) {
+    function _isNil(target) {
         return !target
         //empty_object =  
         || ($.isPlainObject(target) && $.isEmptyObject(target))
@@ -399,48 +405,63 @@
         || target === undefined;
     }
 
-    function log() {
+    function _log() {
         if (!settings['debug'] || $.browser.msie)
             return;
         console.log(arguments);
     }
 
-    function setSettings(options) {
+    function _setSettings(options) {
         opt = {};
         if ($.isFunction(options))
             opt['callback'] = options;
         else
             opt = options;
         return $.extend({
-            //must return array;
-            'callback': function(context) {return []},
             'cache' : true,
-            'debug' : false,
-            'tpl' : DEFAULT_TPL,
-            'limit' : 5,
-            'data':[]
+           'debug' : false,
+           'limit' : 5,
+           'tpl' : DEFAULT_TPL,
+           'flags':{
+               "@":{
+                   //must return array;
+                   'callback': function(context) {return []},
+                   'data':[]
+               }
+           }
         },opt);
     }
 
-    DEFAULT_TPL = "<li id='${id}' data-insert='${name}'>${name}</li>";
-    
+    DEFAULT_TPL = "<li id='${id}' data-keyname='${name}'>${name}</li>";
+
+    At.watching = function(name,callback) {
+        this.flags[name] = callback;
+        return this;
+    }
+    At.done = function() {
+        return this.holder;
+    }
+
     $.fn.atWho = function (options) {
-        settings = setSettings(options);
-        log("settings",settings);
-        // just used in At.runWithData 
-        var match = /data-insert=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
+        settings = _setSettings(options);
+        _log("settings",settings);
+        // just used in At.watchWithData 
+        var match = /data-keyname=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
         At.search_word = match[1];
-        return this.filter('textarea, input').each(function() {
+
+        At.holder = this.filter('textarea, input').each(function() {
             if (!At.reg(this)) return;
+
             $(this).bind("keyup",function(e) {
                 /* 当用户列表框显示时, 上下键不触发查询 */
                 var stop_key = e.keyCode == 40 || e.keyCode == 38;
-                run = !(At.view.running() && stop_key);
-                if (run) At.run(this);
+                watch = !(At.view.watching() && stop_key);
+                if (watch) At.watch(this);
             })
             .mouseup(function(e) {
-                At.run(this);
+                At.watch(this);
             });
         });
+        return At;
     }
-})(jQuery);
+})(window.jQuery);
