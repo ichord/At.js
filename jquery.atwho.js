@@ -63,7 +63,6 @@
     };
     At = {
         keyword : {'text':"",'start':0,'stop':0},
-        search_word: "",
         _cache : {},
         // textarea, input.
         $inputor : null,
@@ -74,6 +73,20 @@
         pos: 0,
         flags:{},
         theflag:null,
+        options:{},
+        searchWord:function() {
+            // just used in At.watchWithData 
+            var match = /data-keyname=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
+            return !_isNil(match) ? match[1] : null;
+        },
+        getOpt: function(key) {
+            var flag = this.theflag;
+            try {
+                return this.options[flag][key];
+            } catch (e) {
+                return null
+            }
+        },
         /* @ offset*/
         offset: function() {
             $inputor = this.$inputor;
@@ -130,7 +143,7 @@
             return {'top':y,'left':x};
         },
         cache: function(key,value) {
-            if (!settings['cache']) return null;
+            if (!this.getOpt('cache')) return null;
             _log("cacheing",key,value);
             if (value)
                 this._cache[key] = value;
@@ -147,7 +160,7 @@
             // word = subtext.exec(/@(\w+)$|@[^\x00-\xff]+$/g);
             self = this;
             matched = null;
-            $.each(this.flags,function(flag,func) {
+            $.each(this.options,function(flag) {
                 regexp = new RegExp(flag+'(\\w+)$|'+flag+'([^\\x00-\\xff]+)$','gi');
                 matched = regexp.exec(subtext);
                 if (!_isNil(matched)) {
@@ -239,11 +252,13 @@
              * 注册过的key将不再进行绑定
              * */
             key = $inputor.data("@reg-key");
-            _log("reg",inputor,key);
             if ($.inArray(key,this.inputor_keys) >= 0)
                 return null;
+            _log("reg",inputor,key);
+
             key = "@-"+$.now();
-            this.inputor_keys[key];
+            $inputor.data("@reg-key",key);
+            this.inputor_keys.push(key);
             // 捕捉inputor事件
             var self = this;
             $inputor.bind("keydown",function(e) {
@@ -272,21 +287,21 @@
             } else if (!_isNil(names = this.watchWithData(key))) {
                 _log("statis data",names);
                 this.view.load(names,false);
-            } else if ($.isFunction(callback = settings['callback'])){
+            } else if ($.isFunction(callback = this.getOpt('callback'))){
                 _log("callbacking",callback);
                 callback(At);
             } else
                 this.view.hide();
         },
         watchWithData:function(key) {
-            data = this.flags[this.theflag].call(this);
-            _log("watch with data...",data);
+            data = this.getOpt("data");
+            _log("watchWithData",data);
             var items = null;
             var self = this;
             if($.isArray(data) && data.length != 0) {
                 items = $.map(data,function(item,i) {
                     //support plain object also
-                    var name = $.isPlainObject(item) ? item[self.search_word] : item;
+                    var name = $.isPlainObject(item) ? item[self.searchWord()] : item;
                     match = name.match((new RegExp(key.text,"i")));
                     return match ? item : null;
                 });
@@ -362,10 +377,10 @@
             $ul = $(this.id).find('ul');
             this.clear();
             $.merge(this.items,list);
-            var tpl = settings['tpl'];
+            var tpl = At.getOpt('tpl');
             var self = this;
-            var list = _unique(list,At.search_word);
-            $.each(list.splice(0,settings['limit']), function(i,item) {
+            var list = _unique(list,At.searchWord());
+            $.each(list.splice(0, At.getOpt('limit')), function(i,item) {
                 if (!$.isPlainObject(item)) {
                     item = {'id':i,'name':item};
                     tpl = DEFAULT_TPL;
@@ -406,7 +421,7 @@
     }
 
     function _log() {
-        if (!settings['debug'] || $.browser.msie)
+        if (!At.getOpt('debug') || $.browser.msie)
             return;
         console.log(arguments);
     }
@@ -422,36 +437,16 @@
            'debug' : false,
            'limit' : 5,
            'tpl' : DEFAULT_TPL,
-           'flags':{
-               "@":{
-                   //must return array;
-                   'callback': function(context) {return []},
-                   'data':[]
-               }
-           }
         },opt);
     }
 
     DEFAULT_TPL = "<li id='${id}' data-keyname='${name}'>${name}</li>";
 
-    At.watching = function(name,callback) {
-        this.flags[name] = callback;
-        return this;
-    }
-    At.done = function() {
-        return this.holder;
-    }
-
-    $.fn.atWho = function (options) {
-        settings = _setSettings(options);
-        _log("settings",settings);
-        // just used in At.watchWithData 
-        var match = /data-keyname=['?]\$\{(\w+)\}/g.exec(settings['tpl']);
-        At.search_word = match[1];
-
-        At.holder = this.filter('textarea, input').each(function() {
+    $.fn.atWho = function (flag,options) {
+        At.options[flag] = _setSettings(options);
+        _log("options",At.options);
+        return this.filter('textarea, input').each(function() {
             if (!At.reg(this)) return;
-
             $(this).bind("keyup",function(e) {
                 /* 当用户列表框显示时, 上下键不触发查询 */
                 var stop_key = e.keyCode == 40 || e.keyCode == 38;

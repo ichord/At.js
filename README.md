@@ -70,7 +70,7 @@ $('textarea').atWho({
 code in example.html file
 base template :
 
-`<li data-insert='${search_word}'>anything here</li>`
+`<li data-keyname='${search_word}'>anything here</li>`
 
 ``` javascript
 var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe"];
@@ -79,9 +79,11 @@ data = $.map(data,function(value,i) {
         return {'id':i,'name':value,'email':value+"@email.com"};
         });
 
-$("textarea").atWho({
+$("textarea").atWho("@",{
         'tpl': "<li id='${id}' data-insert='${name}'>${name}<small>${email}</small></li>",
         'data':data,
         'debug':true
-        });
+        })
+        .atWho(":",{'data':['bowtie:','grin:']});
+
 ```

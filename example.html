@@ -13,16 +13,13 @@
                     data = $.map(data,function(value,i) {
                         return {'id':i,'name':value,'email':value+"@email.com"};
                         });
-                    $("textarea").atWho({
+
+                    $("textarea").atWho("@",{
                         'tpl': "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>",
                         'debug':true,
+                        'data':data
                         })
-                    .watching("@",function(cxt){
-                        return data;
-                        })
-                    .watching(":",function(cxt){
-                        return ['bowtie:','grin:']
-                        }).done();
+                    .atWho(":",{'data':['bowtie:','grin:']});
             });
         </script>
         <style type="text/css" media="screen">
