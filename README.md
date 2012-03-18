@@ -3,10 +3,13 @@ Implement Twitter/Weibo @ mentions
 **support ie6,7. But problem in long word break**
 
 ###Feature
+* can listen any char you want.
+    every listening can have same settings but different value.
+    so they can have different behaviors such as showing different data by setting different template.
 * support static data and dynamic data(ajax) at the same time
     it will search the static data first. If not exist, searching by callabck then.
 * cacheable
-* decide which data should show yourself(data template)
+* decide which data should be showing yourself(data template)
 * press `TAB` or `ENTER` to insert.
 * press `UP` and `DOWN` to select.
 
@@ -38,9 +41,18 @@ Implement Twitter/Weibo @ mentions
 	};
 ```
 
+####static data
+``` javascript
+emoji_list = [
+    "apple", "aquarius", "aries", "arrow_backward", "arrow_down",
+    "arrow_forward", "arrow_left", "arrow_lower_left", "arrow_lower_right",
+    "arrow_right", "arrow_up", "arrow_upper_left", "arrow_upper_right"];
+$('textarea').atWho(":",{data:emoji_list});
+```
+
 ####ajax
 ``` javascript
-$('textarea').atWho(function(context){
+$('textarea').atWho("@",function(context){
     var url = "#",
     param = {'q':context.keyword.text},
     names = [];
@@ -51,16 +63,11 @@ $('textarea').atWho(function(context){
     });
 });
 ```
-####static data
-``` javascript
-names = ['one','two'];
-$('textarea').atWho({data:names});
-```
 
 ####both
 ``` javascript
 names = ['one','two'];
-$('textarea').atWho({
+$('textarea').atWho("@",{
     'data': names,
     'callback': function(c) { console.log(c);}
     });

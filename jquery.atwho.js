@@ -158,23 +158,24 @@
              * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个*/
             subtext = text.slice(0,caret_pos);
             // word = subtext.exec(/@(\w+)$|@[^\x00-\xff]+$/g);
-            self = this;
-            matched = null;
+            var self = this;
+            var matched = null;
             $.each(this.options,function(flag) {
-                regexp = new RegExp(flag+'(\\w+)$|'+flag+'([^\\x00-\\xff]+)$','gi');
-                matched = regexp.exec(subtext);
-                if (!_isNil(matched)) {
+                regexp = new RegExp(flag+'(\\w*)$|'+flag+'([^\\x00-\\xff]*)$','gi');
+                match = regexp.exec(subtext);
+                if (!_isNil(match)) {
+                    matched = match[1] == undefined ? match[2] : match[1];
                     self.theflag = flag;
                     return false;
                 }
             });
-            key = null;
-            _log("matched",matched)
-            if (matched && (word = matched[1]).length < 20) {
-                start = caret_pos - word.length;
-                end = start + word.length;
+            var key = null;
+            _log("matched",matched);
+            if (typeof matched == "string" && matched.length <= 20) {
+                start = caret_pos - matched.length;
+                end = start + matched.length;
                 this.pos = start;
-                key = {'text':word, 'start':start, 'end':end};
+                key = {'text':matched, 'start':start, 'end':end};
             } else
                 this.view.hide();
 
@@ -358,7 +359,7 @@
         load: function(list,cacheable) {
             // 是否已经加载了列表视图
             if (_isNil($(this.id))) {
-                tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><span id='title'>@who?</span><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
+                tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>";
                 $('body').append(tpl);
                 this.onLoaded($(this.id));
             }
@@ -436,7 +437,7 @@
             'cache' : true,
            'debug' : false,
            'limit' : 5,
-           'tpl' : DEFAULT_TPL,
+           'tpl' : DEFAULT_TPL
         },opt);
     }
 
