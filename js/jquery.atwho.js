@@ -35,7 +35,7 @@
         init: function($origin) {
             $mirror =  $('<div></div>');
             var css = {
-                opacity: 1, 
+                opacity: 0, 
                 position: 'absolute', 
                 left: 0,
                 top:0, 
