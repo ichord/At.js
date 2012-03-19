@@ -35,13 +35,11 @@
         init: function($origin) {
             $mirror =  $('<div></div>');
             var css = {
-                opacity: 0, 
+                opacity: 1, 
                 position: 'absolute', 
                 left: 0,
                 top:0, 
                 zIndex: -20000,
-                'word-wrap':'break-word',
-                /* wrap long line as textarea do. not work in ie < 8 */
                 'white-space':'pre-wrap'
             }
             $.each(this.css,function(i,p){
@@ -90,6 +88,15 @@
         /* @ offset*/
         offset: function() {
             $inputor = this.$inputor;
+
+            if (document.selection) {// IE!!! 
+                var Sel = document.selection.createRange();
+                x = Sel.boundingLeft + $inputor.scrollLeft();
+                y = Sel.boundingTop + Sel.boundingHeight 
+                    + $(window).scrollTop() + $inputor.scrollTop();
+                return {'top':y,'left':x};
+            }
+
             mirror = $inputor.data("mirror");
             if (_isNil(mirror)) {
                 mirror = new Mirror($inputor);
@@ -107,10 +114,6 @@
                     .replace(/>/g, '&gt;')
                     .replace(/`/g,'&#96;')
                     .replace(/"/g,'&quot;');
-                if ($.browser.msie) {
-                    rep_str = parseInt($.browser.version) < 8 ? "&nbsp;" : "<span> </span>"
-                    value = value.replace(/ /g,rep_str);
-                }
                 return value.replace(/\r\n|\r|\n/g,"<br />");
             } 
             /* 克隆完inputor后将原来的文本内容根据
@@ -136,10 +139,9 @@
             //FIXME: -$(window).scrollTop() get "wrong" offset.
             // but is good for $inputor.scrollTop();
             // jquey 1. + 07.1 fixed the scrollTop problem!?
-            y = offset.top + at_pos.top + line_height
-                - $inputor.scrollTop();
+            y = offset.top + at_pos.top + line_height - $inputor.scrollTop();
             x = offset.left + at_pos.left - $inputor.scrollLeft();
-
+            
             return {'top':y,'left':x};
         },
         cache: function(key,value) {
