@@ -161,7 +161,7 @@
             var self = this;
             var matched = null;
             $.each(this.options,function(flag) {
-                regexp = new RegExp(flag+'(\\w*)$|'+flag+'([^\\x00-\\xff]*)$','gi');
+                regexp = new RegExp(flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi');
                 match = regexp.exec(subtext);
                 if (!_isNil(match)) {
                     matched = match[1] == undefined ? match[2] : match[1];
@@ -303,7 +303,7 @@
                 items = $.map(data,function(item,i) {
                     //support plain object also
                     var name = $.isPlainObject(item) ? item[self.searchWord()] : item;
-                    match = name.match((new RegExp(key.text,"i")));
+                    match = name.match((new RegExp(key.text.replace("+","\\+"),"i")));
                     return match ? item : null;
                 });
             }
