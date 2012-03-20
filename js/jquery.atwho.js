@@ -72,10 +72,14 @@
         flags:{},
         theflag:null,
         options:{},
+        search_word:{},
         searchWord:function() {
-            // just used in At.watchWithData 
+            // just used in At.watchWithData
+            search_word = this.search_word[this.theflag];
+            if (search_word)
+                return search_word;
             var match = /data-keyname=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
-            return !_isNil(match) ? match[1] : null;
+            return this.search_word[this.theflag] = !_isNil(match) ? match[1] : null;
         },
         getOpt: function(key) {
             var flag = this.theflag;
@@ -305,7 +309,12 @@
                 items = $.map(data,function(item,i) {
                     //support plain object also
                     var name = $.isPlainObject(item) ? item[self.searchWord()] : item;
-                    match = name.match((new RegExp(key.text.replace("+","\\+"),"i")));
+                    try {
+                        match = name.match((new RegExp(key.text.replace("+","\\+"),"i")));    
+                    } catch(e) {
+                        _log("watchWithData.error",e);
+                        return null;
+                    }
                     return match ? item : null;
                 });
             }
@@ -349,10 +358,9 @@
             $view.offset(At.offset());
         },
         show: function(){
-            if (!this.watching()) {
+            if (!this.watching())
                 $view = $(this.id).show();
-                this.rePosition($view);
-            }
+            this.rePosition($view);
         },
         hide: function() {
             if (!this.watching()) return;
