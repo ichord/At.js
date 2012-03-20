@@ -349,9 +349,10 @@
             $view.offset(At.offset());
         },
         show: function(){
-            if (!this.watching())
+            if (!this.watching()) {
                 $view = $(this.id).show();
-            this.rePosition($view);
+                this.rePosition($view);
+            }
         },
         hide: function() {
             if (!this.watching()) return;
