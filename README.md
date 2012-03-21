@@ -2,7 +2,7 @@ Implement Twitter/Weibo @ mentions
 
 **support ie6,7. But problem in long word break**
 
-###Documention & Demo
+###Demo
 http://ichord.github.com/At.js
 
 ###Feature

@@ -31,7 +31,6 @@
 (function($) {
     function getCaretPos(inputor) {
         if ("selection" in document) { // IE
-            inputor.focus(); 
             /*
              * reference: http://tinyurl.com/86pyc4s
              */
@@ -117,6 +116,7 @@
     }
     $.fn.caretPos = function(pos) {
         var inputor = this[0];
+        inputor.focus();
         if (pos) {
             return setCaretPos(inputor,pos);
         } else {
