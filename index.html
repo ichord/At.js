@@ -75,6 +75,17 @@
                 <article>
                     <h2>How to use At.js</h2>
                     <p>It is explain at <a href="https://github.com/ichord/At.js/blob/master/README.md">README</a></p>
+                    <p>But here shows the basic usage:</p>
+                    <pre>
+var names = ["Jacob","Isabella","Ethan","Emma"];
+var emojis = ["smile", "heart"];
+$('textarea').atWho('@', {
+    data: names
+}).atWho(':', {
+    data: emojis
+});
+                    </pre>
+                    <p>Check the <a href="assets/at.js">script of this demo</a> to learn how to use template.</p>
                 </article>
                 <article>
                     <h2>Who are using At.js</h2>
