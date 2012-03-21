@@ -42,7 +42,7 @@ http://ichord.github.com/At.js
                 /* element render template
                  * the value will insert into textarea when you make a choose
                  */
-                'tpl' : "<li id='${index}' data-insert='${name}'>${name}</li>"
+                'tpl' : "<li id='${index}' data-keyname='${name}'>${name}</li>"
 	};
 ```
 
@@ -80,7 +80,7 @@ $('textarea').atWho("@",{
 
 ####customs template
 code in example.html file
-base template :
+base template, `li` element and `data-keyname` property is necessary :
 
 `<li data-keyname='${search_word}'>anything here</li>`
 
