@@ -2,6 +2,9 @@ Implement Twitter/Weibo @ mentions
 
 **support ie6,7. But problem in long word break**
 
+###Documention & Demo
+http://ichord.github.com/At.js
+
 ###Feature
 * can listen any char you want.
     every listening can have same settings but different value.
