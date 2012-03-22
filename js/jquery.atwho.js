@@ -275,9 +275,10 @@
              * 可以设置静态数据的同时从服务器动态获取.
              * 获取级别从先到后: cache -> statis data -> ajax.
              */
-            if (!_isNil(var datas = this.cache())) {
+            var datas = null
+            if (!_isNil(datas = this.cache())) {
                 this.loadView(datas)
-            } else if (!_isNil(var datas = this.lookupWithData(key))) {
+            } else if (!_isNil(datas = this.lookupWithData(key))) {
                 this.loadView(datas)
             } else if ($.isFunction(callback = this.getOpt('callback'))){
                 callback(key.text,this.loadView)
