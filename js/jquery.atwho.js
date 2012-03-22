@@ -265,7 +265,7 @@
                 self.view.hide()
             })
             .on('blur.inputor',function(e){
-                self.view.timeout_id = setTimeout("self.view.hide()",100)
+                self.view.timeout_id = setTimeout("self.view.hide()",150)
             })
         }
         ,loadView: function(datas,cacheable) {
@@ -444,7 +444,8 @@
     function _log() {
         //if (!this.holder.getOpt('debug') || $.browser.msie)
         //    return
-        console.log(arguments)
+        //console.log(arguments)
+        $.noop()
     }
 
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
@@ -463,7 +464,6 @@
 
     $.fn.atWho.default = {
         'cache' : true,
-        'debug' : false,
         'limit' : 5,
         'tpl' : _DEFAULT_TPL
     }
