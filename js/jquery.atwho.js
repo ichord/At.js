@@ -71,7 +71,6 @@
         this.flags = {}
         this.theflag = null
         this.search_word = {}
-        this.id = $.now()
 
         this.view = AtView
         this.mirror = new Mirror($inputor)
