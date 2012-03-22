@@ -1,7 +1,7 @@
 (function() {
 
   (function($) {
-    var At, Mirror;
+    var At, AtView, Mirror;
     Mirror = function($origin) {
       return this.init($origin);
     };
@@ -36,14 +36,271 @@
         return this.$mirror.height();
       }
     };
-    return At = function(inputor) {
+    At = function(inputor) {
+      var $inputor,
+        _this = this;
+      $inputor = this.$inputor = $(inputor);
       this.options = {};
       this.keyword = {
         text: "",
         start: 0,
         stop: 0
       };
-      return this._cache = {};
+      this._cache = {};
+      this.pos = 0;
+      this.flags = {};
+      this.theflag = null;
+      this.seach_word = {};
+      this.view = AtView;
+      this.mirror = new Mirror($inputor);
+      $inputor.on("keyup.inputor", function(e) {
+        var lookup, stop;
+        stop = e.keyCode === 40 || e.keyCode === 38;
+        lookup = stop && !_this.view.isShowing();
+        if (lookup) return _this.lookup();
+      }).on("mouseup.inputor", function(e) {
+        return _this.lookup();
+      });
+      return this.init();
+    };
+    At.prototype = {
+      constructor: At,
+      reg: function(flag, options) {
+        var opt;
+        opt = {};
+        if ($.isFunction(options)) {
+          opt['callback'] = options;
+        } else {
+          opt = options;
+        }
+        return this.options[flag] = $.extend({}, $.fn.atWho["default"], opt);
+      },
+      searchWord: function() {
+        var match, search_word;
+        search_word = this.search_word[this.theflag];
+        if (search_word) return search_word;
+        match = /data-value=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
+        return this.search_word[this.theflag] = !_isNil(match) ? match[1] : null;
+      },
+      getOpt: function(key) {
+        try {
+          return this.options[this.theflag][key];
+        } catch (error) {
+          return null;
+        }
+      },
+      offset: function() {
+        var $inputor, Sel, at_pos, end_range, format, html, line_height, mirror, offset, start_range, text, x, y;
+        $inputor = this.$inputor;
+        if (document.selection) {
+          Sel = document.selection.createRange();
+          x = Sel.boundingLeft + $inputor.scrollLeft();
+          y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop();
+        }
+        return {
+          'top': y,
+          'left': x
+        };
+        mirror = this.mirror;
+        format = function(value) {
+          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
+        };
+        /* 克隆完inputor后将原来的文本内容根据
+          @的位置进行分块,以获取@块在inputor(输入框)里的position
+        */
+        text = $inputor.val();
+        start_range = text.slice(0, this.pos - 1);
+        end_range = text.slice(this.pos + 1);
+        html = "<span>" + format(start_range) + "</span>";
+        html += "<span id='flag'>@</span>";
+        html += "<span>" + format(end_range) + "</span>";
+        mirror.setContent(html);
+        /*
+                      将inputor的 offset(相对于document)
+                      和@在inputor里的position相加
+                      就得到了@相对于document的offset.
+                      当然,还要加上行高和滚动条的偏移量.
+        */
+        offset = $inputor.offset();
+        at_pos = mirror.getFlagPos();
+        line_height = $inputor.css("line-height");
+        line_height = isNaN(line_height) ? 20 : line_height;
+        /*
+                    FIXME: -$(window).scrollTop() get "wrong" offset.
+                     but is good for $inputor.scrollTop()
+                     jquey 1. + 07.1 fixed the scrollTop problem!?
+        */
+        y = offset.top + at_pos.top + line_height - $inputor.scrollTop();
+        x = offset.left + at_pos.left - $inputor.scrollLeft();
+        return {
+          'top': y,
+          'left': x
+        };
+      },
+      cache: function(value) {
+        var key, _base;
+        key = this.keyword.text;
+        if (!this.getOpt("cache") || !key) return null;
+        return (_base = this._cache)[key] || (_base[key] = value);
+      },
+      getKeyname: function() {
+        var $inputor, caret_pos, end, key, start, subtext, text,
+          _this = this;
+        $inputor = this.$inputor;
+        text = $inputor.val();
+        caret_pos = $inputor.caretPos();
+        /* 向在插入符前的的文本进行正则匹配
+         * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
+        */
+        subtext = text.slice(0, caret_pos);
+        $.each(this.options, function(flag) {
+          var match, matched, regexp;
+          regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
+          match = regexp.exec(subtext);
+          if (!_isNil(match)) {
+            matched = match[1] === 'undefined' ? match[2] : match[1];
+            _this.theflag = flag;
+            return false;
+          }
+        });
+        if (matched === String && matched.length <= 20) {
+          start = caret_pos - matched.length;
+          end = start + matched.length;
+          this.pos = start;
+          key = {
+            'text': matched,
+            'start': start,
+            'end': end
+          };
+        } else {
+          this.view.hide();
+        }
+        return this.keyword = key;
+      },
+      replaceStr: function(str) {
+        var $inputor, key, source, start_str, text;
+        $inputor = this.$inputor;
+        key = this.keyword;
+        source = $inputor.val();
+        start_str = source.slice(0, key.start);
+        text = start_str + str + source.slice(key.end);
+        $inputor.val(text);
+        $inputor.caretPos(start_str.length + str.length);
+        return $inputor.change();
+      },
+      onkeydown: function(e) {
+        var view;
+        view = this.view;
+        if (!view.isShowing()) return;
+        switch (e.keyCode) {
+          case 38:
+            e.preventDefault();
+            view.prev();
+            break;
+          case 40:
+            e.preventDefault();
+            view.next();
+            break;
+          case 9:
+          case 13:
+            if (!view.isShowing()) return;
+            e.preventDefault();
+            view.choose();
+            break;
+          default:
+            $.noop();
+        }
+        return e.stopPropagation();
+      },
+      init: function() {
+        var _this = this;
+        return this.$inputor.on('keydown.inputor', function(e) {
+          return _this.onkeydown(e);
+        }).on('scroll.inputor', function(e) {
+          return _this.view.hide();
+        }).on('blur.inputor', function(e) {
+          return _this.view.timeout_id = setTimeout("_this.view.hide()", 150);
+        });
+      },
+      loadView: function(datas) {
+        return this.view.load(this, datas);
+      },
+      lookup: function() {
+        var callback, datas, key;
+        key = this.getKeyname();
+        if (!key) return false;
+        if (!_isNil(datas = this.cache())) {
+          this.loadView(datas);
+        } else if (!_isNil(datas = this.lookupWithData(key))) {
+          this.loadView(datas);
+        } else if ($.isFunction(callback = this.getOpt('callback'))) {
+          callback(key.text, this.loadView);
+        } else {
+          this.view.hide();
+        }
+        return $.noop();
+      },
+      lookupWithData: function(key) {
+        var data, items,
+          _this = this;
+        data = this.getOpt("data");
+        if ($.isArray(data) && data.length !== 0) {
+          items = $.map(data, function(item, i) {
+            var match, name, regexp;
+            try {
+              name = $.isPlainObject(item);
+              regexp = new RegExp(key.text.replace("+", "\\+"), 'i');
+              match = name.match(regexp);
+            } catch (e) {
+              return null;
+            }
+            if (match) {
+              return item;
+            } else {
+              return null;
+            }
+          });
+        }
+        return items;
+      }
+    };
+    return AtView = {
+      timeout_id: null,
+      id: '#at-view',
+      holder: null,
+      _jqo: null,
+      jqo: function() {
+        return this._jqo || (this._jqo = $(this.id));
+      },
+      init: function() {
+        var $menu, tpl,
+          _this = this;
+        if (!_isNil(this.jqo())) return;
+        tpl = "<div id='" + this.id.slice(1) + "' class='at-view'><ul id='" + this.id.slice(1) + "-ul'></ul></div>";
+        $("body").append(tpl);
+        $menu = this.jqo().find('ul');
+        return $menu.on('mouseenter.view', 'li', function(e) {
+          $menu.find('.cur').removeClass('cur');
+          return $(e.currentTarget).addClass('cur');
+        }).on('click', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          return _this.choose();
+        });
+      },
+      isShowing: function() {
+        return this.jqo().is(":visible");
+      },
+      choose: function() {
+        var $li, str;
+        $li = this.jqo().find(".cur");
+        str = _isNil($li) ? this.holder.keyword.text + " " : $li.attr("data-value") + " ";
+        this.holder.replaceStr(str);
+        return this.hide();
+      },
+      rePosition: function() {
+        return this.jqo().offset(this.holder.offset());
+      }
     };
   })(window.jQuery);
 

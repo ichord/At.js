@@ -42,11 +42,224 @@
         @view = AtView
         @mirror = new Mirror $inputor
 
-        $inputor.on "keyup.inputor" $.proxy ((e) ->
-            stop = e.keyCode is 40 or e.keyCode is 38
-            lookup = stop and not @.view.isShowing()
-            this.lookup() if lookup
-        ,this)
+        $inputor
+            .on "keyup.inputor", (e) =>
+                stop = e.keyCode is 40 or e.keyCode is 38
+                lookup = stop and not @.view.isShowing()
+                @.lookup() if lookup
+            .on "mouseup.inputor",(e) =>
+                @.lookup()
+        @.init()
+
+    At:: =
+        constructor: At
+        reg: (flag, options) ->
+            opt = {}
+            if $.isFunction options
+                opt['callback'] = options
+            else
+                opt = options
+            @.options[flag] = $.extend {}, $.fn.atWho.default, opt
+
+        searchWord: ->
+            search_word = @.search_word[@.theflag]
+            return search_word if search_word
+            match = /data-value=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
+            return @.search_word[@.theflag] =  if !_isNil(match) then match[1] else null
+
+        getOpt: (key) ->
+            try
+                return @.options[@.theflag][key]
+            catch error
+                return null
+
+        offset: ->
+            $inputor = @.$inputor
+            if document.selection # for IE full
+                Sel = document.selection.createRange()
+                x = Sel.boundingLeft + $inputor.scrollLeft()
+                y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop()
+            
+            return {'top':y,'left':x}
+
+            mirror = @.mirror
+
+            format = (value) ->
+                value.replace(/</g, '&lt')
+                    .replace(/>/g, '&gt')
+                    .replace(/`/g,'&#96')
+                    .replace(/"/g,'&quot')
+                    .replace(/\r\n|\r|\n/g,"<br />")
+
+            ### 克隆完inputor后将原来的文本内容根据
+              @的位置进行分块,以获取@块在inputor(输入框)里的position
+            ###
+            text = $inputor.val()
+            start_range = text.slice(0,this.pos - 1)
+            end_range = text.slice(this.pos + 1)
+            html = "<span>"+format(start_range)+"</span>"
+            html += "<span id='flag'>@</span>"
+            html += "<span>"+format(end_range)+"</span>"
+            mirror.setContent(html)
+
+            ###
+              将inputor的 offset(相对于document)
+              和@在inputor里的position相加
+              就得到了@相对于document的offset.
+              当然,还要加上行高和滚动条的偏移量.
+            ###
+            offset = $inputor.offset()
+            at_pos = mirror.getFlagPos()
+            line_height = $inputor.css("line-height")
+            line_height = if isNaN(line_height) then 20 else line_height
+            ###
+            FIXME: -$(window).scrollTop() get "wrong" offset.
+             but is good for $inputor.scrollTop()
+             jquey 1. + 07.1 fixed the scrollTop problem!?
+             ###
+            y = offset.top + at_pos.top + line_height - $inputor.scrollTop()
+            x = offset.left + at_pos.left - $inputor.scrollLeft()
+            return {'top':y,'left':x}
+
+        cache: (value) ->
+            key = @.keyword.text
+            return null if not @.getOpt("cache") or not key
+            return @._cache[key] or= value
+
+        getKeyname: ->
+            $inputor = @.$inputor
+            text = $inputor.val()
+
+            ##获得inputor中插入符的position.
+            caret_pos = $inputor.caretPos()
+
+            ### 向在插入符前的的文本进行正则匹配
+             * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
+            subtext = text.slice(0,caret_pos)
+
+            $.each this.options, (flag) =>
+                regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
+                match = regexp.exec subtext
+                if not _isNil(match)
+                    matched = if match[1] is 'undefined' then match[2] else match[1]
+                    @.theflag = flag
+                    return no
+
+            if matched is String and matched.length <= 20
+                start = caret_pos - matched.length
+                end = start + matched.length
+                @.pos = start
+                key = {'text':matched, 'start':start, 'end':end}
+            else
+                @.view.hide()
+
+            @.keyword = key
+
+        replaceStr: (str) ->
+            #$inputor.replaceStr(str,start,end)
+            $inputor = @.$inputor
+            key = @.keyword
+            source = $inputor.val()
+            start_str = source.slice 0, key.start
+            text = start_str + str + source.slice key.end
+
+            $inputor.val text
+            $inputor.caretPos start_str.length + str.length
+            $inputor.change()
+
+        onkeydown: (e) ->
+            view = @.view
+            return if not view.isShowing()
+            switch e.keyCode
+                # UP
+                when 38
+                    e.preventDefault()
+                    view.prev()
+                # DOWN
+                when 40
+                    e.preventDefault()
+                    view.next()
+                # TAB or ENTER
+                when 9, 13
+                    return if not view.isShowing()
+                    e.preventDefault()
+                    view.choose()
+                else
+                    $.noop()
+            e.stopPropagation()
+
+        init: ->
+            @.$inputor
+                .on 'keydown.inputor', (e) =>
+                    return @.onkeydown(e)
+                .on 'scroll.inputor', (e) =>
+                    @.view.hide()
+                .on 'blur.inputor', (e) =>
+                    @.view.timeout_id = setTimeout "_this.view.hide()",150
+
+        loadView: (datas) ->
+            this.view.load this, datas
+
+        lookup: ->
+            key = this.getKeyname()
+            return no if not key
+
+            if not _isNil(datas = @.cache())
+                @.loadView datas
+            else if not _isNil(datas = @.lookupWithData key)
+                @.loadView datas
+            else if $.isFunction(callback = @.getOpt 'callback')
+                callback key.text, @.loadView
+            else
+                @.view.hide()
+            $.noop()
+
+        lookupWithData: (key) ->
+            data = @.getOpt "data"
+            if $.isArray(data) and data.length != 0
+                items = $.map data, (item,i) =>
+                    try
+                        name = $.isPlainObject item
+                        regexp = new RegExp(key.text.replace("+","\\+"),'i')
+                        match = name.match(regexp)
+                    catch e
+                        return null
+
+                    return if match then item else null
+            items
+
+    AtView =
+        timeout_id: null
+        id: '#at-view'
+        holder: null
+        _jqo: null
+        jqo: ->
+            return @._jqo or= $(@.id)
+
+        init: ->
+            return if not _isNil @.jqo()
+            tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>"
+            $("body").append(tpl)
+
+            $menu = @.jqo().find('ul')
+            $menu.on 'mouseenter.view','li', (e) ->
+                    $menu.find('.cur').removeClass 'cur'
+                    $(e.currentTarget).addClass 'cur'
+                .on 'click', (e) =>
+                    e.stopPropagation()
+                    e.preventDefault()
+                    @.choose()
+
+        isShowing: () ->
+            @.jqo().is(":visible")
+
+        choose: () ->
+            $li = @.jqo().find ".cur"
+            str = if _isNil($li) then @.holder.keyword.text+" " else $li.attr("data-value") + " "
+            @.holder.replaceStr(str)
+            @.hide()
+        rePosition: () ->
+            @.jqo().offset @.holder.offset()
+
 
 )(window.jQuery)
-
