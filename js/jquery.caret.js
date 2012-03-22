@@ -123,4 +123,4 @@
             return getCaretPos(inputor);
         }
     }
-})(jQuery);
+})(window.jQuery);
