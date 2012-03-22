@@ -79,15 +79,14 @@
         this.$inputor.on("keyup.inputor", $.proxy(function(e) {
             /* 当用户列表框显示时, 上下键不触发查询 */
             var stop_key = e.keyCode == 40 || e.keyCode == 38
-            lookup = !(this.view.showing() && stop_key)
+            lookup = !(this.view.isShowing() && stop_key)
             if (lookup) this.lookup()
         },this))
         .on('mouseup.inputor', $.proxy(function(e) {
             this.lookup()
         },this))
 
-        this.watch()
-        _log("At.new",inputor)
+        this.init()
     }
 
     At.prototype = {
@@ -100,7 +99,6 @@
                 opt = options
 
             this.options[flag] = $.extend({},$.fn.atWho.default,opt)
-            _log("options",this.options)
         }
         ,searchWord:function() {
             // just used in this.holder.lookupWithData
@@ -172,9 +170,9 @@
             
             return {'top':y,'left':x}
         },
-        cache: function(key,value) {
-            if (!this.getOpt('cache')) return null
-            _log("cacheing",key,value)
+        cache: function(value) {
+            var key = this.keyword.text
+            if (!this.getOpt('cache') || !key) return null
             if (value)
                 this._cache[key] = value
             return this._cache[key]
@@ -200,7 +198,6 @@
                 }
             })
             var key = null
-            _log("matched",matched)
             if (typeof matched == "string" && matched.length <= 20) {
                 start = caret_pos - matched.length
                 end = start + matched.length
@@ -210,7 +207,6 @@
                 this.view.hide()
 
             this.keyword = key
-            _log("getKeyname",key)
             return key
         },
         replaceStr: function(str) {
@@ -231,7 +227,7 @@
          * */
         ,onkeydown: function(e) {
             view = this.view
-            if (!view.showing()) return
+            if (!view.isShowing()) return
             switch (e.keyCode) {
                 // UP
                 case 38:
@@ -246,7 +242,7 @@
                 //TAB or ENTER
                 case 9:
                 case 13:
-                    if (!view.showing()) return
+                    if (!view.isShowing()) return
                     e.preventDefault()
                     view.choose()
                     break
@@ -255,7 +251,7 @@
             }
             e.stopPropagation()
         }       
-        ,watch: function() {
+        ,init: function() {
             // 捕捉inputor事件
             var self = this
             $inputor.on('keydown.inputor',function(e) {
@@ -268,32 +264,28 @@
                 self.view.timeout_id = setTimeout("self.view.hide()",150)
             })
         }
-        ,loadView: function(datas,cacheable) {
-            return this.view.load(this,datas,false)
+        ,loadView: function(datas) {
+            return this.view.load(this, datas)
         }
         ,lookup: function() {
-            key = this.getKeyname()
+            var key = this.getKeyname()
             if (!key) return false
             /*
              * 支持多渠道获得用户数据.
              * 可以设置静态数据的同时从服务器动态获取.
              * 获取级别从先到后: cache -> statis data -> ajax.
              */
-            if (!_isNil(datas = this.cache(this.keyword.text))) {
-                _log("cache data",datas)
-                this.loadView(datas,false)
-            } else if (!_isNil(datas = this.lookupWithData(key))) {
-                _log("statis data",datas)
-                this.loadView(datas,false)
+            if (!_isNil(var datas = this.cache())) {
+                this.loadView(datas)
+            } else if (!_isNil(var datas = this.lookupWithData(key))) {
+                this.loadView(datas)
             } else if ($.isFunction(callback = this.getOpt('callback'))){
-                _log("callbacking",callback)
-                callback(At)
+                callback(key.text,this.loadView)
             } else
                 this.view.hide()
         },
         lookupWithData:function(key) {
             data = this.getOpt("data")
-            _log("lookupWithData",key,data,this.searchWord())
             var items = null
             var self = this
             if($.isArray(data) && data.length != 0) {
@@ -303,13 +295,11 @@
                         var name = $.isPlainObject(item) ? item[self.searchWord()] : item
                         var match = name.match((new RegExp(key.text.replace("+","\\+"),"i")))    
                     } catch(e) {
-                        _log("lookupWithData.error",e)
                         return null
                     }
                     return match ? item : null
                 })
             }
-            _log("lookup with data.item",items)
             return items
         }
     }
@@ -320,19 +310,22 @@
         timeout_id : null
         ,id : '#at-view'
         ,holder : null
+        ,_jqo: null
+        ,jqo: function() {
+            var jqo = this._jqo
+            return _isNil(jqo) ? (this._jqo = $(this.id)) : jqo 
+        }
         ,init: function() {
             // 是否已经加载了列表视图
-            if (!_isNil($(this.id))) return
+            if (!_isNil(this.jqo())) return
             tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>"
             $('body').append(tpl)
-            _log("AtView.init",tpl,$(this.id)[0])
 
-            $menu = $(this.id).find('ul')
+            $menu = this.jqo().find('ul')
             $menu.on('mouseenter.view','li',function(e) {
                 $menu.find('.cur').removeClass('cur')
                 $(e.currentTarget).addClass('cur')
-            })
-            $(this.id).find('ul').on('click', $.proxy(function(e){
+            }).on('click', $.proxy(function(e){
                 e.stopPropagation()
                 e.preventDefault()
                 this.choose()
@@ -340,54 +333,60 @@
             
         }
         // 列表框是否显示中.
-        ,showing :function() {
-            return $(this.id).is(":visible")
+        ,isShowing :function() {
+            return this.jqo().is(":visible")
         },
         choose: function() {
-            $li = $(this.id).find(".cur")
+            $li = this.jqo().find(".cur")
             str = _isNil($li) ? this.holder.keyword.text+" " : $li.attr("data-value")+" " 
             this.holder.replaceStr(str)
             this.hide()
         },
         rePosition:function() {
-            $(this.id).offset(this.holder.offset())
+            this.jqo().offset(this.holder.offset())
         }
         ,next: function(event) {
-            var cur = $(this.id).find('.cur').removeClass('cur')
+            var cur = this.jqo().find('.cur').removeClass('cur')
                 , next = cur.next()
             if (!next.length) {
-                next = $($(this.id).find('li')[0])
+                next = $(this.jqo().find('li')[0])
             }
             next.addClass('cur')
         }
         ,prev: function() {
-            var cur = $(this.id).find('.cur').removeClass('cur')
+            var cur = this.jqo().find('.cur').removeClass('cur')
                 , prev = cur.prev()
             if (!prev.length) {
-                prev = $(this.id).find('li').last()
+                prev = this.jqo().find('li').last()
             }
             prev.addClass('cur')
         }
         ,show: function(){
-            if (!this.showing())
-                $(this.id).show()
+            if (!this.isShowing())
+                this.jqo().show()
             this.rePosition()
         },
         hide: function() {
-            if (!this.showing()) return
-            $(this.id).hide()
-        },
-        load: function(holder,list,cacheable) {
-            this.holder = holder
+            if (!this.isShowing()) return
+            this.jqo().hide()
+        }
+        ,clear: function(clear_all) {
+            if (clear_all == true)
+                this._cache = {}
+            this.jqo().find('ul').empty()
+        }
+        ,load: function(holder,list) {
             if (!$.isArray(list)) return false
-            if (cacheable != false) this.holder.cache(this.holder.keyword.text,list)
+
+            this.holder = holder
+            this.holder.cache(list)
 
             this.clear()
             var tpl = this.holder.getOpt('tpl')
             var list = _unique(list,this.holder.searchWord())
 
             var self = this
-            $ul = $(this.id).find('ul')
+            $ul = this.jqo().find('ul')
             $.each(list.splice(0, this.holder.getOpt('limit')), function(i,item) {
                 if (!$.isPlainObject(item)) {
                     item = {'id':i,'name':item}
@@ -397,12 +396,7 @@
             })
             this.show()
             $ul.find("li:eq(0)").addClass("cur")
-        },
-        clear: function(clear_all) {
-            if (clear_all == true)
-                this._cache = {}
-            $(this.id).find('ul').empty()
-        },
+        }
     }
 
     function _evalTpl(tpl,map) {
@@ -410,7 +404,6 @@
         el = tpl.replace(/\$\{([^\}]*)\}/g,function(tag,key,pos){
             return map[key]
         })
-        _log("evalTpl",el)
         return el
     }
     /* maybe we can use $._unique. 
@@ -420,7 +413,6 @@
      * */
     function _unique(list,keyword) {
         var record = []
-        _log(list,keyword)
         return $.map(list,function(v,idx){
             var value = $.isPlainObject(v) ? v[keyword] : v
             if ($.inArray(value,record) < 0) {
@@ -441,13 +433,6 @@
         || target === undefined
     }
 
-    function _log() {
-        //if (!this.holder.getOpt('debug') || $.browser.msie)
-        //    return
-        //console.log(arguments)
-        $.noop()
-    }
-
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
     
     $.fn.atWho = function (flag,options) {
@@ -463,6 +448,8 @@
     }
 
     $.fn.atWho.default = {
+        'data' : [],
+        'callback' : null,
         'cache' : true,
         'limit' : 5,
         'tpl' : _DEFAULT_TPL

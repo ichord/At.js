@@ -28,7 +28,7 @@ http://ichord.github.com/At.js
 		 see the example below.
 		 it must be return a plain text array
                  */
-		'callback': function(context) {return []},
+		'callback': null,
                 /*
 		 enable search cache. if you want to use $.ajax cache.
 		 just set it false.
@@ -36,8 +36,6 @@ http://ichord.github.com/At.js
 		'cache' : true,
                 /* see usage below. */
 		'data':[],
-                /* if set true it will issue running msg; */
-                'debug' : false,
                 'limit' : 5,
                 /* element render template
                  * the value will insert into textarea when you make a choose
@@ -57,14 +55,14 @@ $('textarea').atWho(":",{data:emoji_list});
 
 ####ajax
 ``` javascript
-$('textarea').atWho("@",function(context){
+$('textarea').atWho("@",function(query,callback){
     var url = "#",
-    param = {'q':context.keyword.text},
+    param = {'q':query},
     names = [];
     $.ajax(url,param,function(data) {
         names = $.jsonParse(data);
         //for now , just support plain text array.
-        context.view.load(names);
+        callback(names);
     });
 });
 ```
@@ -74,7 +72,7 @@ $('textarea').atWho("@",function(context){
 names = ['one','two'];
 $('textarea').atWho("@",{
     'data': names,
-    'callback': function(c) { console.log(c);}
+    'callback': function(query,callback) { console.log(query,callback);}
     });
 ```
 
@@ -92,11 +90,9 @@ base template, `li` element and `data-keyname` property is necessary :
 
                     $("textarea").atWho("@",{
                         'tpl': "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>",
-                        'debug':true,
                         'data':data
                         })
                     .atWho(":",{
-                        debug:true,
                         'data':emojis,
                         'tpl':"<li data-keyname='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
                         });
