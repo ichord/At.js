@@ -73,7 +73,7 @@
         this.search_word = {}
         this.id = $.now()
 
-        this.view = new AtView(this)
+        this.view = AtView
         this.mirror = new Mirror($inputor)
 
         this.$inputor.on("keyup.inputor", $.proxy(function(e) {
@@ -215,13 +215,15 @@
         },
         replaceStr: function(str) {
             /* $inputor.replaceStr(str,start,end)*/
+            $inputor = this.$inputor
             key = this.keyword
-            source = this.$inputor.val()
+            source = $inputor.val()
             start_str = source.slice(0, key.start)
             text = start_str + str + source.slice(key.end)
-            this.$inputor.val(text)
-            this.$inputor.caretPos(start_str.length + str.length)
-            this.$inputor.change()
+
+            $inputor.val(text)
+            $inputor.caretPos(start_str.length + str.length)
+            $inputor.change()
         }
         /* 捕捉inputor的上下回车键.
          * 在列表框做相应的操作,上下滚动,回车选择
@@ -265,8 +267,11 @@
             .on('blur.inputor',function(e){
                 self.view.timeout_id = setTimeout("self.view.hide()",100)
             })
-        },
-        lookup: function() {
+        }
+        ,loadView: function(datas,cacheable) {
+            return this.view.load(this,datas,false)
+        }
+        ,lookup: function() {
             key = this.getKeyname()
             if (!key) return false
             /*
@@ -274,12 +279,12 @@
              * 可以设置静态数据的同时从服务器动态获取.
              * 获取级别从先到后: cache -> statis data -> ajax.
              */
-            if (!_isNil(names = this.cache(this.keyword.text))) {
-                _log("cache data",names)
-                this.view.load(names,false)
-            } else if (!_isNil(names = this.lookupWithData(key))) {
-                _log("statis data",names)
-                this.view.load(names,false)
+            if (!_isNil(datas = this.cache(this.keyword.text))) {
+                _log("cache data",datas)
+                this.loadView(datas,false)
+            } else if (!_isNil(datas = this.lookupWithData(key))) {
+                _log("statis data",datas)
+                this.loadView(datas,false)
             } else if ($.isFunction(callback = this.getOpt('callback'))){
                 _log("callbacking",callback)
                 callback(At)
@@ -311,34 +316,31 @@
 
     /* private class
      * 弹出的用户列表框相关的操作 */
-    AtView = function(holder) {
-        this.timeout_id = null
-        this.id = '#at-view'
-        this.holder = holder
-        
-        this.init()
-    }
-    AtView.prototype = {
-        constructor: AtView
+    AtView = {
+        timeout_id : null
+        ,id : '#at-view'
+        ,holder : null
         ,init: function() {
             // 是否已经加载了列表视图
             if (!_isNil($(this.id))) return
             tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>"
             $('body').append(tpl)
+            _log("AtView.init",tpl,$(this.id)[0])
 
             $menu = $(this.id).find('ul')
-            $menu.on('click.'+this.holder.id, $.proxy(function(e){
-                e.stopPropagation()
-                e.preventDefault()
-                this.choose()
-            },this))
             $menu.on('mouseenter.view','li',function(e) {
                 $menu.find('.cur').removeClass('cur')
                 $(e.currentTarget).addClass('cur')
             })
-        },
+            $(this.id).find('ul').on('click', $.proxy(function(e){
+                e.stopPropagation()
+                e.preventDefault()
+                this.choose()
+            },this))
+            
+        }
         // 列表框是否显示中.
-        showing :function() {
+        ,showing :function() {
             return $(this.id).is(":visible")
         },
         choose: function() {
@@ -347,7 +349,6 @@
             this.holder.replaceStr(str)
             this.hide()
         },
-        
         rePosition:function() {
             $(this.id).offset(this.holder.offset())
         }
@@ -376,7 +377,8 @@
             if (!this.showing()) return
             $(this.id).hide()
         },
-        load: function(list,cacheable) {
+        load: function(holder,list,cacheable) {
+            this.holder = holder
             if (!$.isArray(list)) return false
             if (cacheable != false) this.holder.cache(this.holder.keyword.text,list)
 
@@ -448,6 +450,7 @@
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
     
     $.fn.atWho = function (flag,options) {
+        AtView.init()
         return this.filter('textarea, input').each(function() {
             var $this = $(this)
             , data = $this.data('AtWho')
