@@ -22,8 +22,10 @@
             @.$mirror = $mirror
         setContent: (html) ->
             @.$mirror.html(html)
-        getFlagPos: () ->
-            @.$mirror.find("span#flag").position()
+        getFlagRect: () ->
+            $flag = @.$mirror.find "span#flag"
+            pos = $flag.position()
+            {left:pos.left, top:pos.top, bottom:$flag.height() + pos.top}
         height: () ->
             @.$mirror.height()
 
@@ -64,7 +66,7 @@
                 .on 'scroll.inputor', (e) =>
                     @.view.hide()
                 .on 'blur.inputor', (e) =>
-                    callback = -> @.view.hide()
+                    callback = => @.view.hide()
                     @.view.timeout_id = setTimeout callback,150
             log "At.init", @.$inputor[0]
 
@@ -89,13 +91,14 @@
             catch error
                 return null
 
-        offset: ->
+        rect: ->
             $inputor = @.$inputor
             if document.selection # for IE full
                 Sel = document.selection.createRange()
                 x = Sel.boundingLeft + $inputor.scrollLeft()
-                y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop()
-                return {'top':y,'left':x}
+                y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
+                bottom = y + Sel.boundingHeight
+                return {top:y, left:x, bottom:bottom}
 
             mirror = @.mirror
 
@@ -124,17 +127,19 @@
               当然,还要加上行高和滚动条的偏移量.
             ###
             offset = $inputor.offset()
-            at_pos = mirror.getFlagPos()
-            line_height = $inputor.css("line-height")
-            line_height = if isNaN(line_height) then 20 else line_height
+            at_rect = mirror.getFlagRect()
+
             ###
             FIXME: -$(window).scrollTop() get "wrong" offset.
              but is good for $inputor.scrollTop()
              jquey 1. + 07.1 fixed the scrollTop problem!?
              ###
-            y = offset.top + at_pos.top + line_height - $inputor.scrollTop()
-            x = offset.left + at_pos.left - $inputor.scrollLeft()
-            return {'top':y,'left':x}
+            x = offset.left + at_rect.left - $inputor.scrollLeft()
+            y = offset.top - $inputor.scrollTop()
+            bottom = y + at_rect.bottom
+            y += at_rect.top
+
+            return {top:y,left:x,bottom:bottom}
 
         cache: (value) ->
             key = @.keyword.text
@@ -271,7 +276,11 @@
             @.holder.replaceStr(str)
             @.hide()
         rePosition: () ->
-            @.jqo().offset @.holder.offset()
+            rect = @.holder.rect()
+            if rect.bottom + @.jqo().height() > $(window).height()
+                rect.bottom = rect.top - @.jqo().height()
+            log "AtView.rePosition",{left:rect.left, top:rect.bottom}
+            @.jqo().offset {left:rect.left, top:rect.bottom}
 
         next: (e) ->
             cur = @.jqo().find('.cur').removeClass('cur')
@@ -344,7 +353,7 @@
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
     
     log = () ->
-        console.log(arguments)
+        #console.log(arguments)
 
     $.fn.atWho = (flag, options) ->
         AtView.init()

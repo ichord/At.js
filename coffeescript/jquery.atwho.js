@@ -30,8 +30,15 @@
       setContent: function(html) {
         return this.$mirror.html(html);
       },
-      getFlagPos: function() {
-        return this.$mirror.find("span#flag").position();
+      getFlagRect: function() {
+        var $flag, pos;
+        $flag = this.$mirror.find("span#flag");
+        pos = $flag.position();
+        return {
+          left: pos.left,
+          top: pos.top,
+          bottom: $flag.height() + pos.top
+        };
       },
       height: function() {
         return this.$mirror.height();
@@ -77,7 +84,7 @@
         }).on('blur.inputor', function(e) {
           var callback;
           callback = function() {
-            return this.view.hide();
+            return _this.view.hide();
           };
           return _this.view.timeout_id = setTimeout(callback, 150);
         });
@@ -108,16 +115,18 @@
           return null;
         }
       },
-      offset: function() {
-        var $inputor, Sel, at_pos, end_range, format, html, line_height, mirror, offset, start_range, text, x, y;
+      rect: function() {
+        var $inputor, Sel, at_rect, bottom, end_range, format, html, mirror, offset, start_range, text, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
           Sel = document.selection.createRange();
           x = Sel.boundingLeft + $inputor.scrollLeft();
-          y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop();
+          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop();
+          bottom = y + Sel.boundingHeight;
           return {
-            'top': y,
-            'left': x
+            top: y,
+            left: x,
+            bottom: bottom
           };
         }
         mirror = this.mirror;
@@ -141,19 +150,20 @@
                       当然,还要加上行高和滚动条的偏移量.
         */
         offset = $inputor.offset();
-        at_pos = mirror.getFlagPos();
-        line_height = $inputor.css("line-height");
-        line_height = isNaN(line_height) ? 20 : line_height;
+        at_rect = mirror.getFlagRect();
         /*
                     FIXME: -$(window).scrollTop() get "wrong" offset.
                      but is good for $inputor.scrollTop()
                      jquey 1. + 07.1 fixed the scrollTop problem!?
         */
-        y = offset.top + at_pos.top + line_height - $inputor.scrollTop();
-        x = offset.left + at_pos.left - $inputor.scrollLeft();
+        x = offset.left + at_rect.left - $inputor.scrollLeft();
+        y = offset.top - $inputor.scrollTop();
+        bottom = y + at_rect.bottom;
+        y += at_rect.top;
         return {
-          'top': y,
-          'left': x
+          top: y,
+          left: x,
+          bottom: bottom
         };
       },
       cache: function(value) {
@@ -314,7 +324,19 @@
         return this.hide();
       },
       rePosition: function() {
-        return this.jqo().offset(this.holder.offset());
+        var rect;
+        rect = this.holder.rect();
+        if (rect.bottom + this.jqo().height() > $(window).height()) {
+          rect.bottom = rect.top - this.jqo().height();
+        }
+        log("AtView.rePosition", {
+          left: rect.left,
+          top: rect.bottom
+        });
+        return this.jqo().offset({
+          left: rect.left,
+          top: rect.bottom
+        });
       },
       next: function(e) {
         var cur, next;
@@ -396,9 +418,7 @@
       return !target || ($.isPlainObject(target) && $.isEmptyObject(target)) || ($.isArray(target) && target.length === 0) || (target instanceof $ && target.length === 0) || target === void 0;
     };
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>";
-    log = function() {
-      return console.log(arguments);
-    };
+    log = function() {};
     $.fn.atWho = function(flag, options) {
       AtView.init();
       return this.filter('textarea, input').each(function() {

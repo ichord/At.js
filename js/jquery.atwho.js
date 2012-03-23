@@ -253,7 +253,7 @@
         ,init: function() {
             // 捕捉inputor事件
             var self = this
-            $inputor.on('keydown.inputor',function(e) {
+            this.$inputor.on('keydown.inputor',function(e) {
                 return self.onkeydown(e)
             })
             .on('scroll.inputor',function(e){
