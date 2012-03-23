@@ -1,6 +1,7 @@
 (($) ->
     Mirror = ($origin) ->
         @.init $origin
+        this
 
     Mirror:: =
         $mirror: null
@@ -13,8 +14,8 @@
                 left: 0
                 top:0
                 zIndex: -20000
-                'white-space': pre-wrap
-            $.each this.css (i,p) ->
+                'white-space': 'pre-wrap'
+            $.each @.css, (i,p) ->
                 css[p] = $origin.css p
             $mirror.css(css)
             $('body').append $mirror
@@ -37,7 +38,7 @@
         @pos = 0
         @flags = {}
         @theflag = null
-        @seach_word = {}
+        @search_word = {}
 
         @view = AtView
         @mirror = new Mirror $inputor
@@ -45,14 +46,28 @@
         $inputor
             .on "keyup.inputor", (e) =>
                 stop = e.keyCode is 40 or e.keyCode is 38
-                lookup = stop and not @.view.isShowing()
+                lookup = not (stop and @.view.isShowing())
                 @.lookup() if lookup
             .on "mouseup.inputor",(e) =>
                 @.lookup()
         @.init()
+        log "At.new", $inputor[0]
+        return this
 
     At:: =
         constructor: At
+
+        init: ->
+            @.$inputor
+                .on 'keydown.inputor', (e) =>
+                    @.onkeydown(e)
+                .on 'scroll.inputor', (e) =>
+                    @.view.hide()
+                .on 'blur.inputor', (e) =>
+                    callback = -> @.view.hide()
+                    @.view.timeout_id = setTimeout callback,150
+            log "At.init", @.$inputor[0]
+
         reg: (flag, options) ->
             opt = {}
             if $.isFunction options
@@ -60,6 +75,7 @@
             else
                 opt = options
             @.options[flag] = $.extend {}, $.fn.atWho.default, opt
+            log "At.reg", @.$inputor[0],flag, options
 
         searchWord: ->
             search_word = @.search_word[@.theflag]
@@ -79,8 +95,7 @@
                 Sel = document.selection.createRange()
                 x = Sel.boundingLeft + $inputor.scrollLeft()
                 y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop()
-            
-            return {'top':y,'left':x}
+                return {'top':y,'left':x}
 
             mirror = @.mirror
 
@@ -137,6 +152,7 @@
              * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
             subtext = text.slice(0,caret_pos)
 
+            matched = null
             $.each this.options, (flag) =>
                 regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
                 match = regexp.exec subtext
@@ -145,7 +161,7 @@
                     @.theflag = flag
                     return no
 
-            if matched is String and matched.length <= 20
+            if typeof matched is 'string' and matched.length <= 20
                 start = caret_pos - matched.length
                 end = start + matched.length
                 @.pos = start
@@ -153,6 +169,7 @@
             else
                 @.view.hide()
 
+            log "At.getKeyname", key
             @.keyword = key
 
         replaceStr: (str) ->
@@ -188,21 +205,14 @@
                     $.noop()
             e.stopPropagation()
 
-        init: ->
-            @.$inputor
-                .on 'keydown.inputor', (e) =>
-                    return @.onkeydown(e)
-                .on 'scroll.inputor', (e) =>
-                    @.view.hide()
-                .on 'blur.inputor', (e) =>
-                    @.view.timeout_id = setTimeout "_this.view.hide()",150
-
         loadView: (datas) ->
+            log "At.loadView", this, datas
             this.view.load this, datas
 
         lookup: ->
             key = this.getKeyname()
             return no if not key
+            log "At.lookup.key", key
 
             if not _isNil(datas = @.cache())
                 @.loadView datas
@@ -219,7 +229,7 @@
             if $.isArray(data) and data.length != 0
                 items = $.map data, (item,i) =>
                     try
-                        name = $.isPlainObject item
+                        name = if $.isPlainObject item then item[@.searchWord()] else item
                         regexp = new RegExp(key.text.replace("+","\\+"),'i')
                         match = name.match(regexp)
                     catch e
@@ -234,7 +244,8 @@
         holder: null
         _jqo: null
         jqo: ->
-            return @._jqo or= $(@.id)
+            jqo = @._jqo
+            jqo = if _isNil jqo then (@._jqo = $(@.id)) else jqo
 
         init: ->
             return if not _isNil @.jqo()
@@ -250,6 +261,7 @@
                     e.preventDefault()
                     @.choose()
 
+
         isShowing: () ->
             @.jqo().is(":visible")
 
@@ -261,5 +273,93 @@
         rePosition: () ->
             @.jqo().offset @.holder.offset()
 
+        next: (e) ->
+            cur = @.jqo().find('.cur').removeClass('cur')
+            next = cur.next()
+            next = $(@.jqo().find('li')[0]) if not cur.length
+            next.addClass 'cur'
+
+        prev: (e) ->
+            cur = @.jqo().find('.cur').removeClass('cur')
+            prev = cur.prev()
+            prev = @.jqo().find('li').last() if not prev.length
+            prev.addClass('cur')
+
+        show: (e) ->
+            @.jqo().show() if not @.isShowing()
+            @.rePosition()
+
+        hide: (e) ->
+            @.jqo().hide() if @.isShowing()
+
+        clear: (clear_all) ->
+            @._cache = {} if clear_all is yes
+            @.jqo().find('ul').empty()
+
+        load: (holder, list) ->
+            return no if not $.isArray(list)
+            @.holder = holder
+            holder.cache(list)
+            @.clear()
+
+            tpl = holder.getOpt('tpl')
+            list = _unique(list, holder.searchWord())
+
+            $ul = @.jqo().find('ul')
+            $.each list.splice(0, holder.getOpt('limit')), (i, item) ->
+                if not $.isPlainObject item
+                    item = {id:i, name:item}
+                    tpl = _DEFAULT_TPL
+                $ul.append _evalTpl tpl, item
+            @.show()
+            $ul.find("li:eq(0)").addClass "cur"
+
+    _evalTpl = (tpl, map) ->
+        try
+            el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
+                map[key]
+        catch error
+            ""
+    ### 
+      maybe we can use $._unique. 
+      But i don't know it will delete li element frequently or not.
+      I think we should not change DOM element frequently.
+      more, It seems batter not to call evalTpl function too much times.
+    ###
+    _unique = (list,keyword) ->
+        record = []
+        $.map list, (v, id) ->
+            value = if $.isPlainObject(v) then v[keyword] else v
+            if $.inArray(value,record) < 0
+                record.push value
+                return v
+
+    _isNil = (target) ->
+        not target \
+        or ($.isPlainObject(target) and $.isEmptyObject(target)) \
+        or ($.isArray(target) and target.length is 0) \
+        or (target instanceof $ and target.length is 0) \
+        or target is undefined
+
+    _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
+    
+    log = () ->
+        console.log(arguments)
+
+    $.fn.atWho = (flag, options) ->
+        AtView.init()
+        @.filter('textarea, input').each () ->
+            $this = $(this)
+            data = $this.data "AtWho"
+
+            $this.data 'AtWho', (data = new At(this)) if not data
+            data.reg flag, options
+
+    $.fn.atWho.default =
+        data: []
+        callback: null
+        cache: yes
+        limit: 5
+        tpl: _DEFAULT_TPL
 
 )(window.jQuery)

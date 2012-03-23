@@ -1,9 +1,10 @@
 (function() {
 
   (function($) {
-    var At, AtView, Mirror;
+    var At, AtView, Mirror, log, _DEFAULT_TPL, _evalTpl, _isNil, _unique;
     Mirror = function($origin) {
-      return this.init($origin);
+      this.init($origin);
+      return this;
     };
     Mirror.prototype = {
       $mirror: null,
@@ -17,11 +18,11 @@
           left: 0,
           top: 0,
           zIndex: -20000,
-          'white-space': pre - wrap
+          'white-space': 'pre-wrap'
         };
-        $.each(this.css(function(i, p) {
+        $.each(this.css, function(i, p) {
           return css[p] = $origin.css(p);
-        }));
+        });
         $mirror.css(css);
         $('body').append($mirror);
         return this.$mirror = $mirror;
@@ -50,21 +51,38 @@
       this.pos = 0;
       this.flags = {};
       this.theflag = null;
-      this.seach_word = {};
+      this.search_word = {};
       this.view = AtView;
       this.mirror = new Mirror($inputor);
       $inputor.on("keyup.inputor", function(e) {
         var lookup, stop;
         stop = e.keyCode === 40 || e.keyCode === 38;
-        lookup = stop && !_this.view.isShowing();
+        lookup = !(stop && _this.view.isShowing());
         if (lookup) return _this.lookup();
       }).on("mouseup.inputor", function(e) {
         return _this.lookup();
       });
-      return this.init();
+      this.init();
+      log("At.new", $inputor[0]);
+      return this;
     };
     At.prototype = {
       constructor: At,
+      init: function() {
+        var _this = this;
+        this.$inputor.on('keydown.inputor', function(e) {
+          return _this.onkeydown(e);
+        }).on('scroll.inputor', function(e) {
+          return _this.view.hide();
+        }).on('blur.inputor', function(e) {
+          var callback;
+          callback = function() {
+            return this.view.hide();
+          };
+          return _this.view.timeout_id = setTimeout(callback, 150);
+        });
+        return log("At.init", this.$inputor[0]);
+      },
       reg: function(flag, options) {
         var opt;
         opt = {};
@@ -73,7 +91,8 @@
         } else {
           opt = options;
         }
-        return this.options[flag] = $.extend({}, $.fn.atWho["default"], opt);
+        this.options[flag] = $.extend({}, $.fn.atWho["default"], opt);
+        return log("At.reg", this.$inputor[0], flag, options);
       },
       searchWord: function() {
         var match, search_word;
@@ -96,11 +115,11 @@
           Sel = document.selection.createRange();
           x = Sel.boundingLeft + $inputor.scrollLeft();
           y = Sel.boundingTop + Sel.boundingHeight + $(window).scrollTop() + $inputor.scrollTop();
+          return {
+            'top': y,
+            'left': x
+          };
         }
-        return {
-          'top': y,
-          'left': x
-        };
         mirror = this.mirror;
         format = function(value) {
           return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
@@ -144,7 +163,7 @@
         return (_base = this._cache)[key] || (_base[key] = value);
       },
       getKeyname: function() {
-        var $inputor, caret_pos, end, key, start, subtext, text,
+        var $inputor, caret_pos, end, key, matched, start, subtext, text,
           _this = this;
         $inputor = this.$inputor;
         text = $inputor.val();
@@ -153,8 +172,9 @@
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
         */
         subtext = text.slice(0, caret_pos);
+        matched = null;
         $.each(this.options, function(flag) {
-          var match, matched, regexp;
+          var match, regexp;
           regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
           match = regexp.exec(subtext);
           if (!_isNil(match)) {
@@ -163,7 +183,7 @@
             return false;
           }
         });
-        if (matched === String && matched.length <= 20) {
+        if (typeof matched === 'string' && matched.length <= 20) {
           start = caret_pos - matched.length;
           end = start + matched.length;
           this.pos = start;
@@ -175,6 +195,7 @@
         } else {
           this.view.hide();
         }
+        log("At.getKeyname", key);
         return this.keyword = key;
       },
       replaceStr: function(str) {
@@ -212,23 +233,15 @@
         }
         return e.stopPropagation();
       },
-      init: function() {
-        var _this = this;
-        return this.$inputor.on('keydown.inputor', function(e) {
-          return _this.onkeydown(e);
-        }).on('scroll.inputor', function(e) {
-          return _this.view.hide();
-        }).on('blur.inputor', function(e) {
-          return _this.view.timeout_id = setTimeout("_this.view.hide()", 150);
-        });
-      },
       loadView: function(datas) {
+        log("At.loadView", this, datas);
         return this.view.load(this, datas);
       },
       lookup: function() {
         var callback, datas, key;
         key = this.getKeyname();
         if (!key) return false;
+        log("At.lookup.key", key);
         if (!_isNil(datas = this.cache())) {
           this.loadView(datas);
         } else if (!_isNil(datas = this.lookupWithData(key))) {
@@ -248,7 +261,7 @@
           items = $.map(data, function(item, i) {
             var match, name, regexp;
             try {
-              name = $.isPlainObject(item);
+              name = $.isPlainObject(item) ? item[_this.searchWord()] : item;
               regexp = new RegExp(key.text.replace("+", "\\+"), 'i');
               match = name.match(regexp);
             } catch (e) {
@@ -264,13 +277,15 @@
         return items;
       }
     };
-    return AtView = {
+    AtView = {
       timeout_id: null,
       id: '#at-view',
       holder: null,
       _jqo: null,
       jqo: function() {
-        return this._jqo || (this._jqo = $(this.id));
+        var jqo;
+        jqo = this._jqo;
+        return jqo = _isNil(jqo) ? (this._jqo = $(this.id)) : jqo;
       },
       init: function() {
         var $menu, tpl,
@@ -300,7 +315,106 @@
       },
       rePosition: function() {
         return this.jqo().offset(this.holder.offset());
+      },
+      next: function(e) {
+        var cur, next;
+        cur = this.jqo().find('.cur').removeClass('cur');
+        next = cur.next();
+        if (!cur.length) next = $(this.jqo().find('li')[0]);
+        return next.addClass('cur');
+      },
+      prev: function(e) {
+        var cur, prev;
+        cur = this.jqo().find('.cur').removeClass('cur');
+        prev = cur.prev();
+        if (!prev.length) prev = this.jqo().find('li').last();
+        return prev.addClass('cur');
+      },
+      show: function(e) {
+        if (!this.isShowing()) this.jqo().show();
+        return this.rePosition();
+      },
+      hide: function(e) {
+        if (this.isShowing()) return this.jqo().hide();
+      },
+      clear: function(clear_all) {
+        if (clear_all === true) this._cache = {};
+        return this.jqo().find('ul').empty();
+      },
+      load: function(holder, list) {
+        var $ul, tpl;
+        if (!$.isArray(list)) return false;
+        this.holder = holder;
+        holder.cache(list);
+        this.clear();
+        tpl = holder.getOpt('tpl');
+        list = _unique(list, holder.searchWord());
+        $ul = this.jqo().find('ul');
+        $.each(list.splice(0, holder.getOpt('limit')), function(i, item) {
+          if (!$.isPlainObject(item)) {
+            item = {
+              id: i,
+              name: item
+            };
+            tpl = _DEFAULT_TPL;
+          }
+          return $ul.append(_evalTpl(tpl, item));
+        });
+        this.show();
+        return $ul.find("li:eq(0)").addClass("cur");
       }
+    };
+    _evalTpl = function(tpl, map) {
+      var el;
+      try {
+        return el = tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+          return map[key];
+        });
+      } catch (error) {
+        return "";
+      }
+    };
+    /* 
+      maybe we can use $._unique. 
+      But i don't know it will delete li element frequently or not.
+      I think we should not change DOM element frequently.
+      more, It seems batter not to call evalTpl function too much times.
+    */
+    _unique = function(list, keyword) {
+      var record;
+      record = [];
+      return $.map(list, function(v, id) {
+        var value;
+        value = $.isPlainObject(v) ? v[keyword] : v;
+        if ($.inArray(value, record) < 0) {
+          record.push(value);
+          return v;
+        }
+      });
+    };
+    _isNil = function(target) {
+      return !target || ($.isPlainObject(target) && $.isEmptyObject(target)) || ($.isArray(target) && target.length === 0) || (target instanceof $ && target.length === 0) || target === void 0;
+    };
+    _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>";
+    log = function() {
+      return console.log(arguments);
+    };
+    $.fn.atWho = function(flag, options) {
+      AtView.init();
+      return this.filter('textarea, input').each(function() {
+        var $this, data;
+        $this = $(this);
+        data = $this.data("AtWho");
+        if (!data) $this.data('AtWho', (data = new At(this)));
+        return data.reg(flag, options);
+      });
+    };
+    return $.fn.atWho["default"] = {
+      data: [],
+      callback: null,
+      cache: true,
+      limit: 5,
+      tpl: _DEFAULT_TPL
     };
   })(window.jQuery);
 
