@@ -257,7 +257,7 @@
         } else if (!_isNil(datas = this.lookupWithData(key))) {
           this.loadView(datas);
         } else if ($.isFunction(callback = this.getOpt('callback'))) {
-          callback(key.text, this.loadView);
+          callback(key.text, $.proxy(this.loadView, this));
         } else {
           this.view.hide();
         }
@@ -396,11 +396,11 @@
         return "";
       }
     };
-    /* 
-      maybe we can use $._unique. 
-      But i don't know it will delete li element frequently or not.
-      I think we should not change DOM element frequently.
-      more, It seems batter not to call evalTpl function too much times.
+    /*
+          maybe we can use $._unique.
+          But i don't know it will delete li element frequently or not.
+          I think we should not change DOM element frequently.
+          more, It seems batter not to call evalTpl function too much times.
     */
     _unique = function(list, keyword) {
       var record;

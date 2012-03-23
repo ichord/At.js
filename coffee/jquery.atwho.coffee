@@ -224,7 +224,7 @@
             else if not _isNil(datas = @.lookupWithData key)
                 @.loadView datas
             else if $.isFunction(callback = @.getOpt 'callback')
-                callback key.text, @.loadView
+                callback key.text, $.proxy(@.loadView,@)
             else
                 @.view.hide()
             $.noop()
@@ -329,8 +329,8 @@
                 map[key]
         catch error
             ""
-    ### 
-      maybe we can use $._unique. 
+    ###
+      maybe we can use $._unique.
       But i don't know it will delete li element frequently or not.
       I think we should not change DOM element frequently.
       more, It seems batter not to call evalTpl function too much times.

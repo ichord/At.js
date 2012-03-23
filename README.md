@@ -1,7 +1,5 @@
 Implement Twitter/Weibo @ mentions
 
-**support ie6,7. But problem in long word break**
-
 ###Demo
 http://ichord.github.com/At.js
 
@@ -23,28 +21,44 @@ http://ichord.github.com/At.js
 ``` javascript
     default = {
                 /*
-		 call this function after catch the query words.
-		 context object will be the core handler hold all function and field.
-		 see the example below.
-		 it must be return a plain text array
+                 It's must be a function.
+
+                 `At` will pass two arguments to this callback, they are `query` and `callback`:
+                 `query` is the key word that fetch from the textarea 
+                 with the char you have regsitered such as "@"
+
+                 `callback` will accept a string array or plain object array
+                 one more thing, those name is optional.
                  */
 		'callback': null,
+
                 /*
 		 enable search cache. if you want to use $.ajax cache.
 		 just set it false.
                  */
 		'cache' : true,
-                /* see usage below. */
-		'data':[],
-                'limit' : 5,
-                /* element render template
-                 * the value will insert into textarea when you make a choose
+
+                /* 
+                 static data will be searched by this plugin
                  */
-                'tpl' : "<li id='${index}' data-keyname='${name}'>${name}</li>"
+		'data':[],
+
+                /*
+                 how much item will be showed in box
+                 */
+                'limit' : 5,
+
+                /* 
+                 item template
+                 this plugin will insert the value of `data-value` into textarea and search by it.
+                 */
+                'tpl' : "<li id='${index}' data-value='${name}'>${name}</li>"
 	};
 ```
 
 ####static data
+what you need to do is just register the character such as `@` or `:` like this example,
+and then pass the data.
 ``` javascript
 emoji_list = [
     "apple", "aquarius", "aries", "arrow_backward", "arrow_down",
@@ -60,8 +74,8 @@ $('textarea').atWho("@",function(query,callback){
     param = {'q':query},
     names = [];
     $.ajax(url,param,function(data) {
-        names = $.jsonParse(data);
-        //for now , just support plain text array.
+        names = $.parseJSON(data);
+        // `names` must be a array contain string or plain object 
         callback(names);
     });
 });
@@ -78,23 +92,30 @@ $('textarea').atWho("@",{
 
 ####customs template
 code in example.html file
-base template, `li` element and `data-keyname` property is necessary :
+base template, `li` element and `data-value` property is necessary :
 
-`<li data-keyname='${search_word}'>anything here</li>`
+`<li data-value='${search_word}'>anything here</li>`
 
 ``` javascript
-
-    var emojis = $.map(emoji_list,function(value,i) {
-                        return {'id':i,'key':value+":",'name':value};
-                        });
-
-                    $("textarea").atWho("@",{
-                        'tpl': "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>",
-                        'data':data
-                        })
-                    .atWho(":",{
-                        'data':emojis,
-                        'tpl':"<li data-keyname='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
-                        });
-
+$("textarea")
+.atWho("@",{
+    'tpl': "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>"
+    ,'data':data
+})
+.atWho(":",{
+    tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
+    ,callback:function(query,callback) {
+        $.ajax({
+            url:'data.json'
+            data:{q:query}
+            ,type:'GET'
+            ,success:function(data) {
+                datas = $.map(data,function(value,i){
+                    return {'id':i,'key':value+":",'name':value}
+                    })
+                callback(datas)
+            }
+        })
+    }
+})
 ```

@@ -1,3 +1,10 @@
+###v0.1.4 2012-3-23
+* box showing above instead of bottom when it get close to the bottom of window
+* coffeescript here is.
+* every registered character able to have thire own options such as template(`tpl`)
+* every inputor (textarea, input) able to have their own registered character and different behavior
+  even the same character to other inputor
+
 ###v0.1.0
 * 可以監聽多個字符  
     multiple char listening.
