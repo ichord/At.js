@@ -59,6 +59,7 @@ http://ichord.github.com/At.js
 ####static data
 what you need to do is just register the character such as `@` or `:` like this example,
 and then pass the data.
+
 ``` javascript
 emoji_list = [
     "apple", "aquarius", "aries", "arrow_backward", "arrow_down",
@@ -68,6 +69,7 @@ $('textarea').atWho(":",{data:emoji_list});
 ```
 
 ####ajax
+
 ``` javascript
 $('textarea').atWho("@",function(query,callback){
     var url = "#",
@@ -82,6 +84,7 @@ $('textarea').atWho("@",function(query,callback){
 ```
 
 ####both
+
 ``` javascript
 names = ['one','two'];
 $('textarea').atWho("@",{
