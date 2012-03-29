@@ -224,7 +224,7 @@
           end = start + matched.length;
           this.pos = start;
           key = {
-            'text': matched,
+            'text': matched.toLowerCase(),
             'start': start,
             'end': end
           };
