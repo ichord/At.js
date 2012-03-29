@@ -18,6 +18,13 @@
 #at-view .cur small {
     color: white;
 }
+#at-view strong {
+    color: #3366FF;
+}
+#at-view .cur strong {
+    color: white;
+    font:bold;
+}
 #at-view ul {
     /* width: 100px; */
     list-style:none;
