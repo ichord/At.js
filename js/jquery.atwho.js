@@ -356,7 +356,7 @@
       rePosition: function() {
         var rect;
         rect = this.holder.rect();
-        if (rect.bottom + this.jqo().height() > $(window).height()) {
+        if (rect.bottom + this.jqo().height() - $(window).scrollTop() > $(window).height()) {
           rect.bottom = rect.top - this.jqo().height();
         }
         log("AtView.rePosition", {

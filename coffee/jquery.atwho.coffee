@@ -308,7 +308,7 @@
             @.hide()
         rePosition: () ->
             rect = @.holder.rect()
-            if rect.bottom + @.jqo().height() > $(window).height()
+            if rect.bottom + @.jqo().height() - $(window).scrollTop() > $(window).height()
                 rect.bottom = rect.top - @.jqo().height()
             log "AtView.rePosition",{left:rect.left, top:rect.bottom}
             @.jqo().offset {left:rect.left, top:rect.bottom}
