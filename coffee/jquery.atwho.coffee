@@ -203,7 +203,6 @@
             @.query = key
 
         replaceStr: (str) ->
-            #$inputor.replaceStr(str,start,end)
             $inputor = @.$inputor
             key = @.query
             source = $inputor.val()
@@ -370,7 +369,7 @@
 
     _highlighter = (li,query) ->
         return li if _isNil(query)
-        li.replace new RegExp(">\\s*(\\w*)(" + query + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
+        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
             '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
     _sorter = (items) ->

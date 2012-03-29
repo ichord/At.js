@@ -434,7 +434,7 @@
     };
     _highlighter = function(li, query) {
       if (_isNil(query)) return li;
-      return li.replace(new RegExp(">\\s*(\\w*)(" + query + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
+      return li.replace(new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
         return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
       });
     };
