@@ -10,12 +10,6 @@
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
     min-width: 120px;
 }
-#at-view span#title {
-    font-size:13px;
-    color: gray;
-    padding: 3px 5px;
-    cursor: default;
-}
 
 #at-view .cur {
     background: #3366FF;
@@ -34,7 +28,7 @@
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
-    font-weight: bold;    cursor: pointer;
+    cursor: pointer;
     /* border-top: 1px solid #C8C8C8; */
 }
 #at-view small {
