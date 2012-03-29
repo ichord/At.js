@@ -29,9 +29,9 @@ var emojis = $.map(emojis, function(value, i) {return {key: value + ':', name:va
 $(function(){
     $('textarea').atWho('@', {
         data: names,
-        tpl: "<li id='${id}' data-keyname='${name}'>${name} <small>${email}</small></li>"
+        tpl: "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>"
     }).atWho(':', {
         data: emojis,
-        tpl:"<li data-keyname='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
+        tpl:"<li data-value='${name}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
     });
 });
