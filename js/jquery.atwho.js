@@ -27,7 +27,7 @@
 (function() {
 
   (function($) {
-    var At, AtView, Mirror, log, _DEFAULT_TPL, _evalTpl, _isNil, _unique;
+    var At, AtView, Mirror, log, _DEFAULT_TPL, _evalTpl, _highlighter, _isNil, _objectify, _sorter, _unique;
     Mirror = function($origin) {
       this.init($origin);
       return this;
@@ -75,7 +75,7 @@
         _this = this;
       $inputor = this.$inputor = $(inputor);
       this.options = {};
-      this.keyword = {
+      this.query = {
         text: "",
         start: 0,
         stop: 0
@@ -127,7 +127,7 @@
         this.options[flag] = $.extend({}, $.fn.atWho["default"], opt);
         return log("At.reg", this.$inputor[0], flag, options);
       },
-      searchWord: function() {
+      dataValue: function() {
         var match, search_word;
         search_word = this.search_word[this.theflag];
         if (search_word) return search_word;
@@ -194,7 +194,7 @@
       },
       cache: function(value) {
         var key, _base;
-        key = this.keyword.text;
+        key = this.query.text;
         if (!this.getOpt("cache") || !key) return null;
         return (_base = this._cache)[key] || (_base[key] = value);
       },
@@ -232,12 +232,12 @@
           this.view.hide();
         }
         log("At.getKeyname", key);
-        return this.keyword = key;
+        return this.query = key;
       },
       replaceStr: function(str) {
         var $inputor, key, source, start_str, text;
         $inputor = this.$inputor;
-        key = this.keyword;
+        key = this.query;
         source = $inputor.val();
         start_str = source.slice(0, key.start);
         text = start_str + str + source.slice(key.end);
@@ -269,9 +269,13 @@
         }
         return e.stopPropagation();
       },
-      loadView: function(datas) {
-        log("At.loadView", this, datas);
-        return this.view.load(this, datas);
+      renderView: function(datas) {
+        log("At.renderView", this, datas);
+        datas = datas.splice(0, this.getOpt('limit'));
+        datas = _unique(datas, this.dataValue());
+        datas = _objectify(datas);
+        datas = _sorter.call(this, datas);
+        return this.view.render(this, datas);
       },
       lookup: function() {
         var callback, datas, key;
@@ -279,11 +283,11 @@
         if (!key) return false;
         log("At.lookup.key", key);
         if (!_isNil(datas = this.cache())) {
-          this.loadView(datas);
+          this.renderView(datas);
         } else if (!_isNil(datas = this.lookupWithData(key))) {
-          this.loadView(datas);
+          this.renderView(datas);
         } else if ($.isFunction(callback = this.getOpt('callback'))) {
-          callback(key.text, $.proxy(this.loadView, this));
+          callback(key.text, $.proxy(this.renderView, this));
         } else {
           this.view.hide();
         }
@@ -297,7 +301,7 @@
           items = $.map(data, function(item, i) {
             var match, name, regexp;
             try {
-              name = $.isPlainObject(item) ? item[_this.searchWord()] : item;
+              name = $.isPlainObject(item) ? item[_this.dataValue()] : item;
               regexp = new RegExp(key.text.replace("+", "\\+"), 'i');
               match = name.match(regexp);
             } catch (e) {
@@ -345,7 +349,7 @@
       choose: function() {
         var $li, str;
         $li = this.jqo().find(".cur");
-        str = _isNil($li) ? this.holder.keyword.text + " " : $li.attr("data-value") + " ";
+        str = _isNil($li) ? this.holder.query.text + " " : $li.attr("data-value") + " ";
         this.holder.replaceStr(str);
         return this.hide();
       },
@@ -389,28 +393,34 @@
         if (clear_all === true) this._cache = {};
         return this.jqo().find('ul').empty();
       },
-      load: function(holder, list) {
+      render: function(holder, list) {
         var $ul, tpl;
         if (!$.isArray(list)) return false;
         this.holder = holder;
         holder.cache(list);
         this.clear();
-        tpl = holder.getOpt('tpl');
-        list = _unique(list, holder.searchWord());
         $ul = this.jqo().find('ul');
-        $.each(list.splice(0, holder.getOpt('limit')), function(i, item) {
-          if (!$.isPlainObject(item)) {
-            item = {
-              id: i,
-              name: item
-            };
-            tpl = _DEFAULT_TPL;
-          }
-          return $ul.append(_evalTpl(tpl, item));
+        tpl = holder.getOpt('tpl');
+        $.each(list, function(i, item) {
+          var li;
+          tpl || (tpl = _DEFAULT_TPL);
+          li = _evalTpl(tpl, item);
+          return $ul.append(_highlighter(li, holder.query.text));
         });
         this.show();
         return $ul.find("li:eq(0)").addClass("cur");
       }
+    };
+    _objectify = function(list) {
+      return $.map(list, function(item, k) {
+        if (!$.isPlainObject(item)) {
+          item = {
+            id: k,
+            name: item
+          };
+        }
+        return item;
+      });
     };
     _evalTpl = function(tpl, map) {
       var el;
@@ -422,18 +432,41 @@
         return "";
       }
     };
+    _highlighter = function(li, query) {
+      if (_isNil(query)) return li;
+      return li.replace(new RegExp(">\\s*(\\w*)(" + query + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
+        return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
+      });
+    };
+    _sorter = function(items) {
+      var data_value, item, query, results, text, _i, _len;
+      data_value = this.dataValue();
+      query = this.query.text;
+      results = [];
+      for (_i = 0, _len = items.length; _i < _len; _i++) {
+        item = items[_i];
+        text = item[data_value];
+        if (text.toLowerCase().indexOf(query) === -1) continue;
+        item.order = text.toLowerCase().indexOf(query);
+        results.push(item);
+      }
+      results.sort(function(a, b) {
+        return a.order - b.order;
+      });
+      return results;
+    };
     /*
           maybe we can use $._unique.
           But i don't know it will delete li element frequently or not.
           I think we should not change DOM element frequently.
           more, It seems batter not to call evalTpl function too much times.
     */
-    _unique = function(list, keyword) {
+    _unique = function(list, query) {
       var record;
       record = [];
       return $.map(list, function(v, id) {
         var value;
-        value = $.isPlainObject(v) ? v[keyword] : v;
+        value = $.isPlainObject(v) ? v[query] : v;
         if ($.inArray(value, record) < 0) {
           record.push(value);
           return v;

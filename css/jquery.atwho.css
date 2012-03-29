@@ -28,7 +28,8 @@
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
-    font-weight: bold;    cursor: pointer;
+    ffont-weight: bold;
+    cursor: pointer;
     /* border-top: 1px solid #C8C8C8; */
 }
 #at-view small {

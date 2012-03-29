@@ -57,7 +57,7 @@
     At = (inputor) ->
         $inputor = @.$inputor = $(inputor)
         @options = {}
-        @keyword =
+        @query =
             text:""
             start:0
             stop:0
@@ -104,7 +104,7 @@
             @.options[flag] = $.extend {}, $.fn.atWho.default, opt
             log "At.reg", @.$inputor[0],flag, options
 
-        searchWord: ->
+        dataValue: ->
             search_word = @.search_word[@.theflag]
             return search_word if search_word
             match = /data-value=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
@@ -167,7 +167,7 @@
             return {top:y,left:x,bottom:bottom}
 
         cache: (value) ->
-            key = @.keyword.text
+            key = @.query.text
             return null if not @.getOpt("cache") or not key
             return @._cache[key] or= value
 
@@ -200,12 +200,12 @@
                 @.view.hide()
 
             log "At.getKeyname", key
-            @.keyword = key
+            @.query = key
 
         replaceStr: (str) ->
             #$inputor.replaceStr(str,start,end)
             $inputor = @.$inputor
-            key = @.keyword
+            key = @.query
             source = $inputor.val()
             start_str = source.slice 0, key.start
             text = start_str + str + source.slice key.end
@@ -235,9 +235,15 @@
                     $.noop()
             e.stopPropagation()
 
-        loadView: (datas) ->
-            log "At.loadView", this, datas
-            this.view.load this, datas
+        renderView: (datas) ->
+            log "At.renderView", @, datas
+
+            datas = datas.splice(0, @.getOpt('limit'))
+            datas = _unique(datas, @.dataValue())
+            datas = _objectify(datas)
+            datas = _sorter.call(@,datas)
+
+            this.view.render this, datas
 
         lookup: ->
             key = this.getKeyname()
@@ -245,11 +251,11 @@
             log "At.lookup.key", key
 
             if not _isNil(datas = @.cache())
-                @.loadView datas
+                @.renderView datas
             else if not _isNil(datas = @.lookupWithData key)
-                @.loadView datas
+                @.renderView datas
             else if $.isFunction(callback = @.getOpt 'callback')
-                callback key.text, $.proxy(@.loadView,@)
+                callback key.text, $.proxy(@.renderView,@)
             else
                 @.view.hide()
             $.noop()
@@ -259,7 +265,7 @@
             if $.isArray(data) and data.length != 0
                 items = $.map data, (item,i) =>
                     try
-                        name = if $.isPlainObject item then item[@.searchWord()] else item
+                        name = if $.isPlainObject item then item[@.dataValue()] else item
                         regexp = new RegExp(key.text.replace("+","\\+"),'i')
                         match = name.match(regexp)
                     catch e
@@ -297,7 +303,7 @@
 
         choose: () ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.keyword.text+" " else $li.attr("data-value") + " "
+            str = if _isNil($li) then @.holder.query.text+" " else $li.attr("data-value") + " "
             @.holder.replaceStr(str)
             @.hide()
         rePosition: () ->
@@ -330,23 +336,30 @@
             @._cache = {} if clear_all is yes
             @.jqo().find('ul').empty()
 
-        load: (holder, list) ->
+        render: (holder, list) ->
             return no if not $.isArray(list)
+
             @.holder = holder
             holder.cache(list)
             @.clear()
 
-            tpl = holder.getOpt('tpl')
-            list = _unique(list, holder.searchWord())
-
             $ul = @.jqo().find('ul')
-            $.each list.splice(0, holder.getOpt('limit')), (i, item) ->
-                if not $.isPlainObject item
-                    item = {id:i, name:item}
-                    tpl = _DEFAULT_TPL
-                $ul.append _evalTpl tpl, item
+            tpl = holder.getOpt('tpl')
+
+            $.each list, (i, item) ->
+                tpl or= _DEFAULT_TPL
+                li = _evalTpl tpl, item
+                $ul.append _highlighter li,holder.query.text
+
             @.show()
             $ul.find("li:eq(0)").addClass "cur"
+
+
+    _objectify = (list) ->
+        $.map list, (item,k) ->
+            if not $.isPlainObject item
+                item = {id:k, name:item}
+            return item
 
     _evalTpl = (tpl, map) ->
         try
@@ -354,16 +367,38 @@
                 map[key]
         catch error
             ""
+
+    _highlighter = (li,query) ->
+        return li if _isNil(query)
+        li.replace new RegExp(">\\s*(\\w*)(" + query + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
+            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
+
+    _sorter = (items) ->
+        data_value = @.dataValue()
+        query = @.query.text
+        results = []
+
+        for item in items
+            text = item[data_value]
+            continue if text.toLowerCase().indexOf(query) is -1
+            item.order = text.toLowerCase().indexOf query
+            results.push(item)
+
+        results.sort (a,b) ->
+            a.order - b.order
+        return results
+        
+
     ###
       maybe we can use $._unique.
       But i don't know it will delete li element frequently or not.
       I think we should not change DOM element frequently.
       more, It seems batter not to call evalTpl function too much times.
     ###
-    _unique = (list,keyword) ->
+    _unique = (list,query) ->
         record = []
         $.map list, (v, id) ->
-            value = if $.isPlainObject(v) then v[keyword] else v
+            value = if $.isPlainObject(v) then v[query] else v
             if $.inArray(value,record) < 0
                 record.push value
                 return v
