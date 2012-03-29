@@ -195,7 +195,7 @@
                 start = caret_pos - matched.length
                 end = start + matched.length
                 @.pos = start
-                key = {'text':matched, 'start':start, 'end':end}
+                key = {'text':matched.toLowerCase(), 'start':start, 'end':end}
             else
                 @.view.hide()
 
