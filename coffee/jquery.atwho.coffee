@@ -91,8 +91,7 @@
                 .on 'scroll.inputor', (e) =>
                     @.view.hide()
                 .on 'blur.inputor', (e) =>
-                    callback = => @.view.hide()
-                    @.view.timeout_id = setTimeout callback, 500
+                    @.view.hide(1000)
             log "At.init", @.$inputor[0]
 
         reg: (flag, options) ->
@@ -312,24 +311,29 @@
             log "AtView.rePosition",{left:rect.left, top:rect.bottom}
             @.jqo().offset {left:rect.left, top:rect.bottom}
 
-        next: (e) ->
+        next: () ->
             cur = @.jqo().find('.cur').removeClass('cur')
             next = cur.next()
             next = $(@.jqo().find('li')[0]) if not cur.length
             next.addClass 'cur'
 
-        prev: (e) ->
+        prev: () ->
             cur = @.jqo().find('.cur').removeClass('cur')
             prev = cur.prev()
             prev = @.jqo().find('li').last() if not prev.length
             prev.addClass('cur')
 
-        show: (e) ->
+        show: () ->
             @.jqo().show() if not @.isShowing()
             @.rePosition()
 
-        hide: (e) ->
-            @.jqo().hide() if @.isShowing()
+        hide: (time) ->
+            if isNaN time
+                @.jqo().hide() if @.isShowing()
+            else
+                callback = => @.hide()
+                clearTimeout @.timeout_id
+                @.timeout_id = setTimeout callback, 300
 
         clear: (clear_all) ->
             @._cache = {} if clear_all is yes

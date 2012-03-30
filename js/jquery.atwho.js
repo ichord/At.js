@@ -108,11 +108,7 @@
         }).on('scroll.inputor', function(e) {
           return _this.view.hide();
         }).on('blur.inputor', function(e) {
-          var callback;
-          callback = function() {
-            return _this.view.hide();
-          };
-          return _this.view.timeout_id = setTimeout(callback, 500);
+          return _this.view.hide(1000);
         });
         return log("At.init", this.$inputor[0]);
       },
@@ -368,26 +364,36 @@
           top: rect.bottom
         });
       },
-      next: function(e) {
+      next: function() {
         var cur, next;
         cur = this.jqo().find('.cur').removeClass('cur');
         next = cur.next();
         if (!cur.length) next = $(this.jqo().find('li')[0]);
         return next.addClass('cur');
       },
-      prev: function(e) {
+      prev: function() {
         var cur, prev;
         cur = this.jqo().find('.cur').removeClass('cur');
         prev = cur.prev();
         if (!prev.length) prev = this.jqo().find('li').last();
         return prev.addClass('cur');
       },
-      show: function(e) {
+      show: function() {
         if (!this.isShowing()) this.jqo().show();
         return this.rePosition();
       },
-      hide: function(e) {
-        if (this.isShowing()) return this.jqo().hide();
+      hide: function(time) {
+        var callback,
+          _this = this;
+        if (isNaN(time)) {
+          if (this.isShowing()) return this.jqo().hide();
+        } else {
+          callback = function() {
+            return _this.hide();
+          };
+          clearTimeout(this.timeout_id);
+          return this.timeout_id = setTimeout(callback, 300);
+        }
       },
       clear: function(clear_all) {
         if (clear_all === true) this._cache = {};
