@@ -92,7 +92,7 @@
                     @.view.hide()
                 .on 'blur.inputor', (e) =>
                     callback = => @.view.hide()
-                    @.view.timeout_id = setTimeout callback,150
+                    @.view.timeout_id = setTimeout callback, 500
             log "At.init", @.$inputor[0]
 
         reg: (flag, options) ->
