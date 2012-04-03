@@ -102,6 +102,7 @@
             else
                 opt = options
             @.options[flag] = $.extend {}, $.fn.atWho.default, opt
+            @.view.choose_field = @.options[flag]['choose']
             log "At.reg", @.$inputor[0],flag, options
 
         dataValue: ->
@@ -229,8 +230,8 @@
                 when 9, 13
                     return if not view.isShowing()
                     e.preventDefault()
-                    choose_field = this.options[this.theflag]['choose'] || 'data-value'
-                    view.choose(choose_field)
+                    # choose_field = this.options[this.theflag]['choose'] || 'data-value'
+                    view.choose()
                 else
                     $.noop()
             e.stopPropagation()
@@ -276,6 +277,7 @@
 
     AtView =
         timeout_id: null
+        choose_field: null
         id: '#at-view'
         holder: null
         _jqo: null
@@ -301,11 +303,12 @@
         isShowing: () ->
             @.jqo().is(":visible")
 
-        choose: (choose_field) ->
+        choose: () ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(choose_field) + " "
+            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.choose_field) + " "
             @.holder.replaceStr(str)
             @.hide()
+
         rePosition: () ->
             rect = @.holder.rect()
             if rect.bottom + @.jqo().height() - $(window).scrollTop() > $(window).height()
