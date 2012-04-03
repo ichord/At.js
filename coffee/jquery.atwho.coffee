@@ -425,8 +425,11 @@
             data.reg flag, options
 
     $.fn.atWho.default =
-        choose: null
         data: []
+        # Parameter: choose
+        ## specify the attribute on customer tpl, 
+        ## so that we could append different value to the input other than the value we searched in
+        choose: null    
         callback: null
         cache: yes
         limit: 5
