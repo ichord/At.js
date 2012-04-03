@@ -102,6 +102,7 @@
             else
                 opt = options
             @.options[flag] = $.extend {}, $.fn.atWho.default, opt
+            @.view.choose_field = @.options[flag]['choose']
             log "At.reg", @.$inputor[0],flag, options
 
         dataValue: ->
@@ -229,6 +230,7 @@
                 when 9, 13
                     return if not view.isShowing()
                     e.preventDefault()
+                    # choose_field = this.options[this.theflag]['choose'] || 'data-value'
                     view.choose()
                 else
                     $.noop()
@@ -275,6 +277,7 @@
 
     AtView =
         timeout_id: null
+        choose_field: null
         id: '#at-view'
         holder: null
         _jqo: null
@@ -302,9 +305,10 @@
 
         choose: () ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr("data-value") + " "
+            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.choose_field) + " "
             @.holder.replaceStr(str)
             @.hide()
+
         rePosition: () ->
             rect = @.holder.rect()
             if rect.bottom + @.jqo().height() - $(window).scrollTop() > $(window).height()
@@ -425,6 +429,10 @@
 
     $.fn.atWho.default =
         data: []
+        # Parameter: choose
+        ## specify the attribute on customer tpl, 
+        ## so that we could append different value to the input other than the value we searched in
+        choose: null    
         callback: null
         cache: yes
         limit: 5
