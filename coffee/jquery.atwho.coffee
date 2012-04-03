@@ -229,7 +229,8 @@
                 when 9, 13
                     return if not view.isShowing()
                     e.preventDefault()
-                    view.choose()
+                    choose_field = this.options[this.theflag]['choose'] || 'data-value'
+                    view.choose(choose_field)
                 else
                     $.noop()
             e.stopPropagation()
@@ -300,9 +301,9 @@
         isShowing: () ->
             @.jqo().is(":visible")
 
-        choose: () ->
+        choose: (choose_field) ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr("data-value") + " "
+            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(choose_field) + " "
             @.holder.replaceStr(str)
             @.hide()
         rePosition: () ->
@@ -424,6 +425,7 @@
             data.reg flag, options
 
     $.fn.atWho.default =
+        choose: null
         data: []
         callback: null
         cache: yes
