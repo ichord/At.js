@@ -51,8 +51,15 @@ http://ichord.github.com/At.js
                 /* 
                  item template
                  this plugin will insert the value of `data-value` into textarea and search by it.
+                 `data-value` attr is nessnary.
                  */
-                'tpl' : "<li id='${index}' data-value='${name}'>${name}</li>"
+                'tpl' : "<li id='${index}' data-value='${name}'>${name}</li>",
+
+                /*
+                 which attribute's value of the `li` element would be appended to input.
+                 default attribute is "data-value"
+                 */
+                'choose' : "data-value"
 	};
 ```
 
@@ -94,10 +101,11 @@ $('textarea').atWho("@",{
 ```
 
 ####customs template
-code in example.html file
-base template, `li` element and `data-value` property is necessary :
 
-`<li data-value='${search_word}'>anything here</li>`
+code in example.html file  
+**base template**, `li` element and `data-value` attribute is necessary :  
+
+`<li data-value='${word}'>anything here</li>`
 
 ``` javascript
 $("textarea")

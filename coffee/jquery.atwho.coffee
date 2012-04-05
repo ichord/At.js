@@ -101,7 +101,6 @@
             else
                 opt = options
             @.options[flag] = $.extend {}, $.fn.atWho.default, opt
-            @.view.choose_field = @.options[flag]['choose']
             log "At.reg", @.$inputor[0],flag, options
 
         dataValue: ->
@@ -212,6 +211,7 @@
             $inputor.val text
             $inputor.caretPos start_str.length + str.length
             $inputor.change()
+            log "At.replaceStr", text
 
         onkeydown: (e) ->
             view = @.view
@@ -229,7 +229,6 @@
                 when 9, 13
                     return if not view.isShowing()
                     e.preventDefault()
-                    # choose_field = this.options[this.theflag]['choose'] || 'data-value'
                     view.choose()
                 else
                     $.noop()
@@ -276,7 +275,6 @@
 
     AtView =
         timeout_id: null
-        choose_field: null
         id: '#at-view'
         holder: null
         _jqo: null
@@ -304,7 +302,7 @@
 
         choose: () ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.choose_field) + " "
+            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.holder.getOpt("choose")) + " "
             @.holder.replaceStr(str)
             @.hide()
 
@@ -356,6 +354,7 @@
             $.each list, (i, item) ->
                 tpl or= _DEFAULT_TPL
                 li = _evalTpl tpl, item
+                log "AtView.render", li
                 $ul.append _highlighter li,holder.query.text
 
             @.show()
@@ -436,7 +435,7 @@
         # Parameter: choose
         ## specify the attribute on customer tpl, 
         ## so that we could append different value to the input other than the value we searched in
-        choose: null    
+        choose: "data-value"
         callback: null
         cache: yes
         limit: 5

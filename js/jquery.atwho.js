@@ -239,7 +239,8 @@
         text = start_str + str + source.slice(key.end);
         $inputor.val(text);
         $inputor.caretPos(start_str.length + str.length);
-        return $inputor.change();
+        $inputor.change();
+        return log("At.replaceStr", text);
       },
       onkeydown: function(e) {
         var view;
@@ -345,7 +346,7 @@
       choose: function() {
         var $li, str;
         $li = this.jqo().find(".cur");
-        str = _isNil($li) ? this.holder.query.text + " " : $li.attr("data-value") + " ";
+        str = _isNil($li) ? this.holder.query.text + " " : $li.attr(this.holder.getOpt("choose")) + " ";
         this.holder.replaceStr(str);
         return this.hide();
       },
@@ -411,6 +412,7 @@
           var li;
           tpl || (tpl = _DEFAULT_TPL);
           li = _evalTpl(tpl, item);
+          log("AtView.render", li);
           return $ul.append(_highlighter(li, holder.query.text));
         });
         this.show();
@@ -496,6 +498,7 @@
     };
     return $.fn.atWho["default"] = {
       data: [],
+      choose: "data-value",
       callback: null,
       cache: true,
       limit: 5,
