@@ -186,7 +186,7 @@
                 regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
                 match = regexp.exec subtext
                 if not _isNil(match)
-                    matched = if match[1] is 'undefined' then match[2] else match[1]
+                    matched = if match[1] is undefined then match[2] else match[1]
                     @.theflag = flag
                     return no
 
