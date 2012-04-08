@@ -106,7 +106,7 @@
         dataValue: ->
             search_word = @.search_word[@.theflag]
             return search_word if search_word
-            match = /data-value=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
+            match = /data-value=["']?\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
             return @.search_word[@.theflag] =  if !_isNil(match) then match[1] else null
 
         getOpt: (key) ->
@@ -343,6 +343,9 @@
 
         render: (holder, list) ->
             return no if not $.isArray(list)
+            if list.length <= 0
+                @.hide()
+                return yes
 
             @.holder = holder
             holder.cache(list)

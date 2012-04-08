@@ -127,7 +127,7 @@
         var match, search_word;
         search_word = this.search_word[this.theflag];
         if (search_word) return search_word;
-        match = /data-value=['?]\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
+        match = /data-value=["']?\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
         return this.search_word[this.theflag] = !_isNil(match) ? match[1] : null;
       },
       getOpt: function(key) {
@@ -403,6 +403,10 @@
       render: function(holder, list) {
         var $ul, tpl;
         if (!$.isArray(list)) return false;
+        if (list.length <= 0) {
+          this.hide();
+          return true;
+        }
         this.holder = holder;
         holder.cache(list);
         this.clear();
