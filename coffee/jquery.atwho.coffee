@@ -101,7 +101,8 @@
                 opt['callback'] = options
             else
                 opt = options
-            @.options[flag] = $.extend {}, $.fn.atWho.default, opt
+            _default = @.options[flag] or= $.fn.atWho.default
+            @.options[flag] = $.extend {}, _default, opt
             log "At.reg", @.$inputor[0],flag, options
 
         dataValue: ->

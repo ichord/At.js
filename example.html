@@ -35,6 +35,10 @@
                         })
                     }
                     }); 
+                
+                $("button#reflash").click(function(){
+                        $("textarea#inputor").atWho("@",{"data":data.splice(0,3)}) 
+                        })
 
                 emojis = [
                     "six_pointed_star", "ski", "skull", "sleepy", "slot_machine", "smile",
@@ -78,6 +82,7 @@
 <body>
     <div class="box"></div>
     <div class="box"></div>
+    <button id="reflash">reflash</button>
     <textarea id="inputor" name="at" rows="8" cols="40">
         this textarea register "@" with static data 
         and ":" with ajax.

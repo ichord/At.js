@@ -117,14 +117,15 @@
         return log("At.init", this.$inputor[0]);
       },
       reg: function(flag, options) {
-        var opt;
+        var opt, _base, _default;
         opt = {};
         if ($.isFunction(options)) {
           opt['callback'] = options;
         } else {
           opt = options;
         }
-        this.options[flag] = $.extend({}, $.fn.atWho["default"], opt);
+        _default = (_base = this.options)[flag] || (_base[flag] = $.fn.atWho["default"]);
+        this.options[flag] = $.extend({}, _default, opt);
         return log("At.reg", this.$inputor[0], flag, options);
       },
       dataValue: function() {
