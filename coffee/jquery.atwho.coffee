@@ -123,7 +123,8 @@
                 x = Sel.boundingLeft + $inputor.scrollLeft()
                 y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
                 bottom = y + Sel.boundingHeight
-                return {top:y, left:x, bottom:bottom}
+                # -2 : for some font style problem.
+                return {top:y-2, left:x-2, bottom:bottom-2}
 
             mirror = @.mirror
 
@@ -154,17 +155,13 @@
             offset = $inputor.offset()
             at_rect = mirror.getFlagRect()
 
-            ###
-            FIXME: -$(window).scrollTop() get "wrong" offset.
-             but is good for $inputor.scrollTop()
-             jquey 1. + 07.1 fixed the scrollTop problem!?
-             ###
             x = offset.left + at_rect.left - $inputor.scrollLeft()
             y = offset.top - $inputor.scrollTop()
             bottom = y + at_rect.bottom
             y += at_rect.top
 
-            return {top:y,left:x,bottom:bottom}
+            # bottom + 2: for some font style problem
+            return {top:y,left:x,bottom:bottom + 2}
 
         cache: (value) ->
             key = @.query.text
