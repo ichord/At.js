@@ -54,6 +54,26 @@
         height: () ->
             @.$mirror.height()
 
+    Highlights = ($origin) ->
+        @.init $origin
+        this
+
+    Highlights:: =
+        $highlights: null
+        css: ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX','boxShadow']
+        init: ($origin) ->
+            $highlights = $("<div class='at-mentions-bg'></div>")
+            css = 'white-space': 'pre-wrap'
+            $.each @.css, (i,p) ->
+                css[p] = $origin.css p
+            $highlights.css(css)
+            $origin.css(background: "transparent")
+              .wrap($("<div class='at-mentions-wrap'></div>"))
+              .after $highlights
+            @.$highlights = $highlights
+        setContent: (html) ->
+            @.$highlights.html(html)
+
     At = (inputor) ->
         $inputor = @.$inputor = $(inputor)
         @options = {}
@@ -69,6 +89,7 @@
 
         @view = AtView
         @mirror = new Mirror $inputor
+        @highlights = new Highlights $inputor
 
         $inputor
             .on "keyup.inputor", (e) =>
@@ -93,6 +114,7 @@
                 .on 'blur.inputor', (e) =>
                     @.view.hide(1000)
             log "At.init", @.$inputor[0]
+            @mentioned = []
 
         reg: (flag, options) ->
             opt = {}
@@ -202,12 +224,31 @@
             log "At.getKeyname", key
             @.query = key
 
+        highlightMention: (text, str) ->
+
+            preg_quote = (string) ->
+              (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1")
+
+            highlights = @.mentioned
+            highlights.push(str)
+
+            $.each highlights, (i, v) ->
+              text = text
+                .replace( new RegExp(preg_quote(v), 'gi'), '<span class="highlight">' + v + '</span>' )
+                .replace( new RegExp(preg_quote('\r'), 'gi'), '<br>' )
+            @.highlights.setContent text
+
         replaceStr: (str) ->
             $inputor = @.$inputor
             key = @.query
             source = $inputor.val()
             start_str = source.slice 0, key.start
+            if !@.getOpt('select_include_char')
+              start_str = start_str.slice(0,-1)
+
             text = start_str + str + source.slice key.end
+
+            @.highlightMention text, str
 
             $inputor.val text
             $inputor.caretPos start_str.length + str.length
@@ -297,14 +338,22 @@
                     e.preventDefault()
                     @.choose()
 
-
         isShowing: () ->
             @.jqo().is(":visible")
 
         choose: () ->
             $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.holder.getOpt("choose")) + " "
-            @.holder.replaceStr(str)
+            str = if _isNil($li) then @.holder.query.text else $li.attr(@.holder.getOpt("choose"))
+            @.holder.replaceStr(str + " ")
+
+            o =
+              name: str
+              id: $li.attr(@.holder.getOpt('id_attr'))
+              type: $li.attr(@.holder.getOpt('type_attr'))
+
+            @.holder.mentioned.push o if o not in @.holder.mentioned
+            @.holder.$inputor.data 'AtWho.mentioned', @.holder.mentioned
+
             @.hide()
 
         rePosition: () ->
@@ -437,12 +486,15 @@
     $.fn.atWho.default =
         data: []
         # Parameter: choose
-        ## specify the attribute on customer tpl, 
+        ## specify the attribute on customer tpl,
         ## so that we could append different value to the input other than the value we searched in
         choose: "data-value"
+        id_attr: "data-id"
+        type_attr: "data-type"
         callback: null
         cache: yes
         limit: 5
+        select_include_char: true
         tpl: _DEFAULT_TPL
 
 )(window.jQuery)
