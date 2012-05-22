@@ -96,6 +96,7 @@
                 stop = e.keyCode is 40 or e.keyCode is 38
                 lookup = not (stop and @.view.isShowing())
                 @.lookup() if lookup
+                @.refreshMentions()
             .on "mouseup.inputor",(e) =>
                 @.lookup()
         @.init()
@@ -224,19 +225,45 @@
             log "At.getKeyname", key
             @.query = key
 
-        highlightMention: (text, str) ->
-
+        highlightReplace: (mentioned, text) ->
             preg_quote = (string) ->
               (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1")
 
-            highlights = @.mentioned
-            highlights.push(str)
+            $.each mentioned, (i, v) =>
+              if text.match(new RegExp(preg_quote(v), 'gi'))
+                text = text
+                  .replace( new RegExp(preg_quote(v), 'gi'), '<span class="highlight">' + v + '</span>' )
+                  .replace( new RegExp(preg_quote('\r'), 'gi'), '<br>' )
+              else
+                @.unmentionByName(v)
+            text
 
-            $.each highlights, (i, v) ->
-              text = text
-                .replace( new RegExp(preg_quote(v), 'gi'), '<span class="highlight">' + v + '</span>' )
-                .replace( new RegExp(preg_quote('\r'), 'gi'), '<br>' )
-            @.highlights.setContent text
+        highlightMention: (text, str) ->
+
+            mentioned = $.map @.mentioned, (m) -> m.name
+            mentioned.push(str)
+            html = @.highlightReplace(mentioned, text)
+
+            @.highlights.setContent html
+
+        refreshMentions: ->
+
+            mentioned = $.map @.mentioned, (m) -> m.name
+            text = @.$inputor.val()
+            html = @.highlightReplace(mentioned, text)
+
+            @.highlights.setContent html
+
+        unmentionByName: (name) ->
+            if @.mentioned.length > 0
+              mentioned = $.map @.mentioned, (m) -> m.name
+              if name in mentioned
+                i = mentioned.indexOf(name)
+                @.mentioned.splice(i,1)
+                @.updateMentionedData()
+
+        updateMentionedData: ->
+          @.$inputor.data 'AtWho.mentioned', @.mentioned
 
         replaceStr: (str) ->
             $inputor = @.$inputor
@@ -352,7 +379,7 @@
               type: $li.attr(@.holder.getOpt('type_attr'))
 
             @.holder.mentioned.push o if o not in @.holder.mentioned
-            @.holder.$inputor.data 'AtWho.mentioned', @.holder.mentioned
+            @.holder.updateMentionedData()
 
             @.hide()
 
