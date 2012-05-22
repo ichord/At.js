@@ -20,7 +20,7 @@
    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ###
 
 (($) ->
@@ -60,7 +60,7 @@
 
     Highlights:: =
         $highlights: null
-        css: ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX','boxShadow']
+        css: ["paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'letterSpacing', 'overflowX', 'boxShadow']
         init: ($origin) ->
             $highlights = $("<div class='at-mentions-bg'></div>")
             css = 'white-space': 'pre-wrap'
@@ -473,7 +473,7 @@
         results.sort (a,b) ->
             a.order - b.order
         return results
-        
+
 
     ###
       maybe we can use $._unique.
@@ -497,7 +497,7 @@
         or target is undefined
 
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
-    
+
     log = () ->
         #console.log(arguments)
 
