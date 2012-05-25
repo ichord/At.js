@@ -34,4 +34,6 @@ $(function(){
         data: emojis,
         tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
     });
+
+    prettyPrint()
 });

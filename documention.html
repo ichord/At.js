@@ -1,0 +1,143 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>At.js</title>
+        <link rel="stylesheet" href="lib/css/jquery.atwho.css" />
+        <link rel="stylesheet" href="assets/css/bootstrap.min.css" type="text/css" media="screen" charset="utf-8">
+        <link rel="stylesheet" href="assets/css/font-awesome.css" />
+        <link rel="stylesheet" href="assets/css/doc.css" />
+        <link rel="stylesheet" href="assets/css/prettify.css" />
+        <!--link href='http://fonts.googleapis.com/css?family=Dosis:400,700|Bubblegum+Sans|Overlock:400,900|PT+Sans:400,700|PT+Sans+Narrow:400,700|Magra|Asap:400,700|Share:400,700&subset=latin,latin-ext' rel='stylesheet' type='text/css' -->
+        <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    </head>
+    <body data-spy="scroll" data-target=".subnav" data-offset="50">
+
+        <div class="container" style="width:940px;">
+            <header id="overview">
+            <div class="subnav">
+                <ul class="nav nav-pills">
+                    <li class="active"><a href="#all">All settings</a></li>
+                    <li><a href="#callback">callback</a></li>
+                </ul>
+            </div>
+            </header>
+
+            <section id="javascript">
+            <div class="page-header">
+                <h1>Settings <small>Default settings of At.js</small></h1>
+            </div>
+            <table class="table table-bordered table-striped">
+                <colgroup>
+                    <col class="span1">
+                    <col class="span1">
+                    <col class="span6">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Options</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>callback</td>
+                        <td>null</td>
+                        <td>
+                            <p>
+                            Callback function to dynamically retrieve data based on query.<br/>
+                            `At` will pass two arguments to the callback: `query` and `callback`.<br/>
+                            `query` is the keyword that is being autocompleted after the character listener ('@' is the default)<br/>
+                            `callback` should be run on the data. It accepts a string array or plain object array
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>cache</td>
+                        <td>true</td>
+                        <td>
+                            <p>
+                            Enable search cache. Set to false if you want to use $.ajax cache.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>data</td>
+                        <td>[]</td>
+                        <td>
+                            <p>
+                            Static data to use before the callback is invoked
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>limit</td>
+                        <td>5</td>
+                        <td>
+                            <p>
+                            How many items to show at a time in the results
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>tpl</td>
+                        <td>read Description </td>
+                        <td>
+                            <p>
+                            Item format template <br/>
+                            <code>data-value</code> contents will be inserted to the textarea on selection <br/>
+                            here is the template:<br/>
+                            <pre class="prettyprint">"&lt;li id='${index}' data-value='${name}'&gt;${name}&lt;/li&gt;"</pre>
+                            </p>
+                        </td>
+                     </tr>
+                     <tr>
+                         <td>choose</td>
+                         <td>"data-value"</td>
+                         <td>
+                             <p>
+                             The name of the data attribute in the item template. <br/>
+                             You can change it into any name defined in <code>tpl</code>
+                             </p>
+                         </td>
+                     </tr>
+                </tbody>
+            </table>            
+            </section>
+
+            <section>
+
+            <section id="callback">
+            <div class="page-header">
+                <h1>Callback <small>when At.js catch the query string</small></h1>
+            </div>
+            <p>
+            This time we pass a callback function instead of the static data as the second parameter. <br/>
+            You can just set a function as second argument, At.js will determine it and set it to <code>callback</code> option.
+            </p>
+            <pre class="prettyprint linenums">
+$('textarea').atWho("@",function(query,loaddata) {
+    var url = "#",
+    param = {'q':query},
+    names = [];
+    $.ajax(url,param,function(data) {
+        names = $.parseJSON(data);
+        loaddata(names);
+    });
+});
+            </pre>
+            <p>
+            Calling the <code>loadata</code> method will load data to At.js and show then
+            </p>
+            </section>
+
+
+        </div>
+        <script type="text/javascript" src="assets/js/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="lib/js/jquery.caret.js" ></script>
+        <script type="text/javascript" src="lib/js/jquery.atwho.js"></script>
+        <script type="text/javascript" src="assets/js/at.js"></script>
+        <script type="text/javascript" src="assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="assets/js/prettify.min.js"></script>
+    </body>
+</html>
