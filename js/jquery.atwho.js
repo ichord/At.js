@@ -28,20 +28,15 @@
 
   (function($) {
     var At, AtView, Mirror, log, _DEFAULT_TPL, _evalTpl, _highlighter, _isNil, _objectify, _sorter, _unique;
-    Mirror = function($origin) {
-      this.init($origin);
-      return this;
-    };
-    Mirror.prototype = {
+    Mirror = {
       $mirror: null,
       css: ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", 'fontFamily', 'borderStyle', 'borderWidth', 'wordWrap', 'fontSize', 'lineHeight', 'overflowX'],
       init: function($origin) {
         var $mirror, css;
         $mirror = $('<div></div>');
         css = {
-          opacity: 0,
           position: 'absolute',
-          left: 0,
+          left: -9999,
           top: 0,
           zIndex: -20000,
           'white-space': 'pre-wrap'
@@ -50,24 +45,25 @@
           return css[p] = $origin.css(p);
         });
         $mirror.css(css);
-        $('body').append($mirror);
-        return this.$mirror = $mirror;
+        this.$mirror = $mirror;
+        $origin.after($mirror);
+        return this;
       },
       setContent: function(html) {
-        return this.$mirror.html(html);
+        this.$mirror.html(html);
+        return this;
       },
       getFlagRect: function() {
-        var $flag, pos;
+        var $flag, pos, rect;
         $flag = this.$mirror.find("span#flag");
         pos = $flag.position();
-        return {
+        rect = {
           left: pos.left,
           top: pos.top,
           bottom: $flag.height() + pos.top
         };
-      },
-      height: function() {
-        return this.$mirror.height();
+        this.$mirror.remove();
+        return rect;
       }
     };
     At = function(inputor) {
@@ -86,7 +82,7 @@
       this.theflag = null;
       this.search_word = {};
       this.view = AtView;
-      this.mirror = new Mirror($inputor);
+      this.mirror = Mirror;
       $inputor.on("keyup.inputor", function(e) {
         var lookup, stop;
         stop = e.keyCode === 40 || e.keyCode === 38;
@@ -139,7 +135,7 @@
         }
       },
       rect: function() {
-        var $inputor, Sel, at_rect, bottom, end_range, format, html, mirror, offset, start_range, text, x, y;
+        var $inputor, Sel, at_rect, bottom, format, html, offset, start_range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
           Sel = document.selection.createRange();
@@ -148,24 +144,19 @@
           bottom = y + Sel.boundingHeight;
           return {
             top: y - 2,
-            left: x - 2,
+            left: x - this.pos,
             bottom: bottom - 2
           };
         }
-        mirror = this.mirror;
         format = function(value) {
           return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
         };
         /* 克隆完inputor后将原来的文本内容根据
           @的位置进行分块,以获取@块在inputor(输入框)里的position
         */
-        text = $inputor.val();
-        start_range = text.slice(0, this.pos - 1);
-        end_range = text.slice(this.pos + 1);
+        start_range = $inputor.val().slice(0, this.pos - 1);
         html = "<span>" + format(start_range) + "</span>";
         html += "<span id='flag'>@</span>";
-        html += "<span>" + format(end_range) + "</span>";
-        mirror.setContent(html);
         /*
                       将inputor的 offset(相对于document)
                       和@在inputor里的position相加
@@ -173,7 +164,7 @@
                       当然,还要加上行高和滚动条的偏移量.
         */
         offset = $inputor.offset();
-        at_rect = mirror.getFlagRect();
+        at_rect = this.mirror.init($inputor).setContent(html).getFlagRect();
         x = offset.left + at_rect.left - $inputor.scrollLeft();
         y = offset.top - $inputor.scrollTop();
         bottom = y + at_rect.bottom;

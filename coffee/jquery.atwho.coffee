@@ -24,35 +24,33 @@
 ###
 
 (($) ->
-    Mirror = ($origin) ->
-        @.init $origin
-        this
 
-    Mirror:: =
+    Mirror =
         $mirror: null
         css: ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX']
         init: ($origin) ->
             $mirror = $('<div></div>')
             css =
-                opacity: 0
                 position: 'absolute'
-                left: 0
+                left: -9999
                 top:0
                 zIndex: -20000
                 'white-space': 'pre-wrap'
             $.each @.css, (i,p) ->
                 css[p] = $origin.css p
             $mirror.css(css)
-            $('body').append $mirror
             @.$mirror = $mirror
+            $origin.after($mirror)
+            this
         setContent: (html) ->
             @.$mirror.html(html)
+            this
         getFlagRect: () ->
             $flag = @.$mirror.find "span#flag"
             pos = $flag.position()
-            {left:pos.left, top:pos.top, bottom:$flag.height() + pos.top}
-        height: () ->
-            @.$mirror.height()
+            rect = {left:pos.left, top:pos.top, bottom:$flag.height() + pos.top}
+            @.$mirror.remove()
+            rect
 
     At = (inputor) ->
         $inputor = @.$inputor = $(inputor)
@@ -68,7 +66,7 @@
         @search_word = {}
 
         @view = AtView
-        @mirror = new Mirror $inputor
+        @mirror = Mirror
 
         $inputor
             .on "keyup.inputor", (e) =>
@@ -124,9 +122,7 @@
                 y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
                 bottom = y + Sel.boundingHeight
                 # -2 : for some font style problem.
-                return {top:y-2, left:x-2, bottom:bottom-2}
-
-            mirror = @.mirror
+                return {top:y-2, left:x-@pos, bottom:bottom-2}
 
             format = (value) ->
                 value.replace(/</g, '&lt')
@@ -138,13 +134,9 @@
             ### 克隆完inputor后将原来的文本内容根据
               @的位置进行分块,以获取@块在inputor(输入框)里的position
             ###
-            text = $inputor.val()
-            start_range = text.slice(0,this.pos - 1)
-            end_range = text.slice(this.pos + 1)
+            start_range = $inputor.val().slice(0,@pos - 1)
             html = "<span>"+format(start_range)+"</span>"
             html += "<span id='flag'>@</span>"
-            html += "<span>"+format(end_range)+"</span>"
-            mirror.setContent(html)
 
             ###
               将inputor的 offset(相对于document)
@@ -153,7 +145,7 @@
               当然,还要加上行高和滚动条的偏移量.
             ###
             offset = $inputor.offset()
-            at_rect = mirror.getFlagRect()
+            at_rect = @mirror.init($inputor).setContent(html).getFlagRect()
 
             x = offset.left + at_rect.left - $inputor.scrollLeft()
             y = offset.top - $inputor.scrollTop()
