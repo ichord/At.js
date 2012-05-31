@@ -314,7 +314,7 @@
         next: () ->
             cur = @.jqo().find('.cur').removeClass('cur')
             next = cur.next()
-            next = $(@.jqo().find('li')[0]) if not cur.length
+            next = $(@.jqo().find('li')[0]) if not next.length
             next.addClass 'cur'
 
         prev: () ->
