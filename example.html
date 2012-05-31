@@ -64,19 +64,6 @@
 
                 $('input').atWho("@",{'data':data})
 
-                $('textarea#i3').atWho('@', {
-  tpl: '',
-  callback: function(query, callback) {
-    return $.ajax({
-      url: '',
-      type: 'GET',
-      success: function(datas) {
-        return callback([{"id":12,"nickname":"stephen"},{"id":13,"nickname":"ben"}]);
-      }
-    });
-  }
-});
-
             });
         </script>
         <style type="text/css" media="screen">
@@ -109,8 +96,6 @@
     </textarea>
     <textarea id="inputor2" name="Name" rows="8" cols="40">
         this register ":" with static data
-    </textarea>
-    <textarea id="i3" name="Name" rows="8" cols="40">
     </textarea>
 <br/>
 <input></input>
