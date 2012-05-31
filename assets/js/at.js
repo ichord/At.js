@@ -21,6 +21,27 @@ var emojis = [
 ]
 var names = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你"];
 
+/*
+var icons = [
+    {'name':'fast-forward', 'content':"\f050"},
+    {'name':'step-forward', 'content': "\f051"},
+    {'name':'eject','content': "\f052"},
+    {'name':'chevron-left','content':"\f053"},
+    {'name':'chevron-right','content': "\f054"},
+    {'name':'plus-sign','content': "\f055"},
+    {'name':'minus-sign','content': "\f056"},
+    {'name':'remove-sign','content': "\f057"},
+    {'name':'ok-sign','content': "\f058"},
+    {'name':'question-sign','content': "\f059"},
+    {'name':'info-sign','content': "\f05a"},
+    {'name':'screenshot','content': "\f05b"},
+    {'name':'remove-circle','content': "\f05c"},
+    {'name':'ok-circle','content': "\f05d"},
+    {'name':'ban-circle','content': "\f05e"},
+]
+*/
+
+
 var names = $.map(names,function(value,i) {
     return {'id':i,'name':value,'email':value+"@email.com"};
 });
@@ -33,7 +54,12 @@ $(function(){
     }).atWho(':', {
         data: emojis,
         tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
-    });
+    })
+    /*.atWho("-",{
+        data: icons,
+        tpl: "<li data-value='${name}' data-insert='${content}'>${name} ${content}</li>",
+        choose: "data-insert"
+    });*/
 
     prettyPrint()
 });
