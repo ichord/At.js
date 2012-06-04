@@ -122,7 +122,7 @@
                 y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
                 bottom = y + Sel.boundingHeight
                 # -2 : for some font style problem.
-                return {top:y-2, left:x-@pos, bottom:bottom-2}
+                return {top:y-2, left:x-2, bottom:bottom-2}
 
             format = (value) ->
                 value.replace(/</g, '&lt')
