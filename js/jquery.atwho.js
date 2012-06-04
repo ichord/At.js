@@ -144,7 +144,7 @@
           bottom = y + Sel.boundingHeight;
           return {
             top: y - 2,
-            left: x - this.pos,
+            left: x - 2,
             bottom: bottom - 2
           };
         }
