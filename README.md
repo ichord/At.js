@@ -178,5 +178,20 @@ Alternatively, you can specific which value would be inserted by setting `choose
     })
 ```
 
+---
+
+#### Update Data
+If you want to update data to all binded inputor or specified one. You can do that like this:
+
+``` javascript
+    // for all binded textarea
+    $('textarea').atWho("@",{data:new_data})
+    // for specified one
+    $('textarea#at_mention').atWho("@",{data:new_data})
+```
+
+It won't change others setting which has been setted earlier.
+Actually, It just update the setting. You can use it to change others settings like that.
+
 
 [1]: http://ichord.github.com/At.js
