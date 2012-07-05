@@ -195,7 +195,8 @@
             $inputor = @.$inputor
             key = @.query
             source = $inputor.val()
-            start_str = source.slice 0, key.start
+            flag_len = if @.getOpt("display_flag") then 0 else @theflag.length
+            start_str = source.slice 0, key.start - flag_len
             text = start_str + str + source.slice key.end
 
             $inputor.val text
@@ -432,6 +433,7 @@
         callback: null
         cache: yes
         limit: 5
+        display_flag: yes
         tpl: _DEFAULT_TPL
 
 )(window.jQuery)

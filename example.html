@@ -50,16 +50,17 @@
                     "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
                     "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
                 emojis = $.map(emojis,function(value,i){
-                    return {'id':i,'key':value+":",'name':value}
+                    return {'id':i,'key':":"+value+":",'name':value}
                     })
                 $("textarea#inputor2").atWho("@",{
                     tpl: "<li id='${id}' data-value='${name}' data-choose='${email}'>${name} <small>${email}</small></li>",
                     'data':data,
                     choose:'data-choose'
                     })
-                .atWho(":",{
+                .atWho("/:",{
                     tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
                     ,'data':emojis
+                    ,display_flag: false
                     })
 
                 $('input').atWho("@",{'data':data})
@@ -95,7 +96,7 @@
         type "@" to try
     </textarea>
     <textarea id="inputor2" name="Name" rows="8" cols="40">
-        this register ":" with static data
+        this register "/:" with static data
     </textarea>
 <br/>
 <input></input>

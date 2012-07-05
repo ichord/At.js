@@ -218,11 +218,12 @@
         return this.query = key;
       },
       replaceStr: function(str) {
-        var $inputor, key, source, start_str, text;
+        var $inputor, flag_len, key, source, start_str, text;
         $inputor = this.$inputor;
         key = this.query;
         source = $inputor.val();
-        start_str = source.slice(0, key.start);
+        flag_len = this.getOpt("display_flag") ? 0 : this.theflag.length;
+        start_str = source.slice(0, key.start - flag_len);
         text = start_str + str + source.slice(key.end);
         $inputor.val(text);
         $inputor.caretPos(start_str.length + str.length);
@@ -493,6 +494,7 @@
       callback: null,
       cache: true,
       limit: 5,
+      display_flag: true,
       tpl: _DEFAULT_TPL
     };
   })(window.jQuery);
