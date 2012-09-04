@@ -206,7 +206,7 @@
           regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
           match = regexp.exec(subtext);
           if (!_isNil(match)) {
-            matched = (match[1] === void 0) || (match[1].length === 0) ? match[2] : match[1];
+            matched = match[2] ? match[2] : match[1];
             _this.theflag = flag;
             return false;
           }
