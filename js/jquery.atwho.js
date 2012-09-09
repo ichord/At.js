@@ -1,4 +1,3 @@
-
 /*
    Implement Twitter/Weibo @ mentions
 
@@ -23,6 +22,7 @@
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 
 (function() {
 
@@ -87,7 +87,9 @@
         var lookup, stop;
         stop = e.keyCode === 40 || e.keyCode === 38;
         lookup = !(stop && _this.view.isShowing());
-        if (lookup) return _this.lookup();
+        if (lookup) {
+          return _this.lookup();
+        }
       }).on("mouseup.inputor", function(e) {
         return _this.lookup();
       });
@@ -123,7 +125,9 @@
       dataValue: function() {
         var match, search_word;
         search_word = this.search_word[this.theflag];
-        if (search_word) return search_word;
+        if (search_word) {
+          return search_word;
+        }
         match = /data-value=["']?\$\{(\w+)\}/g.exec(this.getOpt('tpl'));
         return this.search_word[this.theflag] = !_isNil(match) ? match[1] : null;
       },
@@ -154,6 +158,7 @@
         /* 克隆完inputor后将原来的文本内容根据
           @的位置进行分块,以获取@块在inputor(输入框)里的position
         */
+
         start_range = $inputor.val().slice(0, this.pos - 1);
         html = "<span>" + format(start_range) + "</span>";
         html += "<span id='flag'>@</span>";
@@ -163,6 +168,7 @@
                       就得到了@相对于document的offset.
                       当然,还要加上行高和滚动条的偏移量.
         */
+
         offset = $inputor.offset();
         at_rect = this.mirror.init($inputor).setContent(html).getFlagRect();
         x = offset.left + at_rect.left - $inputor.scrollLeft();
@@ -178,7 +184,9 @@
       cache: function(value) {
         var key, _base;
         key = this.query.text;
-        if (!this.getOpt("cache") || !key) return null;
+        if (!this.getOpt("cache") || !key) {
+          return null;
+        }
         return (_base = this._cache)[key] || (_base[key] = value);
       },
       getKeyname: function() {
@@ -190,6 +198,7 @@
         /* 向在插入符前的的文本进行正则匹配
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
         */
+
         subtext = text.slice(0, caret_pos);
         matched = null;
         $.each(this.options, function(flag) {
@@ -197,7 +206,7 @@
           regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
           match = regexp.exec(subtext);
           if (!_isNil(match)) {
-            matched = match[1] === void 0 ? match[2] : match[1];
+            matched = match[2] ? match[2] : match[1];
             _this.theflag = flag;
             return false;
           }
@@ -233,7 +242,9 @@
       onkeydown: function(e) {
         var view;
         view = this.view;
-        if (!view.isShowing()) return;
+        if (!view.isShowing()) {
+          return;
+        }
         switch (e.keyCode) {
           case 38:
             e.preventDefault();
@@ -245,7 +256,9 @@
             break;
           case 9:
           case 13:
-            if (!view.isShowing()) return;
+            if (!view.isShowing()) {
+              return;
+            }
             e.preventDefault();
             view.choose();
             break;
@@ -265,7 +278,9 @@
       lookup: function() {
         var callback, datas, key;
         key = this.getKeyname();
-        if (!key) return false;
+        if (!key) {
+          return false;
+        }
         log("At.lookup.key", key);
         if (!_isNil(datas = this.cache())) {
           this.renderView(datas);
@@ -315,7 +330,9 @@
       init: function() {
         var $menu, tpl,
           _this = this;
-        if (!_isNil(this.jqo())) return;
+        if (!_isNil(this.jqo())) {
+          return;
+        }
         tpl = "<div id='" + this.id.slice(1) + "' class='at-view'><ul id='" + this.id.slice(1) + "-ul'></ul></div>";
         $("body").append(tpl);
         $menu = this.jqo().find('ul');
@@ -357,25 +374,33 @@
         var cur, next;
         cur = this.jqo().find('.cur').removeClass('cur');
         next = cur.next();
-        if (!next.length) next = $(this.jqo().find('li')[0]);
+        if (!next.length) {
+          next = $(this.jqo().find('li')[0]);
+        }
         return next.addClass('cur');
       },
       prev: function() {
         var cur, prev;
         cur = this.jqo().find('.cur').removeClass('cur');
         prev = cur.prev();
-        if (!prev.length) prev = this.jqo().find('li').last();
+        if (!prev.length) {
+          prev = this.jqo().find('li').last();
+        }
         return prev.addClass('cur');
       },
       show: function() {
-        if (!this.isShowing()) this.jqo().show();
+        if (!this.isShowing()) {
+          this.jqo().show();
+        }
         return this.rePosition();
       },
       hide: function(time) {
         var callback,
           _this = this;
         if (isNaN(time)) {
-          if (this.isShowing()) return this.jqo().hide();
+          if (this.isShowing()) {
+            return this.jqo().hide();
+          }
         } else {
           callback = function() {
             return _this.hide();
@@ -385,12 +410,16 @@
         }
       },
       clear: function(clear_all) {
-        if (clear_all === true) this._cache = {};
+        if (clear_all === true) {
+          this._cache = {};
+        }
         return this.jqo().find('ul').empty();
       },
       render: function(holder, list) {
         var $ul, tpl;
-        if (!$.isArray(list)) return false;
+        if (!$.isArray(list)) {
+          return false;
+        }
         if (list.length <= 0) {
           this.hide();
           return true;
@@ -433,7 +462,9 @@
       }
     };
     _highlighter = function(li, query) {
-      if (_isNil(query)) return li;
+      if (_isNil(query)) {
+        return li;
+      }
       return li.replace(new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
         return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
       });
@@ -446,7 +477,9 @@
       for (_i = 0, _len = items.length; _i < _len; _i++) {
         item = items[_i];
         text = item[data_value];
-        if (text.toLowerCase().indexOf(query) === -1) continue;
+        if (text.toLowerCase().indexOf(query) === -1) {
+          continue;
+        }
         item.order = text.toLowerCase().indexOf(query);
         results.push(item);
       }
@@ -461,6 +494,7 @@
           I think we should not change DOM element frequently.
           more, It seems batter not to call evalTpl function too much times.
     */
+
     _unique = function(list, query) {
       var record;
       record = [];
@@ -484,7 +518,9 @@
         var $this, data;
         $this = $(this);
         data = $this.data("AtWho");
-        if (!data) $this.data('AtWho', (data = new At(this)));
+        if (!data) {
+          $this.data('AtWho', (data = new At(this)));
+        }
         return data.reg(flag, options);
       });
     };
