@@ -20,7 +20,7 @@
    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ###
 
 ###
@@ -47,7 +47,7 @@
             # selection should in the inputor.
             if range and range.parentElement() is inputor
                 normalizedValue = inputor.value.replace /\r\n/g, "\n"
-                ### SOMETIME !!! 
+                ### SOMETIME !!!
                  "/r/n" is counted as two char.
                   one line is two, two will be four. balalala.
                   so we have to using the normalized one's length.;
@@ -76,7 +76,7 @@
                                /         \
                  <   I really [[HATE] IE []]>
                                           \_endRange end-point.
-                
+
                 " > -1" mean the start end-point will be the same or right to the end end-point
                * simplelly, all in the end.
                 ####
@@ -85,19 +85,28 @@
                     start = end = len
                 else
                     ###
-                            I really |HATE] IE   ]> 
+                            I really |HATE] IE   ]>
                                    <-|
                           I really[ [HATE] IE   ]>
                                 <-[
                         I reall[y  [HATE] IE   ]>
-                     
+
                       will return how many unit have moved.
                     ###
                     start = -textInputRange.moveStart "character", -len
                     end = -textInputRange.moveEnd "character", -len
 
         else
-            start = inputor.selectionStart
+
+            # Is inputor a input element?
+            if inputor.selectionStart
+              start = inputor.selectionStart
+
+            # If not, it must be contenteditable
+            else
+              selection = window.getSelection()
+              start = selection.anchorOffset
+
         return start
 
     setCaretPos = (inputor, pos) ->
@@ -106,7 +115,18 @@
             range.move "character", pos
             range.select()
         else
-            inputor.setSelectionRange pos, pos
+            # Is inputor a input element?
+            if inputor.setSelectionRange
+              inputor.setSelectionRange pos, pos
+
+            # If not, it must be contenteditable
+            else
+              range = document.createRange();
+              range.selectNodeContents(inputor);
+              range.collapse(false);
+              selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
 
     $.fn.caretPos = (pos) ->
         inputor = this[0]
