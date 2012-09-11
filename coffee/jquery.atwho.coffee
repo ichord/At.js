@@ -20,7 +20,7 @@
    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ###
 
 (($) ->
@@ -134,7 +134,8 @@
             ### 克隆完inputor后将原来的文本内容根据
               @的位置进行分块,以获取@块在inputor(输入框)里的position
             ###
-            start_range = $inputor.val().slice(0,@pos - 1)
+            value = if $inputor.text() then $inputor.text() else $inputor.val()
+            start_range = value.slice(0,@pos - 1)
             html = "<span>"+format(start_range)+"</span>"
             html += "<span id='flag'>@</span>"
 
@@ -162,7 +163,7 @@
 
         getKeyname: ->
             $inputor = @.$inputor
-            text = $inputor.val()
+            text = if $inputor.text() then $inputor.text() else $inputor.val()
 
             ##获得inputor中插入符的position.
             caret_pos = $inputor.caretPos()
@@ -194,12 +195,13 @@
         replaceStr: (str) ->
             $inputor = @.$inputor
             key = @.query
-            source = $inputor.val()
+            source = if $inputor.text() then $inputor.text() else $inputor.val()
             flag_len = if @.getOpt("display_flag") then 0 else @theflag.length
             start_str = source.slice 0, key.start - flag_len
             text = start_str + str + source.slice key.end
 
-            $inputor.val text
+            if $inputor.text() then $inputor.text text
+            else $inputor.val text
             $inputor.caretPos start_str.length + str.length
             $inputor.change()
             log "At.replaceStr", text
@@ -387,7 +389,7 @@
         results.sort (a,b) ->
             a.order - b.order
         return results
-        
+
 
     ###
       maybe we can use $._unique.
@@ -411,13 +413,15 @@
         or target is undefined
 
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
-    
+
     log = () ->
         #console.log(arguments)
 
     $.fn.atWho = (flag, options) ->
         AtView.init()
-        @.filter('textarea, input').each () ->
+        # OLD: .filter('textarea, input')
+        # Have to check each, or else something else?
+        @.each () ->
             $this = $(this)
             data = $this.data "AtWho"
 
@@ -427,7 +431,7 @@
     $.fn.atWho.default =
         data: []
         # Parameter: choose
-        ## specify the attribute on customer tpl, 
+        ## specify the attribute on customer tpl,
         ## so that we could append different value to the input other than the value we searched in
         choose: "data-value"
         callback: null
