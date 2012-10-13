@@ -37,29 +37,29 @@ Here is the Default setting.
     /*
      Enable search cache. Set to false if you want to use $.ajax cache.
      */
-    'cache' : true,
+    'cache': true,
 
     /* 
      Static data to use before the callback is invoked
      */
-    'data':[],
+    'data': [],
 
     /*
      How many items to show at a time in the results
      */
-    'limit' : 5,
+    'limit': 5,
 
     /* 
      Item format template
      `data-value` contents will be inserted to the textarea on selection
      */
-    'tpl' : "<li id='${index}' data-value='${name}'>${name}</li>",
+    'tpl': "<li id='${index}' data-value='${name}'>${name}</li>",
 
     /*
      The name of the data attribute in the item template
      You can change it into any name defined in attributes of `li` element which is template
      */
-    'choose' : "data-value"
+    'choose': "data-value"
 ```
 
 #### Using static data
@@ -70,10 +70,11 @@ The first argument is the character you want to listen, and the second one is a 
 ``` javascript
     var emoji_list = [
         "apple", "aquarius", "aries", "arrow_backward", "arrow_down",
-        "arrow_forward", "arrow_left", "arrow_lower_left",     "arrow_lower_right",
-    "arrow_right", "arrow_up", "arrow_upper_left", "arrow_upper_right"];
+        "arrow_forward", "arrow_left", "arrow_lower_left", "arrow_lower_right",
+        "arrow_right", "arrow_up", "arrow_upper_left", "arrow_upper_right"
+    ];
     
-    $('textarea').atWho(":",{data:emoji_list});
+    $('textarea').atWho(":", {data:emoji_list});
 ```
 
 #### Using dynamic data with AJAX
@@ -84,10 +85,10 @@ the data - `names` - would be a string array or a map array which the same as `d
 `query` argument is the string behind the character you are listening as "@" in this example.
 
 ``` javascript
-    $('textarea').atWho("@",function(query,callback) {
+    $('textarea').atWho("@", function(query, callback) {
         var url = "data.json",
-        param = {'q':query},
-        $.ajax(url,param,function(data) {
+            param = {'q':query};
+        $.ajax(url, param, function(data) {
             names = $.parseJSON(data);
             callback(names);
         });
@@ -100,11 +101,11 @@ We pass a configuration object containing both the `data` and `callback` paramet
 It will search the local static data first.
 
 ``` javascript
-    var names = ['one','two'];
-    $('textarea').atWho("@",{
+    var names = ['one', 'two'];
+    $('textarea').atWho("@", {
         'data': names,
-        'callback': function(query,callback) { 
-            console.log(query,callback);
+        'callback': function(query, callback) { 
+            console.log(query, callback);
         }
     });
 ```
@@ -123,12 +124,12 @@ We also show how to set up multiple listeners with different characters.
 we use these static data in all examples below:
 
 ``` javascript
-    emojis = $.map(emojis,function(value,i) {
-        return {'id':i,'key':value+":",'name':value}
-    })
+    emojis = $.map(emojis, function(value, i) {
+        return {'id':i, 'key':value+":", 'name':value};
+    });
 
-    data = $.map(data,function(value,i) {
-        return {'id':i,'name':value,'email':value+"@email.com"};
+    data = $.map(data, function(value, i) {
+        return {'id':i, 'name':value, 'email':value+"@email.com"};
     });
 ```
 
@@ -138,32 +139,32 @@ At.js will search by `data-value` and the contents will be inserted to the texta
 
 ``` javascript
     $("textarea").atWho("@",{
-        'tpl': "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>"
-        ,'data':data
-    })
+        'tpl': "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>",
+        'data': data
+    });
 ```
 
 ``` javascript
     $("textarea").atWho(":",{
-        tpl:"<li data-value='${key}'>${name} <img src='http://xxx/emoji/${name}.png'  height='20' width='20' /></li>"
-        ,data:emojis
-    })
+        tpl: "<li data-value='${key}'>${name} <img src='http://xxx/emoji/${name}.png' height='20' width='20' /></li>",
+        data: emojis
+    });
 ```
 
 ##### With callback
 
 ``` javascript
     $('textarea').atWho("@",{
-        tpl: "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>"
-        ,callback:function(query,callback) {
+        tpl: "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>",
+        callback: function(query, callback) {
             var url = "data.json",
-            param = {'q':query},
-            $.ajax(url,param,function(data) {
+                param = {'q':query};
+            $.ajax(url, param, function(data) {
                 names = $.parseJSON(data);
                 callback(names);
             });
         }
-    })
+    });
 ```
 
 ##### Insert different value
@@ -171,11 +172,11 @@ At.js will search by `data-value` and the contents will be inserted to the texta
 Alternatively, you can specific which value would be inserted by setting `choose` option.
 
 ``` javascript
-    $("textarea").atWho("@",{
-        'tpl': "<li id='${id}' data-value='${name}' data-insert='${email}'>${name} <small>${email}</small></li>"
-        ,'data':data
-        ,'choose':"data-insert"
-    })
+    $("textarea").atWho("@", {
+        'tpl': "<li id='${id}' data-value='${name}' data-insert='${email}'>${name} <small>${email}</small></li>",
+        'data': data,
+        'choose': "data-insert"
+    });
 ```
 
 ---
@@ -185,9 +186,9 @@ If you want to update data to all binded inputor or specified one. You can do th
 
 ``` javascript
     // for all binded textarea
-    $('textarea').atWho("@",{data:new_data})
+    $('textarea').atWho("@", {data:new_data})
     // for specified one
-    $('textarea#at_mention').atWho("@",{data:new_data})
+    $('textarea#at_mention').atWho("@", {data:new_data})
 ```
 
 It won't change others setting which has been setted earlier.
