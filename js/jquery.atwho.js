@@ -101,7 +101,9 @@
       constructor: At,
       init: function() {
         var _this = this;
-        this.$inputor.on('keydown.inputor', function(e) {
+        this.$inputor.on('keyup.inputor', function(e) {
+          return _this.onkeyup(e);
+        }).on('keydown.inputor', function(e) {
           return _this.onkeydown(e);
         }).on('scroll.inputor', function(e) {
           return _this.view.hide();
@@ -239,6 +241,22 @@
         $inputor.change();
         return log("At.replaceStr", text);
       },
+      onkeyup: function(e) {
+        var view;
+        view = this.view;
+        if (!view.isShowing()) {
+          return;
+        }
+        switch (e.keyCode) {
+          case 27:
+            e.preventDefault();
+            view.hide();
+            break;
+          default:
+            $.noop();
+        }
+        return e.stopPropagation();
+      },
       onkeydown: function(e) {
         var view;
         view = this.view;
@@ -246,6 +264,10 @@
           return;
         }
         switch (e.keyCode) {
+          case 27:
+            e.preventDefault();
+            view.hide();
+            break;
           case 38:
             e.preventDefault();
             view.prev();

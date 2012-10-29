@@ -20,7 +20,7 @@
    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ###
 
 (($) ->
@@ -84,6 +84,8 @@
 
         init: ->
             @.$inputor
+                .on 'keyup.inputor', (e) =>
+                    @.onkeyup(e)
                 .on 'keydown.inputor', (e) =>
                     @.onkeydown(e)
                 .on 'scroll.inputor', (e) =>
@@ -204,10 +206,26 @@
             $inputor.change()
             log "At.replaceStr", text
 
+        onkeyup: (e) ->
+            view = @.view
+            return unless view.isShowing()
+            switch e.keyCode
+                # ESC
+                when 27
+                    e.preventDefault()
+                    view.hide()
+                else
+                    $.noop()
+            e.stopPropagation()
+
         onkeydown: (e) ->
             view = @.view
             return if not view.isShowing()
             switch e.keyCode
+                # ESC
+                when 27
+                    e.preventDefault()
+                    view.hide()
                 # UP
                 when 38
                     e.preventDefault()
@@ -387,7 +405,7 @@
         results.sort (a,b) ->
             a.order - b.order
         return results
-        
+
 
     ###
       maybe we can use $._unique.
@@ -411,7 +429,7 @@
         or target is undefined
 
     _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
-    
+
     log = () ->
         #console.log(arguments)
 
@@ -427,7 +445,7 @@
     $.fn.atWho.default =
         data: []
         # Parameter: choose
-        ## specify the attribute on customer tpl, 
+        ## specify the attribute on customer tpl,
         ## so that we could append different value to the input other than the value we searched in
         choose: "data-value"
         callback: null
