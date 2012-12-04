@@ -1,5 +1,8 @@
 Add Twitter / Weibo style @ mentions autocomplete to your application.
 
+**Let me know you are using it. So I will work harder on it, Thanks. :) **  
+add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using At.js 
+
 ###Demo
 [http://ichord.github.com/At.js][1]
 
