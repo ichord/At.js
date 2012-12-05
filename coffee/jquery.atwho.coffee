@@ -25,224 +25,42 @@
 
 (($) ->
 
-    Mirror =
-        $mirror: null
-        css: ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX']
-        init: ($origin) ->
-            $mirror = $('<div></div>')
-            css =
-                position: 'absolute'
-                left: -9999
-                top:0
-                zIndex: -20000
-                'white-space': 'pre-wrap'
-            $.each @.css, (i,p) ->
-                css[p] = $origin.css p
-            $mirror.css(css)
-            @.$mirror = $mirror
-            $origin.after($mirror)
-            this
-        setContent: (html) ->
-            @.$mirror.html(html)
-            this
-        getFlagRect: () ->
-            $flag = @.$mirror.find "span#flag"
-            pos = $flag.position()
-            rect = {left:pos.left, top:pos.top, bottom:$flag.height() + pos.top}
-            @.$mirror.remove()
-            rect
+    class Mirror
+      css_attr: [
+        "overflowY", "height", "width", "paddingTop", "paddingLeft",
+        "paddingRight", "paddingBottom", "marginTop", "marginLeft",
+        "marginRight", "marginBottom",'fontFamily', 'borderStyle',
+        'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX'
+      ]
+
+      constructor: (@$inputor) ->
+
+      copy_inputor_css: ->
+        css =
+          position: 'absolute'
+          left: -9999
+          top:0
+          zIndex: -20000
+          'white-space': 'pre-wrap'
+        $.each @css_attr, (i,p) ->
+          css[p] = @$inputor.css p
+        css
+
+      create: (html) ->
+        @$mirror = $('<div></div>')
+        @$mirror.css this.copy_inputor_css()
+        @$mirror.html(html)
+        @$inputor.after(@$mirror)
+        this
+
+      get_flag_rect: ->
+        $flag = @$mirror.find "span#flag"
+        pos = $flag.position()
+        rect = {left: pos.left, top: pos.top, bottom: $flag.height() + pos.top}
+        @$mirror.remove()
+        rect
 
     At = (inputor) ->
-        $inputor = @.$inputor = $(inputor)
-        @options = {}
-        @query =
-            text:""
-            start:0
-            stop:0
-        @_cache = {}
-        @pos = 0
-        @flags = {}
-        @theflag = null
-        @search_word = {}
-
-        @view = AtView
-        @mirror = Mirror
-
-        $inputor
-            .on "keyup.inputor", (e) =>
-                stop = e.keyCode is 40 or e.keyCode is 38
-                lookup = not (stop and @.view.isShowing())
-                @.lookup() if lookup
-            .on "mouseup.inputor",(e) =>
-                @.lookup()
-        @.init()
-        log "At.new", $inputor[0]
-        return this
-
-    At:: =
-        constructor: At
-
-        init: ->
-            @.$inputor
-                .on 'keyup.inputor', (e) =>
-                    @.onkeyup(e)
-                .on 'keydown.inputor', (e) =>
-                    @.onkeydown(e)
-                .on 'scroll.inputor', (e) =>
-                    @.view.hide()
-                .on 'blur.inputor', (e) =>
-                    @.view.hide(1000)
-            log "At.init", @.$inputor[0]
-
-        reg: (flag, options) ->
-            opt = {}
-            if $.isFunction options
-                opt['callback'] = options
-            else
-                opt = options
-            _default = @.options[flag] or= $.fn.atWho.default
-            @.options[flag] = $.extend {}, _default, opt
-            log "At.reg", @.$inputor[0],flag, options
-
-        dataValue: ->
-            search_word = @.search_word[@.theflag]
-            return search_word if search_word
-            match = /data-value=["']?\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
-            return @.search_word[@.theflag] =  if !_isNil(match) then match[1] else null
-
-        getOpt: (key) ->
-            try
-                return @.options[@.theflag][key]
-            catch error
-                return null
-
-        rect: ->
-            $inputor = @.$inputor
-            if document.selection # for IE full
-                Sel = document.selection.createRange()
-                x = Sel.boundingLeft + $inputor.scrollLeft()
-                y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
-                bottom = y + Sel.boundingHeight
-                # -2 : for some font style problem.
-                return {top:y-2, left:x-2, bottom:bottom-2}
-
-            format = (value) ->
-                value.replace(/</g, '&lt')
-                    .replace(/>/g, '&gt')
-                    .replace(/`/g,'&#96')
-                    .replace(/"/g,'&quot')
-                    .replace(/\r\n|\r|\n/g,"<br />")
-
-            ### 克隆完inputor后将原来的文本内容根据
-              @的位置进行分块,以获取@块在inputor(输入框)里的position
-            ###
-            start_range = $inputor.val().slice(0,@pos - 1)
-            html = "<span>"+format(start_range)+"</span>"
-            html += "<span id='flag'>@</span>"
-
-            ###
-              将inputor的 offset(相对于document)
-              和@在inputor里的position相加
-              就得到了@相对于document的offset.
-              当然,还要加上行高和滚动条的偏移量.
-            ###
-            offset = $inputor.offset()
-            at_rect = @mirror.init($inputor).setContent(html).getFlagRect()
-
-            x = offset.left + at_rect.left - $inputor.scrollLeft()
-            y = offset.top - $inputor.scrollTop()
-            bottom = y + at_rect.bottom
-            y += at_rect.top
-
-            # bottom + 2: for some font style problem
-            return {top:y,left:x,bottom:bottom + 2}
-
-        cache: (value) ->
-            key = @.query.text
-            return null if not @.getOpt("cache") or not key
-            return @._cache[key] or= value
-
-        getKeyname: ->
-            $inputor = @.$inputor
-            text = $inputor.val()
-
-            ##获得inputor中插入符的position.
-            caret_pos = $inputor.caretPos()
-
-            ### 向在插入符前的的文本进行正则匹配
-             * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
-            subtext = text.slice(0,caret_pos)
-
-            matched = null
-            $.each this.options, (flag) =>
-                regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
-                match = regexp.exec subtext
-                if not _isNil(match)
-                    matched = if match[2] then match[2] else match[1]
-                    @.theflag = flag
-                    return no
-
-            if typeof matched is 'string' and matched.length <= 20
-                start = caret_pos - matched.length
-                end = start + matched.length
-                @.pos = start
-                key = {'text':matched.toLowerCase(), 'start':start, 'end':end}
-            else
-                @.view.hide()
-
-            log "At.getKeyname", key
-            @.query = key
-
-        replaceStr: (str) ->
-            $inputor = @.$inputor
-            key = @.query
-            source = $inputor.val()
-            flag_len = if @.getOpt("display_flag") then 0 else @theflag.length
-            start_str = source.slice 0, key.start - flag_len
-            text = start_str + str + source.slice key.end
-
-            $inputor.val text
-            $inputor.caretPos start_str.length + str.length
-            $inputor.change()
-            log "At.replaceStr", text
-
-        onkeyup: (e) ->
-            view = @.view
-            return unless view.isShowing()
-            switch e.keyCode
-                # ESC
-                when 27
-                    e.preventDefault()
-                    view.hide()
-                else
-                    $.noop()
-            e.stopPropagation()
-
-        onkeydown: (e) ->
-            view = @.view
-            return if not view.isShowing()
-            switch e.keyCode
-                # ESC
-                when 27
-                    e.preventDefault()
-                    view.hide()
-                # UP
-                when 38
-                    e.preventDefault()
-                    view.prev()
-                # DOWN
-                when 40
-                    e.preventDefault()
-                    view.next()
-                # TAB or ENTER
-                when 9, 13
-                    return if not view.isShowing()
-                    e.preventDefault()
-                    view.choose()
-                else
-                    $.noop()
-            e.stopPropagation()
-
         renderView: (datas) ->
             log "At.renderView", @, datas
 
@@ -281,6 +99,189 @@
 
                     return if match then item else null
             items
+
+
+    KEY_CODE =
+      DOWN: 40
+      UP: 38
+      ESC: 27
+      TAB: 9
+      ENTER: 13
+
+    DEFAULT_CALLBACKS =
+      matcher: (flag, subtext) ->
+        regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
+        match = regexp.exec subtext
+        matched = null
+        if match
+          matched = if match[2] then match[2] else match[1]
+        matched
+
+    class At
+      settings: {}
+      pos: 0
+      flags: {}
+      current_flag: null
+      query: {}
+      callbacks: {}
+
+      constructor: (inputor) ->
+        @$inputor = $(inputor)
+        @mirror = new Mirror(@$inputor)
+        @view = new View(this)
+        this.setup_callback_methods()
+        this.listen()
+
+      setup_callback_methods: ->
+        @callbacks = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks")
+
+      listen: ->
+        @$inputor
+          .on "keyup.atWho", (e) =>
+            stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
+            can_lookup = not (stop and @view.isShowing())
+            this.lookup() if can_lookup
+          .on "mouseup.atWho", (e) =>
+            this.lookup()
+          .on 'keyup.atWho', (e) =>
+            this.onkeyup(e)
+          .on 'keydown.atWho', (e) =>
+            this.onkeydown(e)
+          .on 'scroll.atWho', (e) =>
+            @view.hide()
+          .on 'blur.atWho', (e) =>
+            @view.hide(1000)
+
+      reg: (flag, settings) ->
+        opt = {}
+        opt['callback'] = settings if $.isFunction settings
+        opt = settings
+        _default = @settings[flag] ||= $.fn.atWho.default
+        @settings[flag] = $.extend {}, _default, opt
+
+      get_opt: (key) ->
+        try
+          @settings[@current_flag][key]
+        catch e
+          null
+
+      data_value: ->
+        match = /data-value=["']?\$\{(\w+)\}/g.exec(this.get_opt('tpl'))
+        @data_value || @data_value = match[1]
+
+      rect: ->
+        $inputor = @$inputor
+        if document.selection # for IE full
+          Sel = document.selection.createRange()
+          x = Sel.boundingLeft + $inputor.scrollLeft()
+          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
+          bottom = y + Sel.boundingHeight
+            # -2 : for some font style problem.
+            return {top:y-2, left:x-2, bottom:bottom-2}
+
+            format = (value) ->
+              value.replace(/</g, '&lt')
+              .replace(/>/g, '&gt')
+              .replace(/`/g,'&#96')
+              .replace(/"/g,'&quot')
+              .replace(/\r\n|\r|\n/g,"<br />")
+
+        ### 克隆完inputor后将原来的文本内容根据
+          @的位置进行分块,以获取@块在inputor(输入框)里的position
+        ###
+        start_range = $inputor.val().slice(0,@pos - 1)
+        html = "<span>"+format(start_range)+"</span>"
+        html += "<span id='flag'>?</span>"
+
+        ###
+          将inputor的 offset(相对于document)
+          和@在inputor里的position相加
+          就得到了@相对于document的offset.
+          当然,还要加上行高和滚动条的偏移量.
+        ###
+        offset = $inputor.offset()
+        at_rect = @mirror.create(html).get_flag_rect()
+
+        x = offset.left + at_rect.left - $inputor.scrollLeft()
+        y = offset.top - $inputor.scrollTop()
+        bottom = y + at_rect.bottom
+        y += at_rect.top
+
+        # bottom + 2: for some font style problem
+        return {top:y,left:x,bottom:bottom + 2}
+
+      catch_query: ->
+        content = @$inputor.val()
+        ##获得inputor中插入符的position.
+        caret_pos = @$inputor.caretPos()
+        ### 向在插入符前的的文本进行正则匹配
+         * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
+        subtext = content.slice(0,caret_pos)
+
+        query = ""
+        $.each this.settings, (flag, settings) =>
+          query = @callbacks["matcher"].call(this, flag, subtext) || ""
+          @current_flag = flag
+          return false
+
+        if query.length <= 20
+          start = caret_pos - query.length
+          end = start + query.length
+          @pos = start
+          @query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+        else
+          @view.hide()
+        @query
+
+      replaceStr: (str) ->
+        $inputor = @$inputor
+        source = $inputor.val()
+        flag_len = if @.getOpt("display_flag") then 0 else @current_flag.length
+        start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
+        text = start_str + str + source.slice @query["end_pos"] || 0
+
+        $inputor.val text
+        $inputor.caretPos start_str.length + str.length
+        $inputor.change()
+        log "At.replaceStr", text
+
+      onkeyup: (e) ->
+        return unless @view.isShowing()
+        switch e.keyCode
+        when KEY_CODE.ESC
+          e.preventDefault()
+          @view.hide()
+        else
+          $.noop()
+          e.stopPropagation()
+
+      onkeydown: (e) ->
+        return if not @view.isShowing()
+        switch e.keyCode
+        when KEY_CODE.ESC
+          e.preventDefault()
+          @view.hide()
+        when KEY_CODE.UP
+          e.preventDefault()
+          @view.prev()
+        when KEY_CODE.DOWN
+          e.preventDefault()
+          @view.next()
+        when KEY_CODE.TAB, KEY_CODE.ENTER
+          return if not @view.isShowing()
+          e.preventDefault()
+          @view.choose()
+        else
+          $.noop()
+        e.stopPropagation()
+
+      renderView: (datas) ->
+        datas = datas.splice(0, this.get_opt('limit'))
+        datas = _unique(datas, this.data_value())
+        datas = _objectify(datas)
+        datas = _sorter.call(@,datas)
+
+        @view.render this, datas
 
     AtView =
         timeout_id: null
