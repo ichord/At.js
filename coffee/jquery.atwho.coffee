@@ -60,47 +60,6 @@
         @$mirror.remove()
         rect
 
-    At = (inputor) ->
-        renderView: (datas) ->
-            log "At.renderView", @, datas
-
-            datas = datas.splice(0, @.getOpt('limit'))
-            datas = _unique(datas, @.dataValue())
-            datas = _objectify(datas)
-            datas = _sorter.call(@,datas)
-
-            this.view.render this, datas
-
-        lookup: ->
-            key = this.getKeyname()
-            return no if not key
-            log "At.lookup.key", key
-
-            if not _isNil(datas = @.cache())
-                @.renderView datas
-            else if not _isNil(datas = @.lookupWithData key)
-                @.renderView datas
-            else if $.isFunction(callback = @.getOpt 'callback')
-                callback key.text, $.proxy(@.renderView,@)
-            else
-                @.view.hide()
-            $.noop()
-
-        lookupWithData: (key) ->
-            data = @.getOpt "data"
-            if $.isArray(data) and data.length != 0
-                items = $.map data, (item,i) =>
-                    try
-                        name = if $.isPlainObject item then item[@.dataValue()] else item
-                        regexp = new RegExp(key.text.replace("+","\\+"),'i')
-                        match = name.match(regexp)
-                    catch e
-                        return null
-
-                    return if match then item else null
-            items
-
-
     KEY_CODE =
       DOWN: 40
       UP: 38
@@ -109,6 +68,9 @@
       ENTER: 13
 
     DEFAULT_CALLBACKS =
+      data_source: ->
+        []
+
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
         match = regexp.exec subtext
@@ -116,6 +78,46 @@
         if match
           matched = if match[2] then match[2] else match[1]
         matched
+
+      filter: (key) ->
+        data = this.data_source()
+        if $.isArray(data) and data.length != 0
+          items = $.map data, (item,i) =>
+            try
+              name = if $.isPlainObject item then item[this.data_value()] else item
+              regexp = new RegExp(key.text.replace("+","\\+"),'i')
+              match = name.match(regexp)
+            catch e
+              return null
+            return if match then item else null
+        items
+
+      tpl_eval = (tpl, map) ->
+        try
+          el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
+            map[key]
+        catch error
+          ""
+
+      highlighter = (li, query) ->
+        return li if not query
+        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
+            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
+
+      sorter = (query, items) ->
+        data_value = this.data_value()
+        results = []
+
+        for item in items
+            text = item[data_value]
+            continue if text.toLowerCase().indexOf(query) is -1
+            item.order = text.toLowerCase().indexOf query
+            results.push(item)
+
+        results.sort (a,b) ->
+            a.order - b.order
+        return results
+
 
     class At
       settings: {}
@@ -128,46 +130,41 @@
       constructor: (inputor) ->
         @$inputor = $(inputor)
         @mirror = new Mirror(@$inputor)
-        @view = new View(this)
+        @view = new View(this, @$el)
         this.setup_callback_methods()
         this.listen()
 
       setup_callback_methods: ->
-        @callbacks = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks")
+        @callbacks = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
 
       listen: ->
         @$inputor
           .on "keyup.atWho", (e) =>
             stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
             can_lookup = not (stop and @view.isShowing())
-            this.lookup() if can_lookup
+            this.look_up() if can_lookup
           .on "mouseup.atWho", (e) =>
-            this.lookup()
+            this.look_up()
           .on 'keyup.atWho', (e) =>
-            this.onkeyup(e)
+            this.on_keyup(e)
           .on 'keydown.atWho', (e) =>
-            this.onkeydown(e)
+            this.on_keydown(e)
           .on 'scroll.atWho', (e) =>
             @view.hide()
           .on 'blur.atWho', (e) =>
             @view.hide(1000)
 
       reg: (flag, settings) ->
-        opt = {}
-        opt['callback'] = settings if $.isFunction settings
-        opt = settings
-        _default = @settings[flag] ||= $.fn.atWho.default
-        @settings[flag] = $.extend {}, _default, opt
+        @settings[flag] = $.extend {}, $.fn.atWho.default, settings
 
-      get_opt: (key) ->
+      get_opt: (key, default) ->
         try
           @settings[@current_flag][key]
         catch e
-          null
+          default || null
 
       data_value: ->
-        match = /data-value=["']?\$\{(\w+)\}/g.exec(this.get_opt('tpl'))
-        @data_value || @data_value = match[1]
+        @data_value || @data_value = $(this.get_opt('tpl'))
 
       rect: ->
         $inputor = @$inputor
@@ -233,19 +230,19 @@
           @view.hide()
         @query
 
-      replaceStr: (str) ->
+      replace_str: (str) ->
         $inputor = @$inputor
         source = $inputor.val()
-        flag_len = if @.getOpt("display_flag") then 0 else @current_flag.length
+        flag_len = if this.get_opt("display_flag") then 0 else @current_flag.length
         start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
         text = start_str + str + source.slice @query["end_pos"] || 0
 
         $inputor.val text
         $inputor.caretPos start_str.length + str.length
         $inputor.change()
-        log "At.replaceStr", text
+        log "At.replace_str", text
 
-      onkeyup: (e) ->
+      on_keyup: (e) ->
         return unless @view.isShowing()
         switch e.keyCode
         when KEY_CODE.ESC
@@ -255,7 +252,7 @@
           $.noop()
           e.stopPropagation()
 
-      onkeydown: (e) ->
+      on_keydown: (e) ->
         return if not @view.isShowing()
         switch e.keyCode
         when KEY_CODE.ESC
@@ -275,103 +272,120 @@
           $.noop()
         e.stopPropagation()
 
-      renderView: (datas) ->
+      render_view: (datas) ->
         datas = datas.splice(0, this.get_opt('limit'))
         datas = _unique(datas, this.data_value())
         datas = _objectify(datas)
-        datas = _sorter.call(@,datas)
+        datas = @callbacks["sorter"].call(this, @query.text, datas)
 
-        @view.render this, datas
+        @view.render datas
 
-    AtView =
-        timeout_id: null
-        id: '#at-view'
-        holder: null
-        _jqo: null
-        jqo: ->
-            jqo = @._jqo
-            jqo = if _isNil jqo then (@._jqo = $(@.id)) else jqo
+      look_up: ->
+        key = this.catch_query()
+        return no if not key
+        log "At.look_up.key", key
 
-        init: ->
-            return if not _isNil @.jqo()
-            tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>"
-            $("body").append(tpl)
-
-            $menu = @.jqo().find('ul')
-            $menu.on 'mouseenter.view','li', (e) ->
-                    $menu.find('.cur').removeClass 'cur'
-                    $(e.currentTarget).addClass 'cur'
-                .on 'click', (e) =>
-                    e.stopPropagation()
-                    e.preventDefault()
-                    @.choose()
+        if (datas = @methods['filter'].call(this, key))
+            this.render_view datas
+        # else if $.isFunction(callback = @.get_opt 'callback')
+        #     callback key.text, $.proxy(this.render_view,@)
+        else
+            @view.hide()
+        $.noop()
 
 
-        isShowing: () ->
-            @.jqo().is(":visible")
+    class View
+      constructor: (@at) ->
+        @id = @at.get_opt("view_id", "at-view")
+        @timeout_id = null
+        @$el = $("##{@id}")
+        this.create_view()
 
-        choose: () ->
-            $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.holder.getOpt("choose")) + " "
-            @.holder.replaceStr(str)
-            @.hide()
+      create_view: ->
+        return if this.exist()
+        tpl = "<div id='#{@id}' class='at-view'><ul id='#{@id}-ul'></ul></div>"
+        $("body").append(tpl)
+        @$el = $("##{@id}")
 
-        rePosition: () ->
-            rect = @.holder.rect()
-            if rect.bottom + @.jqo().height() - $(window).scrollTop() > $(window).height()
-                rect.bottom = rect.top - @.jqo().height()
-            log "AtView.rePosition",{left:rect.left, top:rect.bottom}
-            @.jqo().offset {left:rect.left, top:rect.bottom}
+        $menu = @$el.find('ul')
+        $menu.on 'mouseenter.view','li', (e) ->
+          $menu.find('.cur').removeClass 'cur'
+          $(e.currentTarget).addClass 'cur'
+        .on 'click', (e) =>
+          e.stopPropagation()
+          e.preventDefault()
+          this.choose()
 
-        next: () ->
-            cur = @.jqo().find('.cur').removeClass('cur')
-            next = cur.next()
-            next = $(@.jqo().find('li')[0]) if not next.length
-            next.addClass 'cur'
+      exist: ->
+        $("##{@id}").length > 0
 
-        prev: () ->
-            cur = @.jqo().find('.cur').removeClass('cur')
-            prev = cur.prev()
-            prev = @.jqo().find('li').last() if not prev.length
-            prev.addClass('cur')
+      visible: ->
+        @$el.is(":visible")
 
-        show: () ->
-            @.jqo().show() if not @.isShowing()
-            @.rePosition()
+      choose: ->
+        $li = @$el.find ".cur"
+        str = ""
+        if $li.lenght > 0
+          "#{@at.query.text} "
+        else
+          $li.attr(@at.get_opt("choose")) + " "
 
-        hide: (time) ->
-            if isNaN time
-                @.jqo().hide() if @.isShowing()
-            else
-                callback = => @.hide()
-                clearTimeout @.timeout_id
-                @.timeout_id = setTimeout callback, 300
+        @at.replace_str(str)
+        this.hide()
 
-        clear: (clear_all) ->
-            @._cache = {} if clear_all is yes
-            @.jqo().find('ul').empty()
+      reposition: ->
+        rect = @at.rect()
+        if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
+            rect.bottom = rect.top - @$el.height()
+        log "AtView.reposition",{left:rect.left, top:rect.bottom}
+        @$el.offset {left:rect.left, top:rect.bottom}
 
-        render: (holder, list) ->
-            return no if not $.isArray(list)
-            if list.length <= 0
-                @.hide()
-                return yes
+      next: ->
+        cur = @$el.find('.cur').removeClass('cur')
+        next = cur.next()
+        next = $(@$el.find('li')[0]) if not next.length
+        next.addClass 'cur'
 
-            @.holder = holder
-            holder.cache(list)
-            @.clear()
+      prev: ->
+        cur = @$el.find('.cur').removeClass('cur')
+        prev = cur.prev()
+        prev = @$el.find('li').last() if not prev.length
+        prev.addClass('cur')
 
-            $ul = @.jqo().find('ul')
-            tpl = holder.getOpt('tpl')
+      show: ->
+        @$el.show() if not this.visible()
+        this.reposition()
 
-            $.each list, (i, item) ->
-                tpl or= _DEFAULT_TPL
-                li = _evalTpl tpl, item
-                log "AtView.render", li
-                $ul.append _highlighter li,holder.query.text
+      hide: (time) ->
+        if isNaN time
+          @$el.hide() if this.visible()
+        else
+          callback = => this.hide()
+          clearTimeout @timeout_id
+          @timeout_id = setTimeout callback, @at.get_opt("display_timeout", 300)
 
-            @.show()
-            $ul.find("li:eq(0)").addClass "cur"
+      clear: ->
+        @$el.find('ul').empty()
+
+      render: (list) ->
+        return no if not $.isArray(list)
+        if list.length <= 0
+          this.hide()
+          return yes
+
+        # holder.cache(list)
+        this.clear()
+
+        $ul = @$el.find('ul')
+        tpl = @at.get_opt('tpl', _DEFAULT_TPL)
+
+        $.each list, (i, item) ->
+          li = @at.methods["tpl_eval"].call(this, tpl, item)
+          log "AtView.render", li
+          $ul.append @at.methods["highlighter"].call(this, li, @at.query.text)
+
+        this.show()
+        $ul.find("li:eq(0)").addClass "cur"
 
 
     _objectify = (list) ->
@@ -379,34 +393,6 @@
             if not $.isPlainObject item
                 item = {id:k, name:item}
             return item
-
-    _evalTpl = (tpl, map) ->
-        try
-            el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
-                map[key]
-        catch error
-            ""
-
-    _highlighter = (li,query) ->
-        return li if _isNil(query)
-        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
-            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
-
-    _sorter = (items) ->
-        data_value = @.dataValue()
-        query = @.query.text
-        results = []
-
-        for item in items
-            text = item[data_value]
-            continue if text.toLowerCase().indexOf(query) is -1
-            item.order = text.toLowerCase().indexOf query
-            results.push(item)
-
-        results.sort (a,b) ->
-            a.order - b.order
-        return results
-
 
     ###
       maybe we can use $._unique.
@@ -422,14 +408,7 @@
                 record.push value
                 return v
 
-    _isNil = (target) ->
-        not target \
-        or ($.isPlainObject(target) and $.isEmptyObject(target)) \
-        or ($.isArray(target) and target.length is 0) \
-        or (target instanceof $ and target.length is 0) \
-        or target is undefined
-
-    _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
+    _DEFAULT_TPL = "<li id='${id}' data-value=name'>${name}</li>"
 
     log = () ->
         #console.log(arguments)
@@ -444,12 +423,11 @@
             data.reg flag, options
 
     $.fn.atWho.default =
-        data: []
         # Parameter: choose
         ## specify the attribute on customer tpl,
         ## so that we could append different value to the input other than the value we searched in
         choose: "data-value"
-        callback: null
+        callbacks: {}
         cache: yes
         limit: 5
         display_flag: yes

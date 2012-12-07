@@ -1,20 +1,20 @@
 Add Twitter / Weibo style @ mentions autocomplete to your application.
 
-**Let me know you are using it. So I will work harder on it, Thanks. :) **  
-add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using At.js 
+**Let me know you are using it. So I will work harder on it, Thanks. :) **
+add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using At.js
 
 ###Demo
 [http://ichord.github.com/At.js][1]
 
 ###Features
-* Can listen to any character  
+* Can listen to any character
     not just '@', and set up multiple listeners for different characters with different behavior and data.
-* Supports static data and dynamic data(via AJAX) at the same time  
+* Supports static data and dynamic data(via AJAX) at the same time
     static data will be searched first, and then use AJAX to fetch non-existing values.
 * Listener events can be bound to multiple textareas
 * Cacheable
 * Format returned data using templates
-* Keyboard controls in addition to mouse   
+* Keyboard controls in addition to mouse
     `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values
 
 ### Requirements
@@ -42,7 +42,7 @@ Here is the Default setting.
      */
     'cache': true,
 
-    /* 
+    /*
      Static data to use before the callback is invoked
      */
     'data': [],
@@ -52,11 +52,11 @@ Here is the Default setting.
      */
     'limit': 5,
 
-    /* 
+    /*
      Item format template
      `data-value` contents will be inserted to the textarea on selection
      */
-    'tpl': "<li id='${index}' data-value='${name}'>${name}</li>",
+    'tpl': "<li id='${index}' data-value=name'>${name}</li>",
 
     /*
      The name of the data attribute in the item template
@@ -67,7 +67,7 @@ Here is the Default setting.
 
 #### Using static data
 
-Bind a textarea to listen to a specific character and pass an array of data in the `data` parameter  
+Bind a textarea to listen to a specific character and pass an array of data in the `data` parameter
 The first argument is the character you want to listen, and the second one is a map of options:
 
 ``` javascript
@@ -76,15 +76,15 @@ The first argument is the character you want to listen, and the second one is a 
         "arrow_forward", "arrow_left", "arrow_lower_left", "arrow_lower_right",
         "arrow_right", "arrow_up", "arrow_upper_left", "arrow_upper_right"
     ];
-    
+
     $('textarea').atWho(":", {data:emoji_list});
 ```
 
 #### Using dynamic data with AJAX
 
-This time we pass a callback function instead of the static data as the second parameter.  
-You can just set a function as second argument, At.js will determine it and set it to callback option.  
-the data - `names` - would be a string array or a map array which the same as `data` option  
+This time we pass a callback function instead of the static data as the second parameter.
+You can just set a function as second argument, At.js will determine it and set it to callback option.
+the data - `names` - would be a string array or a map array which the same as `data` option
 `query` argument is the string behind the character you are listening as "@" in this example.
 
 ``` javascript
@@ -100,14 +100,14 @@ the data - `names` - would be a string array or a map array which the same as `d
 
 #### Using both static data and dynamic data
 
-We pass a configuration object containing both the `data` and `callback` parameters.  
+We pass a configuration object containing both the `data` and `callback` parameters.
 It will search the local static data first.
 
 ``` javascript
     var names = ['one', 'two'];
     $('textarea').atWho("@", {
         'data': names,
-        'callback': function(query, callback) { 
+        'callback': function(query, callback) {
             console.log(query, callback);
         }
     });
@@ -115,7 +115,7 @@ It will search the local static data first.
 
 #### Custom templates
 
-**base template**, `li` element and `data-value` attribute are all necessary.  
+**base template**, `li` element and `data-value` attribute are all necessary.
 We also show how to set up multiple listeners with different characters.
 
 ``` html
@@ -138,7 +138,7 @@ we use these static data in all examples below:
 
 ##### Simple
 
-At.js will search by `data-value` and the contents will be inserted to the textarea on selection  
+At.js will search by `data-value` and the contents will be inserted to the textarea on selection
 
 ``` javascript
     $("textarea").atWho("@",{
