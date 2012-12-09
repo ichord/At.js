@@ -255,7 +255,7 @@
 
         lookup: ->
             key = this.getKeyname()
-            return no if not key
+            return if not key
             log "At.lookup.key", key
 
             if not _isNil(datas = @.cache())
