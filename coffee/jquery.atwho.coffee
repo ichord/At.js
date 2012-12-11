@@ -137,11 +137,7 @@
         @$inputor = $(inputor)
         @mirror = new Mirror(@$inputor)
         @view = new View(this, @$el)
-        this.setup_callback_methods()
         this.listen()
-
-      setup_callback_methods: ->
-        @callbacks = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
 
       listen: ->
         @$inputor
@@ -165,7 +161,14 @@
           @settings[flag] = $.extend {}, $.fn.atWho.default, settings
         else
           @settings[flag] = $.extend {}, @settings[flag], settings
+        this.setup_callback_methods_for(flag)
         this
+
+      setup_callback_methods_for: (flag) ->
+        @callbacks[flag] = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
+
+      callbacks: (flag) ->
+        @callbacks[flag]
 
       get_opt: (key, default) ->
         try
@@ -225,7 +228,7 @@
 
         query = ""
         $.each this.settings, (flag, settings) =>
-          query = @callbacks["matcher"].call(this, flag, subtext) || ""
+          query = this.callbacks("matcher").call(this, flag, subtext) || ""
           @current_flag = flag
           return false
 
@@ -282,9 +285,9 @@
 
       render_view: (data) ->
         data = data.splice(0, this.get_opt('limit'))
-        data = @callbacks["data_refactor"].call(this, data)
+        data = this.callbacks("data_refactor").call(this, data)
         search_key = this.get_opt("search_key")
-        data = @callbacks["sorter"].call(this, @query.text, data, search_key)
+        data = this.callbacks("sorter").call(this, @query.text, data, search_key)
 
         @view.render data
 
@@ -300,8 +303,8 @@
             q: query.text
             limit: this.get_opt("limit")
           callback = $.proxy(this.render_view, this
-          @callbacks['remote_filter'].call(this, params, callback))
-        else if (data = @callbacks['filter'].call(this, query.text, origin_data, search_query)
+          this.callbacks('remote_filter').call(this, params, callback))
+        else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_query)
             this.render_view data
         else
             @view.hide()
