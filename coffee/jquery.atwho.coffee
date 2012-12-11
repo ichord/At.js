@@ -68,8 +68,6 @@
       ENTER: 13
 
     DEFAULT_CALLBACKS =
-      data_source: ->
-        []
 
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
@@ -79,44 +77,53 @@
           matched = if match[2] then match[2] else match[1]
         matched
 
-      filter: (key) ->
-        data = this.data_source()
+      filter: (query, data, search_query) ->
         if $.isArray(data) and data.length != 0
           items = $.map data, (item,i) =>
             try
-              name = if $.isPlainObject item then item[this.data_value()] else item
-              regexp = new RegExp(key.text.replace("+","\\+"),'i')
+              name = if $.isPlainObject item then item[search_query] else item
+              regexp = new RegExp(query.replace("+","\\+"),'i')
               match = name.match(regexp)
             catch e
               return null
             return if match then item else null
         items
 
-      tpl_eval = (tpl, map) ->
+      remote_filter: (params, url, render_view) ->
+        $.ajax url, params, (data) ->
+          names = $.parseJSON(data)
+          render_view(names)
+
+      tpl_eval: (tpl, map) ->
         try
           el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
             map[key]
         catch error
           ""
 
-      highlighter = (li, query) ->
+      highlighter: (li, query) ->
         return li if not query
         li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
             '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
-      sorter = (query, items) ->
-        data_value = this.data_value()
+      sorter: (query, items, search_key) ->
         results = []
 
         for item in items
-            text = item[data_value]
-            continue if text.toLowerCase().indexOf(query) is -1
-            item.order = text.toLowerCase().indexOf query
-            results.push(item)
+          text = item[search_key]
+          continue if text.toLowerCase().indexOf(query) is -1
+          item.order = text.toLowerCase().indexOf query
+          results.push(item)
 
         results.sort (a,b) ->
-            a.order - b.order
+          a.order - b.order
         return results
+
+      data_refactor: (data) ->
+        $.map data, (item, k) ->
+          if not $.isPlainObject item
+            item = {id:k, name:item}
+          return item
 
 
     class At
@@ -159,12 +166,10 @@
 
       get_opt: (key, default) ->
         try
-          @settings[@current_flag][key]
+          opt = @settings[@current_flag][key]
+          default if !opt
         catch e
           default || null
-
-      data_value: ->
-        @data_value || @data_value = $(this.get_opt('tpl'))
 
       rect: ->
         $inputor = @$inputor
@@ -272,23 +277,29 @@
           $.noop()
         e.stopPropagation()
 
-      render_view: (datas) ->
-        datas = datas.splice(0, this.get_opt('limit'))
-        datas = _unique(datas, this.data_value())
-        datas = _objectify(datas)
-        datas = @callbacks["sorter"].call(this, @query.text, datas)
+      render_view: (data) ->
+        data = data.splice(0, this.get_opt('limit'))
+        data = @callbacks["data_refactor"].call(this, data)
+        search_key = this.get_opt("search_key")
+        data = @callbacks["sorter"].call(this, @query.text, data, search_key)
 
-        @view.render datas
+        @view.render data
 
       look_up: ->
-        key = this.catch_query()
-        return no if not key
-        log "At.look_up.key", key
+        query = this.catch_query()
+        return no if not query
+        log "At.look_up.query", query
 
-        if (datas = @methods['filter'].call(this, key))
-            this.render_view datas
-        # else if $.isFunction(callback = @.get_opt 'callback')
-        #     callback key.text, $.proxy(this.render_view,@)
+        origin_data = this.get_opt("data")
+        search_query = this.get_opt("search_query")
+        if typeof data is "string"
+          params =
+            q: query.text
+            limit: this.get_opt("limit")
+          callback = $.proxy(this.render_view, this
+          @callbacks['remote_filter'].call(this, params, callback))
+        else if (data = @callbacks['filter'].call(this, query.text, origin_data, search_query)
+            this.render_view data
         else
             @view.hide()
         $.noop()
@@ -388,27 +399,7 @@
         $ul.find("li:eq(0)").addClass "cur"
 
 
-    _objectify = (list) ->
-        $.map list, (item,k) ->
-            if not $.isPlainObject item
-                item = {id:k, name:item}
-            return item
-
-    ###
-      maybe we can use $._unique.
-      But i don't know it will delete li element frequently or not.
-      I think we should not change DOM element frequently.
-      more, It seems batter not to call evalTpl function too much times.
-    ###
-    _unique = (list,query) ->
-        record = []
-        $.map list, (v, id) ->
-            value = if $.isPlainObject(v) then v[query] else v
-            if $.inArray(value,record) < 0
-                record.push value
-                return v
-
-    _DEFAULT_TPL = "<li id='${id}' data-value=name'>${name}</li>"
+    _DEFAULT_TPL = "<li id='${id}'>${name}</li>"
 
     log = () ->
         #console.log(arguments)
@@ -426,7 +417,9 @@
         # Parameter: choose
         ## specify the attribute on customer tpl,
         ## so that we could append different value to the input other than the value we searched in
-        choose: "data-value"
+        data: null
+        search_key: "name"
+        choose_key: "name"
         callbacks: {}
         cache: yes
         limit: 5
