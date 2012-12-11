@@ -412,6 +412,9 @@
         $this.data 'AtWho', (data = new At(this)) if not data
         data.reg flag, options
 
+    $.fn.atWho.At = At
+    $.fn.atWho.View = View
+    $.fn.atWho.Mirror = Mirror
     $.fn.atWho.default =
         # Parameter: choose
         ## specify the attribute on customer tpl,
