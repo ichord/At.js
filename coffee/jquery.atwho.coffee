@@ -161,7 +161,11 @@
             @view.hide(1000)
 
       reg: (flag, settings) ->
-        @settings[flag] = $.extend {}, $.fn.atWho.default, settings
+        if not @settings[flag]
+          @settings[flag] = $.extend {}, $.fn.atWho.default, settings
+        else
+          @settings[flag] = $.extend {}, @settings[flag], settings
+        this
 
       get_opt: (key, default) ->
         try
