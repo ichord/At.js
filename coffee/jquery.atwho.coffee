@@ -68,7 +68,6 @@
       ENTER: 13
 
     DEFAULT_CALLBACKS =
-
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
         match = regexp.exec subtext
@@ -122,7 +121,7 @@
       data_refactor: (data) ->
         $.map data, (item, k) ->
           if not $.isPlainObject item
-            item = {id:k, name:item}
+            item = {name:item}
           return item
 
 
@@ -335,13 +334,7 @@
 
       choose: ->
         $li = @$el.find ".cur"
-        str = ""
-        if $li.lenght > 0
-          "#{@at.query.text} "
-        else
-          $li.attr(@at.get_opt("choose")) + " "
-
-        @at.replace_str(str)
+        @at.replace_str($li.data("value") || "") if $li.length > 0
         this.hide()
 
       reposition: ->
@@ -399,19 +392,18 @@
         $ul.find("li:eq(0)").addClass "cur"
 
 
-    _DEFAULT_TPL = "<li id='${id}'>${name}</li>"
+    _DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
     log = () ->
         #console.log(arguments)
 
     $.fn.atWho = (flag, options) ->
-        AtView.init()
-        @.filter('textarea, input').each () ->
-            $this = $(this)
-            data = $this.data "AtWho"
+      @.filter('textarea, input').each () ->
+        $this = $(this)
+        data = $this.data "AtWho"
 
-            $this.data 'AtWho', (data = new At(this)) if not data
-            data.reg flag, options
+        $this.data 'AtWho', (data = new At(this)) if not data
+        data.reg flag, options
 
     $.fn.atWho.default =
         # Parameter: choose
@@ -419,7 +411,6 @@
         ## so that we could append different value to the input other than the value we searched in
         data: null
         search_key: "name"
-        choose_key: "name"
         callbacks: {}
         cache: yes
         limit: 5
