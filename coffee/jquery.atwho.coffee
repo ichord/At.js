@@ -42,7 +42,7 @@
           top:0
           zIndex: -20000
           'white-space': 'pre-wrap'
-        $.each @css_attr, (i,p) ->
+        $.each @css_attr, (i,p) =>
           css[p] = @$inputor.css p
         css
 
@@ -67,7 +67,7 @@
       TAB: 9
       ENTER: 13
 
-    DEFAULT_CALLBACKS =
+    GLOBAL_CALLBACKS =
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
         match = regexp.exec subtext
@@ -76,11 +76,12 @@
           matched = if match[2] then match[2] else match[1]
         matched
 
-      filter: (query, data, search_query) ->
+    DEFAULT_CALLBACKS =
+      filter: (query, data, search_key) ->
         if $.isArray(data) and data.length != 0
           items = $.map data, (item,i) =>
             try
-              name = if $.isPlainObject item then item[search_query] else item
+              name = if $.isPlainObject item then item[search_key] else item
               regexp = new RegExp(query.replace("+","\\+"),'i')
               match = name.match(regexp)
             catch e
@@ -128,10 +129,10 @@
     class At
       settings: {}
       pos: 0
-      flags: {}
+      flags: null
       current_flag: null
-      query: {}
-      callbacks: {}
+      query: null
+      _callbacks: {}
 
       constructor: (inputor) ->
         @$inputor = $(inputor)
@@ -143,7 +144,7 @@
         @$inputor
           .on "keyup.atWho", (e) =>
             stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
-            can_lookup = not (stop and @view.isShowing())
+            can_lookup = not (stop and @view.visible())
             this.look_up() if can_lookup
           .on "mouseup.atWho", (e) =>
             this.look_up()
@@ -165,17 +166,16 @@
         this
 
       setup_callback_methods_for: (flag) ->
-        @callbacks[flag] = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
+        @_callbacks[flag] = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
 
-      callbacks: (flag) ->
-        @callbacks[flag]
+      callbacks: (func_name)->
+        GLOBAL_CALLBACKS[func_name] || @_callbacks[@current_flag][func_name]
 
-      get_opt: (key, default) ->
+      get_opt: (key, default_value) ->
         try
-          opt = @settings[@current_flag][key]
-          default if !opt
+          @settings[@current_flag][key] || default_value
         catch e
-          default || null
+          default_value || null
 
       rect: ->
         $inputor = @$inputor
@@ -185,14 +185,14 @@
           y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
           bottom = y + Sel.boundingHeight
             # -2 : for some font style problem.
-            return {top:y-2, left:x-2, bottom:bottom-2}
+          return {top:y-2, left:x-2, bottom:bottom-2}
 
-            format = (value) ->
-              value.replace(/</g, '&lt')
-              .replace(/>/g, '&gt')
-              .replace(/`/g,'&#96')
-              .replace(/"/g,'&quot')
-              .replace(/\r\n|\r|\n/g,"<br />")
+        format = (value) ->
+          value.replace(/</g, '&lt')
+          .replace(/>/g, '&gt')
+          .replace(/`/g,'&#96')
+          .replace(/"/g,'&quot')
+          .replace(/\r\n|\r|\n/g,"<br />")
 
         ### 克隆完inputor后将原来的文本内容根据
           @的位置进行分块,以获取@块在inputor(输入框)里的position
@@ -226,13 +226,13 @@
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
         subtext = content.slice(0,caret_pos)
 
-        query = ""
-        $.each this.settings, (flag, settings) =>
-          query = this.callbacks("matcher").call(this, flag, subtext) || ""
+        query = @query = null
+        $.each @settings, (flag, settings) =>
+          query = this.callbacks("matcher").call(this, flag, subtext)
           @current_flag = flag
           return false
 
-        if query.length <= 20
+        if typeof query is "string" and query.length <= 20
           start = caret_pos - query.length
           end = start + query.length
           @pos = start
@@ -246,41 +246,41 @@
         source = $inputor.val()
         flag_len = if this.get_opt("display_flag") then 0 else @current_flag.length
         start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
-        text = start_str + str + source.slice @query["end_pos"] || 0
+        text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
 
         $inputor.val text
-        $inputor.caretPos start_str.length + str.length
+        $inputor.caretPos start_str.length + str.length + 1
         $inputor.change()
         log "At.replace_str", text
 
       on_keyup: (e) ->
-        return unless @view.isShowing()
+        return unless @view.visible()
         switch e.keyCode
-        when KEY_CODE.ESC
-          e.preventDefault()
-          @view.hide()
-        else
-          $.noop()
-          e.stopPropagation()
+          when KEY_CODE.ESC
+            e.preventDefault()
+            @view.hide()
+          else
+            $.noop()
+            e.stopPropagation()
 
       on_keydown: (e) ->
-        return if not @view.isShowing()
+        return if not @view.visible()
         switch e.keyCode
-        when KEY_CODE.ESC
-          e.preventDefault()
-          @view.hide()
-        when KEY_CODE.UP
-          e.preventDefault()
-          @view.prev()
-        when KEY_CODE.DOWN
-          e.preventDefault()
-          @view.next()
-        when KEY_CODE.TAB, KEY_CODE.ENTER
-          return if not @view.isShowing()
-          e.preventDefault()
-          @view.choose()
-        else
-          $.noop()
+          when KEY_CODE.ESC
+            e.preventDefault()
+            @view.hide()
+          when KEY_CODE.UP
+            e.preventDefault()
+            @view.prev()
+          when KEY_CODE.DOWN
+            e.preventDefault()
+            @view.next()
+          when KEY_CODE.TAB, KEY_CODE.ENTER
+            return if not @view.visible()
+            e.preventDefault()
+            @view.choose()
+          else
+            $.noop()
         e.stopPropagation()
 
       render_view: (data) ->
@@ -294,17 +294,15 @@
       look_up: ->
         query = this.catch_query()
         return no if not query
-        log "At.look_up.query", query
 
         origin_data = this.get_opt("data")
-        search_query = this.get_opt("search_query")
+        search_key = this.get_opt("search_key")
         if typeof data is "string"
           params =
             q: query.text
             limit: this.get_opt("limit")
-          callback = $.proxy(this.render_view, this
-          this.callbacks('remote_filter').call(this, params, callback))
-        else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_query)
+          callback = $.proxy(this.render_view, this.callbacks('remote_filter').call(this, params, callback))
+        else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
             this.render_view data
         else
             @view.hide()
@@ -390,10 +388,10 @@
         $ul = @$el.find('ul')
         tpl = @at.get_opt('tpl', _DEFAULT_TPL)
 
-        $.each list, (i, item) ->
-          li = @at.methods["tpl_eval"].call(this, tpl, item)
+        $.each list, (i, item) =>
+          li = @at.callbacks("tpl_eval").call(this, tpl, item)
           log "AtView.render", li
-          $ul.append @at.methods["highlighter"].call(this, li, @at.query.text)
+          $ul.append @at.callbacks("highlighter").call(this, li, @at.query.text)
 
         this.show()
         $ul.find("li:eq(0)").addClass "cur"
