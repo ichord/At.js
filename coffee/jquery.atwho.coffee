@@ -67,7 +67,7 @@
       TAB: 9
       ENTER: 13
 
-    GLOBAL_CALLBACKS =
+    DEFAULT_CALLBACKS =
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
         match = regexp.exec subtext
@@ -76,7 +76,6 @@
           matched = if match[2] then match[2] else match[1]
         matched
 
-    DEFAULT_CALLBACKS =
       filter: (query, data, search_key) ->
         if $.isArray(data) and data.length != 0
           items = $.map data, (item,i) =>
@@ -127,16 +126,19 @@
 
 
     class At
-      settings: {}
-      pos: 0
-      flags: null
-      current_flag: null
-      query: null
-      _callbacks: {}
 
       constructor: (inputor) ->
+        @settings     = {}
+        @global       = {}
+        @pos          = 0
+        @flags        = null
+        @current_flag = null
+        @query        = null
+        @_callbacks   = {}
+
         @$inputor = $(inputor)
         @mirror = new Mirror(@$inputor)
+        @global = $.extend {}, $.fn.atWho.default
         @view = new View(this, @$el)
         this.listen()
 
@@ -158,24 +160,25 @@
             @view.hide(1000)
 
       reg: (flag, settings) ->
-        if not @settings[flag]
-          @settings[flag] = $.extend {}, $.fn.atWho.default, settings
+        if not flag
+          @global = $.extend {}, @global, settings
+        else if not @settings[flag]
+          @settings[flag] = $.extend {}, settings
         else
           @settings[flag] = $.extend {}, @settings[flag], settings
-        this.setup_callback_methods_for(flag)
+
         this
 
-      setup_callback_methods_for: (flag) ->
-        @_callbacks[flag] = $.extend {}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {})
-
       callbacks: (func_name)->
-        GLOBAL_CALLBACKS[func_name] || @_callbacks[@current_flag][func_name]
+        this.get_opt("callbacks",{})[func_name]
 
       get_opt: (key, default_value) ->
         try
-          @settings[@current_flag][key] || default_value
+          value = @settings[@current_flag][key] if @current_flag
+          value = @global[key] if value is undefined
+          value = if value is undefined then default_value else value
         catch e
-          default_value || null
+          value = if default_value is undefined then null else default_value
 
       rect: ->
         $inputor = @$inputor
@@ -226,20 +229,22 @@
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
         subtext = content.slice(0,caret_pos)
 
-        query = @query = null
+        query = null
         $.each @settings, (flag, settings) =>
           query = this.callbacks("matcher").call(this, flag, subtext)
-          @current_flag = flag
-          return false
+          if query?
+            @current_flag = flag
+            return false
 
         if typeof query is "string" and query.length <= 20
           start = caret_pos - query.length
           end = start + query.length
           @pos = start
-          @query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+          query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
         else
           @view.hide()
-        @query
+
+        @query = query
 
       replace_str: (str) ->
         $inputor = @$inputor
@@ -251,7 +256,6 @@
         $inputor.val text
         $inputor.caretPos start_str.length + str.length + 1
         $inputor.change()
-        log "At.replace_str", text
 
       on_keyup: (e) ->
         return unless @view.visible()
@@ -284,10 +288,11 @@
         e.stopPropagation()
 
       render_view: (data) ->
-        data = data.splice(0, this.get_opt('limit'))
-        data = this.callbacks("data_refactor").call(this, data)
         search_key = this.get_opt("search_key")
+
+        data = this.callbacks("data_refactor").call(this, data)
         data = this.callbacks("sorter").call(this, @query.text, data, search_key)
+        data = data.splice(0, this.get_opt('limit'))
 
         @view.render data
 
@@ -346,7 +351,6 @@
         rect = @at.rect()
         if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
             rect.bottom = rect.top - @$el.height()
-        log "AtView.reposition",{left:rect.left, top:rect.bottom}
         @$el.offset {left:rect.left, top:rect.bottom}
 
       next: ->
@@ -386,21 +390,17 @@
         this.clear()
 
         $ul = @$el.find('ul')
-        tpl = @at.get_opt('tpl', _DEFAULT_TPL)
+        tpl = @at.get_opt('tpl', DEFAULT_TPL)
 
         $.each list, (i, item) =>
           li = @at.callbacks("tpl_eval").call(this, tpl, item)
-          log "AtView.render", li
           $ul.append @at.callbacks("highlighter").call(this, li, @at.query.text)
 
         this.show()
         $ul.find("li:eq(0)").addClass "cur"
 
 
-    _DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
-
-    log = () ->
-        #console.log(arguments)
+    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
     $.fn.atWho = (flag, options) ->
       @.filter('textarea, input').each () ->
@@ -419,10 +419,10 @@
         ## so that we could append different value to the input other than the value we searched in
         data: null
         search_key: "name"
-        callbacks: {}
+        callbacks: DEFAULT_CALLBACKS
         cache: yes
         limit: 5
         display_flag: yes
-        tpl: _DEFAULT_TPL
+        tpl: DEFAULT_TPL
 
 )(window.jQuery)

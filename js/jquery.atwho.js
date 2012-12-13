@@ -29,7 +29,7 @@
 (function() {
 
   (function($) {
-    var At, DEFAULT_CALLBACKS, GLOBAL_CALLBACKS, KEY_CODE, Mirror, View, log, _DEFAULT_TPL;
+    var At, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
     Mirror = (function() {
 
       Mirror.prototype.css_attr = ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", 'fontFamily', 'borderStyle', 'borderWidth', 'wordWrap', 'fontSize', 'lineHeight', 'overflowX'];
@@ -85,7 +85,7 @@
       TAB: 9,
       ENTER: 13
     };
-    GLOBAL_CALLBACKS = {
+    DEFAULT_CALLBACKS = {
       matcher: function(flag, subtext) {
         var match, matched, regexp;
         regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
@@ -95,9 +95,7 @@
           matched = match[2] ? match[2] : match[1];
         }
         return matched;
-      }
-    };
-    DEFAULT_CALLBACKS = {
+      },
       filter: function(query, data, search_key) {
         var items,
           _this = this;
@@ -175,21 +173,17 @@
     };
     At = (function() {
 
-      At.prototype.settings = {};
-
-      At.prototype.pos = 0;
-
-      At.prototype.flags = null;
-
-      At.prototype.current_flag = null;
-
-      At.prototype.query = null;
-
-      At.prototype._callbacks = {};
-
       function At(inputor) {
+        this.settings = {};
+        this.global = {};
+        this.pos = 0;
+        this.flags = null;
+        this.current_flag = null;
+        this.query = null;
+        this._callbacks = {};
         this.$inputor = $(inputor);
         this.mirror = new Mirror(this.$inputor);
+        this.global = $.extend({}, $.fn.atWho["default"]);
         this.view = new View(this, this.$el);
         this.listen();
       }
@@ -217,28 +211,32 @@
       };
 
       At.prototype.reg = function(flag, settings) {
-        if (!this.settings[flag]) {
-          this.settings[flag] = $.extend({}, $.fn.atWho["default"], settings);
+        if (!flag) {
+          this.global = $.extend({}, this.global, settings);
+        } else if (!this.settings[flag]) {
+          this.settings[flag] = $.extend({}, settings);
         } else {
           this.settings[flag] = $.extend({}, this.settings[flag], settings);
         }
-        this.setup_callback_methods_for(flag);
         return this;
       };
 
-      At.prototype.setup_callback_methods_for = function(flag) {
-        return this._callbacks[flag] = $.extend({}, DEFAULT_CALLBACKS, this.get_opt("callbacks", {}));
-      };
-
       At.prototype.callbacks = function(func_name) {
-        return GLOBAL_CALLBACKS[func_name] || this._callbacks[this.current_flag][func_name];
+        return this.get_opt("callbacks", {})[func_name];
       };
 
       At.prototype.get_opt = function(key, default_value) {
+        var value;
         try {
-          return this.settings[this.current_flag][key] || default_value;
+          if (this.current_flag) {
+            value = this.settings[this.current_flag][key];
+          }
+          if (value === void 0) {
+            value = this.global[key];
+          }
+          return value = value === void 0 ? default_value : value;
         } catch (e) {
-          return default_value || null;
+          return value = default_value === void 0 ? null : default_value;
         }
       };
 
@@ -296,17 +294,19 @@
         */
 
         subtext = content.slice(0, caret_pos);
-        query = this.query = null;
+        query = null;
         $.each(this.settings, function(flag, settings) {
           query = _this.callbacks("matcher").call(_this, flag, subtext);
-          _this.current_flag = flag;
-          return false;
+          if (query != null) {
+            _this.current_flag = flag;
+            return false;
+          }
         });
         if (typeof query === "string" && query.length <= 20) {
           start = caret_pos - query.length;
           end = start + query.length;
           this.pos = start;
-          this.query = {
+          query = {
             'text': query.toLowerCase(),
             'head_pos': start,
             'end_pos': end
@@ -314,7 +314,7 @@
         } else {
           this.view.hide();
         }
-        return this.query;
+        return this.query = query;
       };
 
       At.prototype.replace_str = function(str) {
@@ -326,8 +326,7 @@
         text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
         $inputor.val(text);
         $inputor.caretPos(start_str.length + str.length + 1);
-        $inputor.change();
-        return log("At.replace_str", text);
+        return $inputor.change();
       };
 
       At.prototype.on_keyup = function(e) {
@@ -377,10 +376,10 @@
 
       At.prototype.render_view = function(data) {
         var search_key;
-        data = data.splice(0, this.get_opt('limit'));
-        data = this.callbacks("data_refactor").call(this, data);
         search_key = this.get_opt("search_key");
+        data = this.callbacks("data_refactor").call(this, data);
         data = this.callbacks("sorter").call(this, this.query.text, data, search_key);
+        data = data.splice(0, this.get_opt('limit'));
         return this.view.render(data);
       };
 
@@ -462,10 +461,6 @@
         if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
           rect.bottom = rect.top - this.$el.height();
         }
-        log("AtView.reposition", {
-          left: rect.left,
-          top: rect.bottom
-        });
         return this.$el.offset({
           left: rect.left,
           top: rect.bottom
@@ -531,11 +526,10 @@
         }
         this.clear();
         $ul = this.$el.find('ul');
-        tpl = this.at.get_opt('tpl', _DEFAULT_TPL);
+        tpl = this.at.get_opt('tpl', DEFAULT_TPL);
         $.each(list, function(i, item) {
           var li;
           li = _this.at.callbacks("tpl_eval").call(_this, tpl, item);
-          log("AtView.render", li);
           return $ul.append(_this.at.callbacks("highlighter").call(_this, li, _this.at.query.text));
         });
         this.show();
@@ -545,8 +539,7 @@
       return View;
 
     })();
-    _DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
-    log = function() {};
+    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
     $.fn.atWho = function(flag, options) {
       return this.filter('textarea, input').each(function() {
         var $this, data;
@@ -564,11 +557,11 @@
     return $.fn.atWho["default"] = {
       data: null,
       search_key: "name",
-      callbacks: {},
+      callbacks: DEFAULT_CALLBACKS,
       cache: true,
       limit: 5,
       display_flag: true,
-      tpl: _DEFAULT_TPL
+      tpl: DEFAULT_TPL
     };
   })(window.jQuery);
 
