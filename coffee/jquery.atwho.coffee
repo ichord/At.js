@@ -423,6 +423,7 @@
         cache: yes
         limit: 5
         display_flag: yes
+        display_timeout: 300
         tpl: DEFAULT_TPL
 
 )(window.jQuery)
