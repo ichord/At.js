@@ -92,8 +92,6 @@
         if (lookup) {
           return _this.lookup();
         }
-      }).on("mouseup.inputor", function(e) {
-        return _this.lookup();
       });
       this.init();
       log("At.new", $inputor[0]);

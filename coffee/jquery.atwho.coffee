@@ -73,8 +73,6 @@
                 stop = e.keyCode is 40 or e.keyCode is 38
                 lookup = not (stop and @.view.isShowing())
                 @.lookup() if lookup
-            .on "mouseup.inputor",(e) =>
-                @.lookup()
         @.init()
         log "At.new", $inputor[0]
         return this
