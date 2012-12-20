@@ -197,8 +197,6 @@
           if (can_lookup) {
             return _this.look_up();
           }
-        }).on("mouseup.atWho", function(e) {
-          return _this.look_up();
         }).on('keyup.atWho', function(e) {
           return _this.on_keyup(e);
         }).on('keydown.atWho', function(e) {
@@ -561,6 +559,7 @@
       cache: true,
       limit: 5,
       display_flag: true,
+      display_timeout: 300,
       tpl: DEFAULT_TPL
     };
   })(window.jQuery);

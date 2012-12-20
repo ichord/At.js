@@ -148,8 +148,6 @@
             stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
             can_lookup = not (stop and @view.visible())
             this.look_up() if can_lookup
-          .on "mouseup.atWho", (e) =>
-            this.look_up()
           .on 'keyup.atWho', (e) =>
             this.on_keyup(e)
           .on 'keydown.atWho', (e) =>
@@ -414,9 +412,6 @@
     $.fn.atWho.View = View
     $.fn.atWho.Mirror = Mirror
     $.fn.atWho.default =
-        # Parameter: choose
-        ## specify the attribute on customer tpl,
-        ## so that we could append different value to the input other than the value we searched in
         data: null
         search_key: "name"
         callbacks: DEFAULT_CALLBACKS
