@@ -77,16 +77,9 @@
         matched
 
       filter: (query, data, search_key) ->
-        if $.isArray(data) and data.length != 0
-          items = $.map data, (item,i) =>
-            try
-              name = if $.isPlainObject item then item[search_key] else item
-              regexp = new RegExp(query.replace("+","\\+"),'i')
-              match = name.match(regexp)
-            catch e
-              return null
-            return if match then item else null
-        items
+        $.map data, (item,i) =>
+          name = if $.isPlainObject(item) then item[search_key] else item
+          item if name.toLowerCase().indexOf(query) >= 0
 
       remote_filter: (params, url, render_view) ->
         $.ajax url, params, (data) ->
@@ -110,7 +103,6 @@
 
         for item in items
           text = item[search_key]
-          continue if text.toLowerCase().indexOf(query) is -1
           item.order = text.toLowerCase().indexOf query
           results.push(item)
 
@@ -129,16 +121,15 @@
 
       constructor: (inputor) ->
         @settings     = {}
-        @global       = {}
+        @common_settings       = {}
         @pos          = 0
         @flags        = null
         @current_flag = null
         @query        = null
-        @_callbacks   = {}
 
         @$inputor = $(inputor)
         @mirror = new Mirror(@$inputor)
-        @global = $.extend {}, $.fn.atWho.default
+        @common_settings = $.extend {}, $.fn.atWho.default
         @view = new View(this, @$el)
         this.listen()
 
@@ -159,7 +150,8 @@
 
       reg: (flag, settings) ->
         if not flag
-          @global = $.extend {}, @global, settings
+          console.log settings
+          @common_settings = $.extend {}, @common_settings, settings
         else if not @settings[flag]
           @settings[flag] = $.extend {}, settings
         else
@@ -168,12 +160,15 @@
         this
 
       callbacks: (func_name)->
-        this.get_opt("callbacks",{})[func_name]
+        # this.get_opt("callbacks", {})[func_name]
+        if not (func = this.get_opt("callbacks",{})[func_name])
+          func = @common_settings["callbacks"][func_name]
+        return func
 
       get_opt: (key, default_value) ->
         try
           value = @settings[@current_flag][key] if @current_flag
-          value = @global[key] if value is undefined
+          value = @common_settings[key] if value is undefined
           value = if value is undefined then default_value else value
         catch e
           value = if default_value is undefined then null else default_value

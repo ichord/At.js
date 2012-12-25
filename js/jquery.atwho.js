@@ -97,26 +97,14 @@
         return matched;
       },
       filter: function(query, data, search_key) {
-        var items,
-          _this = this;
-        if ($.isArray(data) && data.length !== 0) {
-          items = $.map(data, function(item, i) {
-            var match, name, regexp;
-            try {
-              name = $.isPlainObject(item) ? item[search_key] : item;
-              regexp = new RegExp(query.replace("+", "\\+"), 'i');
-              match = name.match(regexp);
-            } catch (e) {
-              return null;
-            }
-            if (match) {
-              return item;
-            } else {
-              return null;
-            }
-          });
-        }
-        return items;
+        var _this = this;
+        return $.map(data, function(item, i) {
+          var name;
+          name = $.isPlainObject(item) ? item[search_key] : item;
+          if (name.toLowerCase().indexOf(query) >= 0) {
+            return item;
+          }
+        });
       },
       remote_filter: function(params, url, render_view) {
         return $.ajax(url, params, function(data) {
@@ -149,9 +137,6 @@
         for (_i = 0, _len = items.length; _i < _len; _i++) {
           item = items[_i];
           text = item[search_key];
-          if (text.toLowerCase().indexOf(query) === -1) {
-            continue;
-          }
           item.order = text.toLowerCase().indexOf(query);
           results.push(item);
         }
@@ -175,15 +160,14 @@
 
       function At(inputor) {
         this.settings = {};
-        this.global = {};
+        this.common_settings = {};
         this.pos = 0;
         this.flags = null;
         this.current_flag = null;
         this.query = null;
-        this._callbacks = {};
         this.$inputor = $(inputor);
         this.mirror = new Mirror(this.$inputor);
-        this.global = $.extend({}, $.fn.atWho["default"]);
+        this.common_settings = $.extend({}, $.fn.atWho["default"]);
         this.view = new View(this, this.$el);
         this.listen();
       }
@@ -210,7 +194,8 @@
 
       At.prototype.reg = function(flag, settings) {
         if (!flag) {
-          this.global = $.extend({}, this.global, settings);
+          console.log(settings);
+          this.common_settings = $.extend({}, this.common_settings, settings);
         } else if (!this.settings[flag]) {
           this.settings[flag] = $.extend({}, settings);
         } else {
@@ -220,7 +205,11 @@
       };
 
       At.prototype.callbacks = function(func_name) {
-        return this.get_opt("callbacks", {})[func_name];
+        var func;
+        if (!(func = this.get_opt("callbacks", {})[func_name])) {
+          func = this.common_settings["callbacks"][func_name];
+        }
+        return func;
       };
 
       At.prototype.get_opt = function(key, default_value) {
@@ -230,7 +219,7 @@
             value = this.settings[this.current_flag][key];
           }
           if (value === void 0) {
-            value = this.global[key];
+            value = this.common_settings[key];
           }
           return value = value === void 0 ? default_value : value;
         } catch (e) {

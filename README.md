@@ -1,7 +1,8 @@
 
 ## Add Github like mentions autocomplete to your application.
 
-**Let me know you are using it. So I will work harder on it, Thanks. :smile: .**
+**Let me know you are using it. So I will work harder on it, Thanks. :smile: .**  
+
 add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using **At.js**
 
 
@@ -44,7 +45,6 @@ add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if yo
 Here is the Default setting.
 
 ```javascript
-
     /*
     为数组(Array)时, 当做静态数据处理.
     为 url 字符串(String)时, At.js 将会从向该地址发送 ajax 请求
@@ -61,11 +61,11 @@ Here is the Default setting.
     'tpl': "<li data-value='${name}'>${name}</li>",
 
     /*
-    自定义回调函数列表.
+    自定义回调函数哈希列表.
     用户可自定义某个函数, 比如 `filter`, 可根据 At.js 捕获的字符串去过滤数据.
     详细用法请阅读 `开发者` 章节
     */
-    callbacks: DEFAULT_CALLBACKS
+    callbacks: DEFAULT_CALLBACKS # {}
 
      // Enable search cache. Set to false if you want to use $.ajax cache.
     'cache': true,
@@ -78,7 +78,6 @@ Here is the Default setting.
 
     // 下拉列表延时消失的时间长度, 毫秒为单位
     display_timeout: 300
-
 ```
 
 
@@ -170,8 +169,41 @@ Actually, It just update the setting. You can use it to change others settings l
 
 ### Development Magic
 
-####　Callbacks
+#### Callbacks
+At.js 将所有处理数据的方法都独立出来, 组成一组**可改变**的回调函数.  
+如果你想自己操作处理数据, 可以替换掉相应的回调函数.  
+下面会详细 At.js 介绍如何使用这些函数, 特别是它们的**调用顺序**.  
+详细用法请查看[开发文档]("#todo")
 
-TODO: 描述各个回调函数的调用机制, 以及如何使用
+** 下列方法将按照调用顺序排列 **
+
+```javascript
+    
+    // ------ for data handler
+    
+    // At.js 捕获至紧跟 flag("@", etc) 之后的文字后, 将调用此方法进行匹配.
+    matcher: function (flag, subtext)
+
+    // 如果 `data` 设置为 url string. At.js 将调用此方法发起 ajax 请求
+    remote_filter: function (params, url, render_view)
+
+    // 根据"搜索关键字"过滤数据
+    filter: function (query, data, search_key)
+
+    // ------ for render
+
+    // 重新组织数据的结构, 比如传入一组数组: ["hello", "heaaa", "tttss"]. 
+    // 你可以将其组织成 [{"name": "hello"}, {"name": "heaaa"}, ...], 用于模板渲染
+    data_refactor: function (data)
+
+    // 对过滤后的数据进行排序
+    sorter: function (query, items, search_key)
+
+    // 解析并渲染模板
+    tpl_eval: function (tpl, map)
+
+    // 高亮搜索搜索关键字
+    highlighter: function (li, query)
+```
 
 [1]: http://ichord.github.com/At.js

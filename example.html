@@ -9,20 +9,24 @@
         <script type="text/javascript" src="js/jquery.atwho.js"></script>
         <script type="text/javascript">
         $(function(){
-            var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","lepture","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你",
-            // "Jacob","Isabella","Ethan","reorx","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你"
+            var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","lepture","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你", "高富帅"
             ];
-            data = $.map(data,function(value,i) {
-                return {'id':i,'name':value,'email':value+"@email.com"};
-            });
 
             $("textarea#inputor").atWho("@",{
-                tpl: "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>",
-                'data':data
+                tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
+                'data':data,
+                'callbacks': {
+                    filter: function (query, data) {
+                        return $.map(data, function(item, i) {
+                            return item.toLowerCase().indexOf(query) < 0 ? null : item
+                        })
+                    }
+                }
             });
 
             $("button#reflash").click(function(){
-                $("textarea#inputor").atWho("@",{"data":data.splice(0,3)})
+                // $("textarea#inputor").atWho("@",{"data":data.splice(0,3)})
+                $("textarea#inputor").atWho({"data":data.splice(0,3)})
             })
 
             // =========================
@@ -37,12 +41,16 @@
             "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
             "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
             emojis = $.map(emojis,function(value,i){
-                return {'id':i,'key':":"+value+":",'name':value}
+                return {'key':":"+value+":",'name':value}
             })
+            data = $.map(data,function(value,i) {
+                return {'name':value,'email':value+"@email.com"};
+            });
+
             $("textarea#inputor2").atWho("@",{
-                tpl: "<li id='${id}' data-value='${email}'>${name} <small>${email}</small></li>",
+                tpl: "<li data-value='${email}'>${name} <small>${email}</small></li>",
                 'data':data,
-                search_key: "name"
+                search_key: "email"
             })
             .atWho("/:",{
                 tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
