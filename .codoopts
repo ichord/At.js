@@ -1,0 +1,10 @@
+--name       "Codo"
+--readme     README.md
+--title      "Codo Documentation"
+--private
+--quiet
+--output-dir ./doc
+./src
+-
+LICENSE
+CHANGELOG.md
