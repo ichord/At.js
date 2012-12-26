@@ -179,6 +179,11 @@
         li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
             '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
+      # 选择某列表项的动作
+      #
+      # @param $li [jQuery Object] 选中的列表项目
+      selector: ($li) ->
+        @controller.replace_str($li.data("value") || "") if $li.length > 0
 
 
     # At.js 对数据操作(搜索, 匹配, 渲染) 的主控中心
@@ -423,7 +428,7 @@
 
       choose: ->
         $li = @$el.find ".cur"
-        @controller.replace_str($li.data("value") || "") if $li.length > 0
+        this.callbacks("selector").call(this, $li)
         this.hide()
 
       reposition: ->
