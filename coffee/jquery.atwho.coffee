@@ -1,5 +1,5 @@
 ###
-   Implement Twitter/Weibo @ mentions
+   Implement Github like autocomplete mentions
 
    Copyright (c) chord.luo@gmail.com
 
@@ -453,7 +453,7 @@
       # 选择某项的操作
       choose: ->
         $li = @$el.find ".cur"
-        this.callbacks("selector").call(this, $li)
+        @controller.callbacks("selector").call(this, $li)
         this.hide()
 
       # 重置视图在页面中的位置.
