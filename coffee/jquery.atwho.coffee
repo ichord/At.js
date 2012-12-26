@@ -264,6 +264,9 @@
         catch e
           value = if default_value is undefined then null else default_value
 
+      # 获得标记字符在输入框中的位置
+      #
+      # @return [Hash] 位置信息. {top: y, left: x, bottom: bottom}
       rect: ->
         $inputor = @$inputor
         if document.selection # for IE full
@@ -305,6 +308,9 @@
         # bottom + 2: for some font style problem
         return {top:y,left:x,bottom:bottom + 2}
 
+      # 捕获标记字符后的字符串
+      #
+      # @return [Hash] 该字符串的信息, 包括在输入框中的位置. {'text': "hello", 'head_pos': 0, 'end_pos': 0}
       catch_query: ->
         content = @$inputor.val()
         ##获得inputor中插入符的position.
@@ -330,6 +336,9 @@
 
         @query = query
 
+      # 将选中的项的`data-value` 内容插入到输入框中
+      #
+      # @param str [String] 要插入的字符串, 一般为 `data-value` 的值.
       replace_str: (str) ->
         $inputor = @$inputor
         source = $inputor.val()
@@ -371,6 +380,9 @@
             $.noop()
         e.stopPropagation()
 
+      # 将处理完的数据显示到下拉列表中
+      #
+      # @param data [Array] 处理过后的数据列表
       render_view: (data) ->
         search_key = this.get_opt("search_key")
 
@@ -380,6 +392,7 @@
 
         @view.render data
 
+      # 根据关键字搜索数据
       look_up: ->
         query = this.catch_query()
         return no if not query
@@ -398,13 +411,18 @@
         $.noop()
 
 
+    # 操作下拉列表所有表现行为的类
+    # 所有的这个类的对象都只操作一个视图.
     class View
+
+      # @param controller [Object] 控制器对象.
       constructor: (@controller) ->
         @id = @controller.get_opt("view_id", "at-view")
         @timeout_id = null
         @$el = $("##{@id}")
         this.create_view()
 
+      # 如果试图还不存在,则创建一个新的视图
       create_view: ->
         return if this.exist()
         tpl = "<div id='#{@id}' class='at-view'><ul id='#{@id}-ul'></ul></div>"
@@ -420,17 +438,25 @@
           e.preventDefault()
           this.choose()
 
+      # 判断视图是否存在
+      #
+      # @return [Boolean]
       exist: ->
         $("##{@id}").length > 0
 
+      # 判断视图是否显示中
+      #
+      # @return [Boolean]
       visible: ->
         @$el.is(":visible")
 
+      # 选择某项的操作
       choose: ->
         $li = @$el.find ".cur"
         this.callbacks("selector").call(this, $li)
         this.hide()
 
+      # 重置视图在页面中的位置.
       reposition: ->
         rect = @controller.rect()
         if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()

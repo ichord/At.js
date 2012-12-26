@@ -154,6 +154,11 @@
         return li.replace(new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
           return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
         });
+      },
+      selector: function($li) {
+        if ($li.length > 0) {
+          return this.controller.replace_str($li.data("value") || "");
+        }
       }
     };
     Controller = (function() {
@@ -436,9 +441,7 @@
       View.prototype.choose = function() {
         var $li;
         $li = this.$el.find(".cur");
-        if ($li.length > 0) {
-          this.controller.replace_str($li.data("value") || "");
-        }
+        this.callbacks("selector").call(this, $li);
         return this.hide();
       };
 
