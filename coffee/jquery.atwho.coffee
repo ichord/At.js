@@ -1,7 +1,7 @@
 ###
    Implement Twitter/Weibo @ mentions
 
-   Copyright (c) 2012 chord.luo@gmail.com
+   Copyright (c) chord.luo@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -25,6 +25,12 @@
 
 (($) ->
 
+    # At.js 使用这个类克隆输入框, 插入标记后获得该标记的位置.
+    #
+    # @example
+    #   mirror = new Mirror($("textarea#inputor"))
+    #   html = "<p>We will get the rect of <span>@</span>icho</p>"
+    #   mirror.create(html).get_flag_rect()
     class Mirror
       css_attr: [
         "overflowY", "height", "width", "paddingTop", "paddingLeft",
@@ -33,8 +39,12 @@
         'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX'
       ]
 
+      # @param $inputor [Object] 输入框的 jQuery 对象
       constructor: (@$inputor) ->
 
+      # 克隆输入框的样式
+      #
+      # @return [Object] 返回克隆得到样式
       copy_inputor_css: ->
         css =
           position: 'absolute'
@@ -46,6 +56,12 @@
           css[p] = @$inputor.css p
         css
 
+      # 在页面中创建克隆后的镜像.
+      #
+      # @param html [String] 将输入框内容转换成 html 后的内容.
+      #   主要是为了给 `flag` (@, etc.) 打上标记
+      #
+      # @return [Object] 返回当前对象
       create: (html) ->
         @$mirror = $('<div></div>')
         @$mirror.css this.copy_inputor_css()
@@ -53,12 +69,17 @@
         @$inputor.after(@$mirror)
         this
 
+      # 获得标记的位置
+      #
+      # @return [Object] 标记的坐标
+      #   {left: 0, top: 0, bottom: 0}
       get_flag_rect: ->
         $flag = @$mirror.find "span#flag"
         pos = $flag.position()
         rect = {left: pos.left, top: pos.top, bottom: $flag.height() + pos.top}
         @$mirror.remove()
         rect
+
 
     KEY_CODE =
       DOWN: 40
@@ -67,7 +88,15 @@
       TAB: 9
       ENTER: 13
 
+
     DEFAULT_CALLBACKS =
+
+      # 匹配当前标记后面字符的匹配规则
+      #
+      # @param flag [String] 当前标记 ("@", etc)
+      # @param subtext [String] 输入框从开始到插入符号前的字符串
+      #
+      # @return [String] 匹配后得到的字符串
       matcher: (flag, subtext) ->
         regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
         match = regexp.exec subtext
@@ -76,28 +105,46 @@
           matched = if match[2] then match[2] else match[1]
         matched
 
+      # 根据匹配的的字符串搜索数据
+      #
+      # @param query [String] 匹配得到的字符串
+      # @param data [Array] 数据列表
+      # @param search_key [String] 用于搜索的关键字
+      #
+      # @return [Array] 过滤后的数据
       filter: (query, data, search_key) ->
         $.map data, (item,i) =>
           name = if $.isPlainObject(item) then item[search_key] else item
           item if name.toLowerCase().indexOf(query) >= 0
 
+      # 当 `data` 设置为 url 的时候, 我们使用这个 filter 来发起 ajax 请求
+      #
+      # @param params [Hash] ajax 请求参数. {q: query, limit: 5}
+      # @param url [String] 开发者自己设置的 url 地址
+      # @param render_view [Function] 将数据渲染到下拉列表的回调
       remote_filter: (params, url, render_view) ->
         $.ajax url, params, (data) ->
           names = $.parseJSON(data)
           render_view(names)
 
-      tpl_eval: (tpl, map) ->
-        try
-          el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
-            map[key]
-        catch error
-          ""
+      # 重构数据结构, 以便于渲染模板
+      #
+      # @param data [Array] 开发者自己在配置中设置的数据列表
+      #
+      # @return [Array] 重构后的数据列表
+      data_refactor: (data) ->
+        $.map data, (item, k) ->
+          if not $.isPlainObject item
+            item = {name:item}
+          return item
 
-      highlighter: (li, query) ->
-        return li if not query
-        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
-            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
-
+      # 对重构后的数据进行排序
+      #
+      # @param query [String] 匹配后的关键字
+      # @param items [Array] 重构后的数据列表
+      # @param search_key [String] 用于搜索的关键字
+      #
+      # @return [Array] 排序后的数据列表
       sorter: (query, items, search_key) ->
         results = []
 
@@ -110,15 +157,34 @@
           a.order - b.order
         return results
 
-      data_refactor: (data) ->
-        $.map data, (item, k) ->
-          if not $.isPlainObject item
-            item = {name:item}
-          return item
+      # 解析并渲染下拉列表中单个项的模板
+      #
+      # @param tpl [String] 模板字符串
+      # @param map [Hash] 数据的键值对.
+      tpl_eval: (tpl, map) ->
+        try
+          el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
+            map[key]
+        catch error
+          ""
+
+      # 高亮关键字
+      #
+      # @param li [String] HTML String. 经过渲染后的模板
+      # @param query [String] 匹配得到的关键字
+      #
+      # @return [String] 高亮处理后的 HTML 字符串
+      highlighter: (li, query) ->
+        return li if not query
+        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
+            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
 
-    class At
 
+    # At.js 对数据操作(搜索, 匹配, 渲染) 的主控中心
+    class Controller
+
+      # @param inputor [HTML DOM Object] 输入框
       constructor: (inputor) ->
         @settings     = {}
         @common_settings       = {}
@@ -133,6 +199,7 @@
         @view = new View(this, @$el)
         this.listen()
 
+      # 绑定对输入框的各种监听事件
       listen: ->
         @$inputor
           .on "keyup.atWho", (e) =>
@@ -148,6 +215,16 @@
           .on 'blur.atWho', (e) =>
             @view.hide(1000)
 
+      # At.js 可以对每个输入框绑定不同的监听标记. 比如同时监听 "@", ":" 字符
+      # 并且通过不同的 `settings` 给予不同的表现行为, 比如插入不同的内容(即不同的渲染模板)
+      #
+      # 控制器初始化的时候会将默认配置当作一个所有标记共有的配置. 而每个标记只存放针对自己的特定配置.
+      # 搜索配置的时候, 将先寻找标记里的配置. 如果找不到则去公用的配置里找.
+      #
+      # 当输入框已经注册了某个字符后, 再对该字符进行注册将会更新其配置, 比如改变 `data`, 其它的配置不变.
+      #
+      # @param flag [String] 要监听的字符
+      # @param settings [Hash] 配置哈希值
       reg: (flag, settings) ->
         if not flag
           console.log settings
@@ -159,12 +236,21 @@
 
         this
 
+      # At.js 允许开发者自定义控制器使用的一些功能函数
+      #
+      # @param func_name [String] 回调的函数名
+      # @return [Function] 该回调函数
       callbacks: (func_name)->
         # this.get_opt("callbacks", {})[func_name]
         if not (func = this.get_opt("callbacks",{})[func_name])
           func = @common_settings["callbacks"][func_name]
         return func
 
+      # 由于可以绑定多字符, 但配置缺不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
+      #
+      # @param key [String] 某配置项的键名
+      # @param default_value [?] 没有找到任何值后自定义的默认值
+      # @return [?] 配置项的值
       get_opt: (key, default_value) ->
         try
           value = @settings[@current_flag][key] if @current_flag
@@ -308,8 +394,8 @@
 
 
     class View
-      constructor: (@at) ->
-        @id = @at.get_opt("view_id", "at-view")
+      constructor: (@controller) ->
+        @id = @controller.get_opt("view_id", "at-view")
         @timeout_id = null
         @$el = $("##{@id}")
         this.create_view()
@@ -337,11 +423,11 @@
 
       choose: ->
         $li = @$el.find ".cur"
-        @at.replace_str($li.data("value") || "") if $li.length > 0
+        @controller.replace_str($li.data("value") || "") if $li.length > 0
         this.hide()
 
       reposition: ->
-        rect = @at.rect()
+        rect = @controller.rect()
         if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
             rect.bottom = rect.top - @$el.height()
         @$el.offset {left:rect.left, top:rect.bottom}
@@ -368,7 +454,7 @@
         else
           callback = => this.hide()
           clearTimeout @timeout_id
-          @timeout_id = setTimeout callback, @at.get_opt("display_timeout", 300)
+          @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", 300)
 
       clear: ->
         @$el.find('ul').empty()
@@ -383,11 +469,11 @@
         this.clear()
 
         $ul = @$el.find('ul')
-        tpl = @at.get_opt('tpl', DEFAULT_TPL)
+        tpl = @controller.get_opt('tpl', DEFAULT_TPL)
 
         $.each list, (i, item) =>
-          li = @at.callbacks("tpl_eval").call(this, tpl, item)
-          $ul.append @at.callbacks("highlighter").call(this, li, @at.query.text)
+          li = @controller.callbacks("tpl_eval").call(this, tpl, item)
+          $ul.append @controller.callbacks("highlighter").call(this, li, @controller.query.text)
 
         this.show()
         $ul.find("li:eq(0)").addClass "cur"
@@ -400,10 +486,10 @@
         $this = $(this)
         data = $this.data "AtWho"
 
-        $this.data 'AtWho', (data = new At(this)) if not data
+        $this.data 'AtWho', (data = new Controller(this)) if not data
         data.reg flag, options
 
-    $.fn.atWho.At = At
+    $.fn.atWho.Controller = Controller
     $.fn.atWho.View = View
     $.fn.atWho.Mirror = Mirror
     $.fn.atWho.default =

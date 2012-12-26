@@ -3,7 +3,7 @@
 /*
    Implement Twitter/Weibo @ mentions
 
-   Copyright (c) 2012 chord.luo@gmail.com
+   Copyright (c) chord.luo@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -29,7 +29,7 @@
 (function() {
 
   (function($) {
-    var At, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
+    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
     Mirror = (function() {
 
       Mirror.prototype.css_attr = ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", 'fontFamily', 'borderStyle', 'borderWidth', 'wordWrap', 'fontSize', 'lineHeight', 'overflowX'];
@@ -113,6 +113,30 @@
           return render_view(names);
         });
       },
+      data_refactor: function(data) {
+        return $.map(data, function(item, k) {
+          if (!$.isPlainObject(item)) {
+            item = {
+              name: item
+            };
+          }
+          return item;
+        });
+      },
+      sorter: function(query, items, search_key) {
+        var item, results, text, _i, _len;
+        results = [];
+        for (_i = 0, _len = items.length; _i < _len; _i++) {
+          item = items[_i];
+          text = item[search_key];
+          item.order = text.toLowerCase().indexOf(query);
+          results.push(item);
+        }
+        results.sort(function(a, b) {
+          return a.order - b.order;
+        });
+        return results;
+      },
       tpl_eval: function(tpl, map) {
         var el;
         try {
@@ -130,35 +154,11 @@
         return li.replace(new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
           return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
         });
-      },
-      sorter: function(query, items, search_key) {
-        var item, results, text, _i, _len;
-        results = [];
-        for (_i = 0, _len = items.length; _i < _len; _i++) {
-          item = items[_i];
-          text = item[search_key];
-          item.order = text.toLowerCase().indexOf(query);
-          results.push(item);
-        }
-        results.sort(function(a, b) {
-          return a.order - b.order;
-        });
-        return results;
-      },
-      data_refactor: function(data) {
-        return $.map(data, function(item, k) {
-          if (!$.isPlainObject(item)) {
-            item = {
-              name: item
-            };
-          }
-          return item;
-        });
       }
     };
-    At = (function() {
+    Controller = (function() {
 
-      function At(inputor) {
+      function Controller(inputor) {
         this.settings = {};
         this.common_settings = {};
         this.pos = 0;
@@ -172,7 +172,7 @@
         this.listen();
       }
 
-      At.prototype.listen = function() {
+      Controller.prototype.listen = function() {
         var _this = this;
         return this.$inputor.on("keyup.atWho", function(e) {
           var can_lookup, stop;
@@ -192,7 +192,7 @@
         });
       };
 
-      At.prototype.reg = function(flag, settings) {
+      Controller.prototype.reg = function(flag, settings) {
         if (!flag) {
           console.log(settings);
           this.common_settings = $.extend({}, this.common_settings, settings);
@@ -204,7 +204,7 @@
         return this;
       };
 
-      At.prototype.callbacks = function(func_name) {
+      Controller.prototype.callbacks = function(func_name) {
         var func;
         if (!(func = this.get_opt("callbacks", {})[func_name])) {
           func = this.common_settings["callbacks"][func_name];
@@ -212,7 +212,7 @@
         return func;
       };
 
-      At.prototype.get_opt = function(key, default_value) {
+      Controller.prototype.get_opt = function(key, default_value) {
         var value;
         try {
           if (this.current_flag) {
@@ -227,7 +227,7 @@
         }
       };
 
-      At.prototype.rect = function() {
+      Controller.prototype.rect = function() {
         var $inputor, Sel, at_rect, bottom, format, html, offset, start_range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
@@ -271,7 +271,7 @@
         };
       };
 
-      At.prototype.catch_query = function() {
+      Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext,
           _this = this;
         content = this.$inputor.val();
@@ -304,7 +304,7 @@
         return this.query = query;
       };
 
-      At.prototype.replace_str = function(str) {
+      Controller.prototype.replace_str = function(str) {
         var $inputor, flag_len, source, start_str, text;
         $inputor = this.$inputor;
         source = $inputor.val();
@@ -316,7 +316,7 @@
         return $inputor.change();
       };
 
-      At.prototype.on_keyup = function(e) {
+      Controller.prototype.on_keyup = function(e) {
         if (!this.view.visible()) {
           return;
         }
@@ -330,7 +330,7 @@
         }
       };
 
-      At.prototype.on_keydown = function(e) {
+      Controller.prototype.on_keydown = function(e) {
         if (!this.view.visible()) {
           return;
         }
@@ -361,7 +361,7 @@
         return e.stopPropagation();
       };
 
-      At.prototype.render_view = function(data) {
+      Controller.prototype.render_view = function(data) {
         var search_key;
         search_key = this.get_opt("search_key");
         data = this.callbacks("data_refactor").call(this, data);
@@ -370,7 +370,7 @@
         return this.view.render(data);
       };
 
-      At.prototype.look_up = function() {
+      Controller.prototype.look_up = function() {
         var callback, data, origin_data, params, query, search_key;
         query = this.catch_query();
         if (!query) {
@@ -392,14 +392,14 @@
         return $.noop();
       };
 
-      return At;
+      return Controller;
 
     })();
     View = (function() {
 
-      function View(at) {
-        this.at = at;
-        this.id = this.at.get_opt("view_id", "at-view");
+      function View(controller) {
+        this.controller = controller;
+        this.id = this.controller.get_opt("view_id", "at-view");
         this.timeout_id = null;
         this.$el = $("#" + this.id);
         this.create_view();
@@ -437,14 +437,14 @@
         var $li;
         $li = this.$el.find(".cur");
         if ($li.length > 0) {
-          this.at.replace_str($li.data("value") || "");
+          this.controller.replace_str($li.data("value") || "");
         }
         return this.hide();
       };
 
       View.prototype.reposition = function() {
         var rect;
-        rect = this.at.rect();
+        rect = this.controller.rect();
         if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
           rect.bottom = rect.top - this.$el.height();
         }
@@ -493,7 +493,7 @@
             return _this.hide();
           };
           clearTimeout(this.timeout_id);
-          return this.timeout_id = setTimeout(callback, this.at.get_opt("display_timeout", 300));
+          return this.timeout_id = setTimeout(callback, this.controller.get_opt("display_timeout", 300));
         }
       };
 
@@ -513,11 +513,11 @@
         }
         this.clear();
         $ul = this.$el.find('ul');
-        tpl = this.at.get_opt('tpl', DEFAULT_TPL);
+        tpl = this.controller.get_opt('tpl', DEFAULT_TPL);
         $.each(list, function(i, item) {
           var li;
-          li = _this.at.callbacks("tpl_eval").call(_this, tpl, item);
-          return $ul.append(_this.at.callbacks("highlighter").call(_this, li, _this.at.query.text));
+          li = _this.controller.callbacks("tpl_eval").call(_this, tpl, item);
+          return $ul.append(_this.controller.callbacks("highlighter").call(_this, li, _this.controller.query.text));
         });
         this.show();
         return $ul.find("li:eq(0)").addClass("cur");
@@ -533,12 +533,12 @@
         $this = $(this);
         data = $this.data("AtWho");
         if (!data) {
-          $this.data('AtWho', (data = new At(this)));
+          $this.data('AtWho', (data = new Controller(this)));
         }
         return data.reg(flag, options);
       });
     };
-    $.fn.atWho.At = At;
+    $.fn.atWho.Controller = Controller;
     $.fn.atWho.View = View;
     $.fn.atWho.Mirror = Mirror;
     return $.fn.atWho["default"] = {

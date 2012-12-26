@@ -1,5 +1,5 @@
 
-## Add Github like mentions autocomplete to your application.
+**Add Github like mentions autocomplete to your application.**
 
 **Let me know you are using it. So I will work harder on it, Thanks. :smile: .**  
 
