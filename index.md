@@ -38,7 +38,7 @@ For example, **Type** `:` to complete emoji as I mentioned above.
         data: emojis
     });
 
-**More details at [Documention](documention.html) or [Wiki][wiki]**
+**More details at [Documentation](documentation.html) or [Wiki][wiki]**
 
 If you have any problem, feel free to [post a issue][issues]
 
