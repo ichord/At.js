@@ -11,12 +11,14 @@
     h1,h2,h3,h4 {
         font-family: 'PT Sans', sans-serif;
     }
+    h4 {
+        margin-top: 25px;
+    }
     h1 {
         margin-bottom: 50px;
         font-size: 56px;
     }
     .is-sticky .subnav {
-        width: 942px;
         box-shadow: 0px 2px 5px gray;
     }
     </style>
@@ -42,6 +44,8 @@
 
         {{ content }}
     </div>
+
+    {% include footer.html %}
 
     {% include javascript.html %}
     <script type="text/javascript" src="assets/js/jquery.sticky.js"></script>

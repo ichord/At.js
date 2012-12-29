@@ -30,13 +30,15 @@ For example, **Type** `:` to complete emoji as I mentioned above.
 
 ## How to use
 
-    var names = ["Jacob","Isabella","Ethan","Emma"];
-    var emojis = ["smile", "heart"];
-    $('textarea').atWho('@', {
-        data: names
-    }).atWho(':', {
-        data: emojis
-    });
+{% highlight javascript%}
+var names = ["Jacob","Isabella","Ethan","Emma"];
+var emojis = ["smile", "heart"];
+$('textarea').atWho('@', {
+    data: names
+}).atWho(':', {
+    data: emojis
+});
+{% endhighlight %}
 
 **More details at [Documentation](documentation.html) or [Wiki][wiki]**
 
