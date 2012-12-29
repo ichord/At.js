@@ -6,7 +6,7 @@ layout: home
 
 At.js is what you can guess from the picture bellow.
 
-![at.js](/assets/img/demo.png)
+![at.js](assets/img/demo.png)
 
 ## Live Demo
 
@@ -38,7 +38,7 @@ For example, **Type** `:` to complete emoji as I mentioned above.
         data: emojis
     });
 
-**More details at [Documention](/documention.html) or [Wiki][wiki]**
+**More details at [Documention](documention.html) or [Wiki][wiki]**
 
 If you have any problem, feel free to [post a issue][issues]
 
