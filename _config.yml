@@ -2,7 +2,7 @@ markdown: rdiscount
 server: true
 safe: true
 lsi: false
-pygments: true
+pygments: false
 auto: true
 rdiscount:
   extensions: [smart]

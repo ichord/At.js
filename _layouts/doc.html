@@ -24,12 +24,18 @@
 <body data-spy="scroll" data-target=".subnav" data-offset="50">
 
     <div class="container" style="width:940px;">
+        {% include fork_me.html %}
         <header id="overview">
-            <h1>At.js <small>Documention</small></h1>
+            <h1><a href="/" style="color:black;">At.js</a> <small>Documention</small></h1>
             <div class="subnav">
                 <ul class="nav nav-pills">
-                    <li class="active"><a href="#settings">Settings</a></li>
-                    <li><a href="#callbacks">Callbacks</a></li>
+                    {% for post in site.posts %}
+                        {%if forloop.first %}
+                            <li class="active"><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                        {% else %}
+                            <li><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                        {% endif %}
+                    {% endfor %}
                 </ul>
             </div>
         </header>

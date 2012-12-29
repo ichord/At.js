@@ -1,0 +1,82 @@
+---
+---
+
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>At.js</title>
+        {% include stylesheet.html %}
+        <style type="text/css" media="screen">
+            html, body {
+                background:#F9F9F9;
+                padding: 0;
+                margin: 0;
+                font: 14px/1.6 "Lucida Grande", "Helvetica", sans-serif;
+            }
+            h1,h2,h3,h4 {
+                font-family: 'PT Sans', sans-serif;
+            }
+            strong {
+                color: #424242;
+            }
+            h1 {
+                margin-top: 0;
+                font-size:56px;
+            }
+            h2 {
+                margin: 30px auto 10px;
+            }
+            a {
+                color: #4183C4;
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            .wrapper {
+                width: 750px;
+                padding: 20px;
+                margin: 0 auto;
+            }
+            #preview {
+                text-align: center;
+            }
+            header {
+                margin-top:70px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            textarea {
+                height: 160px;
+                width: 90%;
+                border: 1px solid #dadada;
+                border-radius: 4px;
+                padding: 5px 8px;
+                outline: 0 none;
+                margin: 10px 0;
+            }
+            ul {
+                list-style:none;
+            }
+            li {
+                display:inline-block;
+                margin: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container wrapper">
+            {% include fork_me.html %}
+            <header>
+                <h1>At.js</h1>
+            </header>
+            <div id="main">
+              {{content}}
+            </div>
+            {% include javascript.html %}
+        </div>
+        {% include footer.html %}
+    </body>
+</html>
+
