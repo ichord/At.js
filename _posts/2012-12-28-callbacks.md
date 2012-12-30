@@ -6,10 +6,10 @@ sub_title: 自己定制 At.js
 
 At.js 将所有处理数据的方法都独立出来, 组成一组可改变的回调函数.  
 **如果你想自己操作处理数据, 可以替换掉相应的回调函数.**  
-下面会详细 At.js 介绍如何使用这些函数, 特别是它们的**调用顺序**.  
+下面会简单介绍如何使用这些函数, 特别是它们的**调用顺序**.  
+详细的介绍请查阅技术文档的 <a href="http://coffeedoc.info/github/ichord/At.js/master/mixins/DEFAULT_CALLBACKS.html" target="_blank">Mixins</a> 章节
 
 <span class="label label-warning">NOTE</span> 下列方法将按照调用顺序排列
-
 {% highlight javascript %}
 
     // ------ for data handler
@@ -42,3 +42,4 @@ At.js 将所有处理数据的方法都独立出来, 组成一组可改变的回
     selector: function($li)
 
 {% endhighlight %}
+
