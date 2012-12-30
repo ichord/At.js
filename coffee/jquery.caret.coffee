@@ -1,7 +1,7 @@
 ###
-   Implement Twitter/Weibo @ mentions
+   Get position of caret in inputor(textarea, input)
 
-   Copyright (c) 2012 chord.luo@gmail.com
+   Copyright (c) chord.luo@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -20,7 +20,7 @@
    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ###
 
 ###
@@ -30,90 +30,90 @@
 ###
 (($) ->
     getCaretPos = (inputor) ->
-        if document.selection #IE
-            # reference: http://tinyurl.com/86pyc4s
+      if document.selection #IE
+        # reference: http://tinyurl.com/86pyc4s
 
+        ###
+        #assume we select "HATE" in the inputor such as textarea -> { }.
+         *               start end-point.
+         *              /
+         * <  I really [HATE] IE   > between the brackets is the selection range.
+         *                   \
+         *                    end end-point.
+         ###
+
+        range = document.selection.createRange()
+        pos = 0
+        # selection should in the inputor.
+        if range and range.parentElement() is inputor
+          normalizedValue = inputor.value.replace /\r\n/g, "\n"
+          ### SOMETIME !!!
+           "/r/n" is counted as two char.
+            one line is two, two will be four. balalala.
+            so we have to using the normalized one's length.;
+          ###
+          len = normalizedValue.length
+          ###
+             <[  I really HATE IE   ]>:
+              the whole content in the inputor will be the textInputRange.
+          ###
+          textInputRange = inputor.createTextRange()
+          ###                 _here must be the position of bookmark.
+                           /
+             <[  I really [HATE] IE   ]>
+              [---------->[           ] : this is what moveToBookmark do.
+             <   I really [[HATE] IE   ]> : here is result.
+                            \ two brackets in should be in line.
+          ###
+          textInputRange.moveToBookmark range.getBookmark()
+          endRange = inputor.createTextRange()
+          ###  [--------------------->[] : if set false all end-point goto end.
+            <  I really [[HATE] IE  []]>
+          ###
+          endRange.collapse false
+          ###
+                          ___VS____
+                         /         \
+           <   I really [[HATE] IE []]>
+                                    \_endRange end-point.
+
+          " > -1" mean the start end-point will be the same or right to the end end-point
+         * simplelly, all in the end.
+          ####
+          if textInputRange.compareEndPoints("StartToEnd", endRange) > -1
+            #TextRange object will miss "\r\n". So, we count it ourself.
+            start = end = len
+          else
             ###
-            #assume we select "HATE" in the inputor such as textarea -> { }.
-             *               start end-point.
-             *              /
-             * <  I really [HATE] IE   > between the brackets is the selection range.
-             *                   \
-             *                    end end-point.
-             ###
+                    I really |HATE] IE   ]>
+                           <-|
+                  I really[ [HATE] IE   ]>
+                        <-[
+                I reall[y  [HATE] IE   ]>
 
-            range = document.selection.createRange()
-            pos = 0
-            # selection should in the inputor.
-            if range and range.parentElement() is inputor
-                normalizedValue = inputor.value.replace /\r\n/g, "\n"
-                ### SOMETIME !!! 
-                 "/r/n" is counted as two char.
-                  one line is two, two will be four. balalala.
-                  so we have to using the normalized one's length.;
-                ###
-                len = normalizedValue.length
-                ###
-                   <[  I really HATE IE   ]>:
-                    the whole content in the inputor will be the textInputRange.
-                ###
-                textInputRange = inputor.createTextRange()
-                ###                 _here must be the position of bookmark.
-                                 /
-                   <[  I really [HATE] IE   ]>
-                    [---------->[           ] : this is what moveToBookmark do.
-                   <   I really [[HATE] IE   ]> : here is result.
-                                  \ two brackets in should be in line.
-                ###
-                textInputRange.moveToBookmark range.getBookmark()
-                endRange = inputor.createTextRange()
-                ###  [--------------------->[] : if set false all end-point goto end.
-                  <  I really [[HATE] IE  []]>
-                ###
-                endRange.collapse false
-                ###
-                                ___VS____
-                               /         \
-                 <   I really [[HATE] IE []]>
-                                          \_endRange end-point.
-                
-                " > -1" mean the start end-point will be the same or right to the end end-point
-               * simplelly, all in the end.
-                ####
-                if textInputRange.compareEndPoints("StartToEnd", endRange) > -1
-                    #TextRange object will miss "\r\n". So, we count it ourself.
-                    start = end = len
-                else
-                    ###
-                            I really |HATE] IE   ]> 
-                                   <-|
-                          I really[ [HATE] IE   ]>
-                                <-[
-                        I reall[y  [HATE] IE   ]>
-                     
-                      will return how many unit have moved.
-                    ###
-                    start = -textInputRange.moveStart "character", -len
-                    end = -textInputRange.moveEnd "character", -len
+              will return how many unit have moved.
+            ###
+            start = -textInputRange.moveStart "character", -len
+            end = -textInputRange.moveEnd "character", -len
 
-        else
-            start = inputor.selectionStart
-        return start
+      else
+        start = inputor.selectionStart
+      return start
 
     setCaretPos = (inputor, pos) ->
-        if document.selection #IE
-            range = inputor.createTextRange()
-            range.move "character", pos
-            range.select()
-        else
-            inputor.setSelectionRange pos, pos
+      if document.selection #IE
+        range = inputor.createTextRange()
+        range.move "character", pos
+        range.select()
+      else
+        inputor.setSelectionRange pos, pos
 
     $.fn.caretPos = (pos) ->
-        inputor = this[0]
-        inputor.focus()
-        if pos
-            setCaretPos(inputor, pos)
-        else
-            getCaretPos(inputor)
+      inputor = this[0]
+      inputor.focus()
+      if pos
+        setCaretPos(inputor, pos)
+      else
+        getCaretPos(inputor)
 
 )(window.jQuery)

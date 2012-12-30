@@ -1,7 +1,7 @@
 ###
-   Implement Twitter/Weibo @ mentions
+   Implement Github like autocomplete mentions
 
-   Copyright (c) 2012 chord.luo@gmail.com
+   Copyright (c) chord.luo@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -25,431 +25,512 @@
 
 (($) ->
 
-    Mirror =
-        $mirror: null
-        css: ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom",'fontFamily', 'borderStyle', 'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX']
-        init: ($origin) ->
-            $mirror = $('<div></div>')
-            css =
-                position: 'absolute'
-                left: -9999
-                top:0
-                zIndex: -20000
-                'white-space': 'pre-wrap'
-            $.each @.css, (i,p) ->
-                css[p] = $origin.css p
-            $mirror.css(css)
-            @.$mirror = $mirror
-            $origin.after($mirror)
-            this
-        setContent: (html) ->
-            @.$mirror.html(html)
-            this
-        getFlagRect: () ->
-            $flag = @.$mirror.find "span#flag"
-            pos = $flag.position()
-            rect = {left:pos.left, top:pos.top, bottom:$flag.height() + pos.top}
-            @.$mirror.remove()
-            rect
+    # At.js 使用这个类克隆输入框, 插入标记后获得该标记的位置.
+    #
+    # @example
+    #   mirror = new Mirror($("textarea#inputor"))
+    #   html = "<p>We will get the rect of <span>@</span>icho</p>"
+    #   mirror.create(html).get_flag_rect()
+    class Mirror
+      css_attr: [
+        "overflowY", "height", "width", "paddingTop", "paddingLeft",
+        "paddingRight", "paddingBottom", "marginTop", "marginLeft",
+        "marginRight", "marginBottom",'fontFamily', 'borderStyle',
+        'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX'
+      ]
 
-    At = (inputor) ->
-        $inputor = @.$inputor = $(inputor)
-        @options = {}
-        @query =
-            text:""
-            start:0
-            stop:0
-        @_cache = {}
-        @pos = 0
-        @flags = {}
-        @theflag = null
-        @search_word = {}
+      # @param $inputor [Object] 输入框的 jQuery 对象
+      constructor: (@$inputor) ->
 
-        @view = AtView
-        @mirror = Mirror
+      # 克隆输入框的样式
+      #
+      # @return [Object] 返回克隆得到样式
+      copy_inputor_css: ->
+        css =
+          position: 'absolute'
+          left: -9999
+          top:0
+          zIndex: -20000
+          'white-space': 'pre-wrap'
+        $.each @css_attr, (i,p) =>
+          css[p] = @$inputor.css p
+        css
 
-        $inputor
-            .on "keyup.inputor", (e) =>
-                stop = e.keyCode is 40 or e.keyCode is 38
-                lookup = not (stop and @.view.isShowing())
-                @.lookup() if lookup
-        @.init()
-        log "At.new", $inputor[0]
-        return this
+      # 在页面中创建克隆后的镜像.
+      #
+      # @param html [String] 将输入框内容转换成 html 后的内容.
+      #   主要是为了给 `flag` (@, etc.) 打上标记
+      #
+      # @return [Object] 返回当前对象
+      create: (html) ->
+        @$mirror = $('<div></div>')
+        @$mirror.css this.copy_inputor_css()
+        @$mirror.html(html)
+        @$inputor.after(@$mirror)
+        this
 
-    At:: =
-        constructor: At
-
-        init: ->
-            @.$inputor
-                .on 'keyup.inputor', (e) =>
-                    @.onkeyup(e)
-                .on 'keydown.inputor', (e) =>
-                    @.onkeydown(e)
-                .on 'scroll.inputor', (e) =>
-                    @.view.hide()
-                .on 'blur.inputor', (e) =>
-                    @.view.hide(1000)
-            log "At.init", @.$inputor[0]
-
-        reg: (flag, options) ->
-            opt = {}
-            if $.isFunction options
-                opt['callback'] = options
-            else
-                opt = options
-            _default = @.options[flag] or= $.fn.atWho.default
-            @.options[flag] = $.extend {}, _default, opt
-            log "At.reg", @.$inputor[0],flag, options
-
-        dataValue: ->
-            search_word = @.search_word[@.theflag]
-            return search_word if search_word
-            match = /data-value=["']?\$\{(\w+)\}/g.exec(this.getOpt('tpl'))
-            return @.search_word[@.theflag] =  if !_isNil(match) then match[1] else null
-
-        getOpt: (key) ->
-            try
-                return @.options[@.theflag][key]
-            catch error
-                return null
-
-        rect: ->
-            $inputor = @.$inputor
-            if document.selection # for IE full
-                Sel = document.selection.createRange()
-                x = Sel.boundingLeft + $inputor.scrollLeft()
-                y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
-                bottom = y + Sel.boundingHeight
-                # -2 : for some font style problem.
-                return {top:y-2, left:x-2, bottom:bottom-2}
-
-            format = (value) ->
-                value.replace(/</g, '&lt')
-                    .replace(/>/g, '&gt')
-                    .replace(/`/g,'&#96')
-                    .replace(/"/g,'&quot')
-                    .replace(/\r\n|\r|\n/g,"<br />")
-
-            ### 克隆完inputor后将原来的文本内容根据
-              @的位置进行分块,以获取@块在inputor(输入框)里的position
-            ###
-            start_range = $inputor.val().slice(0,@pos - 1)
-            html = "<span>"+format(start_range)+"</span>"
-            html += "<span id='flag'>@</span>"
-
-            ###
-              将inputor的 offset(相对于document)
-              和@在inputor里的position相加
-              就得到了@相对于document的offset.
-              当然,还要加上行高和滚动条的偏移量.
-            ###
-            offset = $inputor.offset()
-            at_rect = @mirror.init($inputor).setContent(html).getFlagRect()
-
-            x = offset.left + at_rect.left - $inputor.scrollLeft()
-            y = offset.top - $inputor.scrollTop()
-            bottom = y + at_rect.bottom
-            y += at_rect.top
-
-            # bottom + 2: for some font style problem
-            return {top:y,left:x,bottom:bottom + 2}
-
-        cache: (value) ->
-            key = @.query.text
-            return null if not @.getOpt("cache") or not key
-            return @._cache[key] or= value
-
-        getKeyname: ->
-            $inputor = @.$inputor
-            text = $inputor.val()
-
-            ##获得inputor中插入符的position.
-            caret_pos = $inputor.caretPos()
-
-            ### 向在插入符前的的文本进行正则匹配
-             * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
-            subtext = text.slice(0,caret_pos)
-
-            matched = null
-            $.each this.options, (flag) =>
-                regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
-                match = regexp.exec subtext
-                if not _isNil(match)
-                    matched = if match[2] then match[2] else match[1]
-                    @.theflag = flag
-                    return no
-
-            if typeof matched is 'string' and matched.length <= 20
-                start = caret_pos - matched.length
-                end = start + matched.length
-                @.pos = start
-                key = {'text':matched.toLowerCase(), 'start':start, 'end':end}
-            else
-                @.view.hide()
-
-            log "At.getKeyname", key
-            @.query = key
-
-        replaceStr: (str) ->
-            $inputor = @.$inputor
-            key = @.query
-            source = $inputor.val()
-            flag_len = if @.getOpt("display_flag") then 0 else @theflag.length
-            start_str = source.slice 0, key.start - flag_len
-            text = start_str + str + source.slice key.end
-
-            $inputor.val text
-            $inputor.caretPos start_str.length + str.length
-            $inputor.change()
-            log "At.replaceStr", text
-
-        onkeyup: (e) ->
-            view = @.view
-            return unless view.isShowing()
-            switch e.keyCode
-                # ESC
-                when 27
-                    e.preventDefault()
-                    view.hide()
-                else
-                    $.noop()
-            e.stopPropagation()
-
-        onkeydown: (e) ->
-            view = @.view
-            return if not view.isShowing()
-            switch e.keyCode
-                # ESC
-                when 27
-                    e.preventDefault()
-                    view.hide()
-                # UP
-                when 38
-                    e.preventDefault()
-                    view.prev()
-                # DOWN
-                when 40
-                    e.preventDefault()
-                    view.next()
-                # TAB or ENTER
-                when 9, 13
-                    return if not view.isShowing()
-                    e.preventDefault()
-                    view.choose()
-                else
-                    $.noop()
-            e.stopPropagation()
-
-        renderView: (datas) ->
-            log "At.renderView", @, datas
-
-            datas = datas.splice(0, @.getOpt('limit'))
-            datas = _unique(datas, @.dataValue())
-            datas = _objectify(datas)
-            datas = _sorter.call(@,datas)
-
-            this.view.render this, datas
-
-        lookup: ->
-            key = this.getKeyname()
-            return if not key
-            log "At.lookup.key", key
-
-            if not _isNil(datas = @.cache())
-                @.renderView datas
-            else if not _isNil(datas = @.lookupWithData key)
-                @.renderView datas
-            else if $.isFunction(callback = @.getOpt 'callback')
-                callback key.text, $.proxy(@.renderView,@)
-            else
-                @.view.hide()
-            $.noop()
-
-        lookupWithData: (key) ->
-            data = @.getOpt "data"
-            if $.isArray(data) and data.length != 0
-                items = $.map data, (item,i) =>
-                    try
-                        name = if $.isPlainObject item then item[@.dataValue()] else item
-                        regexp = new RegExp(key.text.replace("+","\\+"),'i')
-                        match = name.match(regexp)
-                    catch e
-                        return null
-
-                    return if match then item else null
-            items
-
-    AtView =
-        timeout_id: null
-        id: '#at-view'
-        holder: null
-        _jqo: null
-        jqo: ->
-            jqo = @._jqo
-            jqo = if _isNil jqo then (@._jqo = $(@.id)) else jqo
-
-        init: ->
-            return if not _isNil @.jqo()
-            tpl = "<div id='"+this.id.slice(1)+"' class='at-view'><ul id='"+this.id.slice(1)+"-ul'></ul></div>"
-            $("body").append(tpl)
-
-            $menu = @.jqo().find('ul')
-            $menu.on 'mouseenter.view','li', (e) ->
-                    $menu.find('.cur').removeClass 'cur'
-                    $(e.currentTarget).addClass 'cur'
-                .on 'click', (e) =>
-                    e.stopPropagation()
-                    e.preventDefault()
-                    @.choose()
+      # 获得标记的位置
+      #
+      # @return [Object] 标记的坐标
+      #   {left: 0, top: 0, bottom: 0}
+      get_flag_rect: ->
+        $flag = @$mirror.find "span#flag"
+        pos = $flag.position()
+        rect = {left: pos.left, top: pos.top, bottom: $flag.height() + pos.top}
+        @$mirror.remove()
+        rect
 
 
-        isShowing: () ->
-            @.jqo().is(":visible")
-
-        choose: () ->
-            $li = @.jqo().find ".cur"
-            str = if _isNil($li) then @.holder.query.text+" " else $li.attr(@.holder.getOpt("choose")) + " "
-            @.holder.replaceStr(str)
-            @.hide()
-
-        rePosition: () ->
-            rect = @.holder.rect()
-            if rect.bottom + @.jqo().height() - $(window).scrollTop() > $(window).height()
-                rect.bottom = rect.top - @.jqo().height()
-            log "AtView.rePosition",{left:rect.left, top:rect.bottom}
-            @.jqo().offset {left:rect.left, top:rect.bottom}
-
-        next: () ->
-            cur = @.jqo().find('.cur').removeClass('cur')
-            next = cur.next()
-            next = $(@.jqo().find('li')[0]) if not next.length
-            next.addClass 'cur'
-
-        prev: () ->
-            cur = @.jqo().find('.cur').removeClass('cur')
-            prev = cur.prev()
-            prev = @.jqo().find('li').last() if not prev.length
-            prev.addClass('cur')
-
-        show: () ->
-            @.jqo().show() if not @.isShowing()
-            @.rePosition()
-
-        hide: (time) ->
-            if isNaN time
-                @.jqo().hide() if @.isShowing()
-            else
-                callback = => @.hide()
-                clearTimeout @.timeout_id
-                @.timeout_id = setTimeout callback, 300
-
-        clear: (clear_all) ->
-            @._cache = {} if clear_all is yes
-            @.jqo().find('ul').empty()
-
-        render: (holder, list) ->
-            return no if not $.isArray(list)
-            if list.length <= 0
-                @.hide()
-                return yes
-
-            @.holder = holder
-            holder.cache(list)
-            @.clear()
-
-            $ul = @.jqo().find('ul')
-            tpl = holder.getOpt('tpl')
-
-            $.each list, (i, item) ->
-                tpl or= _DEFAULT_TPL
-                li = _evalTpl tpl, item
-                log "AtView.render", li
-                $ul.append _highlighter li,holder.query.text
-
-            @.show()
-            $ul.find("li:eq(0)").addClass "cur"
+    KEY_CODE =
+      DOWN: 40
+      UP: 38
+      ESC: 27
+      TAB: 9
+      ENTER: 13
 
 
-    _objectify = (list) ->
-        $.map list, (item,k) ->
-            if not $.isPlainObject item
-                item = {id:k, name:item}
-            return item
+    DEFAULT_CALLBACKS =
 
-    _evalTpl = (tpl, map) ->
-        try
-            el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
-                map[key]
-        catch error
-            ""
+      # 匹配当前标记后面字符的匹配规则
+      #
+      # @param flag [String] 当前标记 ("@", etc)
+      # @param subtext [String] 输入框从开始到插入符号前的字符串
+      #
+      # @return [String] 匹配后得到的字符串
+      matcher: (flag, subtext) ->
+        regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
+        match = regexp.exec subtext
+        matched = null
+        if match
+          matched = if match[2] then match[2] else match[1]
+        matched
 
-    _highlighter = (li,query) ->
-        return li if _isNil(query)
-        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
-            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
+      # 根据匹配的的字符串搜索数据
+      #
+      # @param query [String] 匹配得到的字符串
+      # @param data [Array] 数据列表
+      # @param search_key [String] 用于搜索的关键字
+      #
+      # @return [Array] 过滤后的数据
+      filter: (query, data, search_key) ->
+        $.map data, (item,i) =>
+          name = if $.isPlainObject(item) then item[search_key] else item
+          item if name.toLowerCase().indexOf(query) >= 0
 
-    _sorter = (items) ->
-        data_value = @.dataValue()
-        query = @.query.text
+      # 当 `data` 设置为 url 的时候, 我们使用这个 filter 来发起 ajax 请求
+      #
+      # @param params [Hash] ajax 请求参数. {q: query, limit: 5}
+      # @param url [String] 开发者自己设置的 url 地址
+      # @param render_view [Function] 将数据渲染到下拉列表的回调
+      remote_filter: (params, url, render_view) ->
+        $.ajax url, params, (data) ->
+          names = $.parseJSON(data)
+          render_view(names)
+
+      # 重构数据结构, 以便于渲染模板
+      #
+      # @param data [Array] 开发者自己在配置中设置的数据列表
+      #
+      # @return [Array] 重构后的数据列表
+      data_refactor: (data) ->
+        $.map data, (item, k) ->
+          if not $.isPlainObject item
+            item = {name:item}
+          return item
+
+      # 对重构后的数据进行排序
+      #
+      # @param query [String] 匹配后的关键字
+      # @param items [Array] 重构后的数据列表
+      # @param search_key [String] 用于搜索的关键字
+      #
+      # @return [Array] 排序后的数据列表
+      sorter: (query, items, search_key) ->
         results = []
 
         for item in items
-            text = item[data_value]
-            continue if text.toLowerCase().indexOf(query) is -1
-            item.order = text.toLowerCase().indexOf query
-            results.push(item)
+          text = item[search_key]
+          item.order = text.toLowerCase().indexOf query
+          results.push(item)
 
         results.sort (a,b) ->
-            a.order - b.order
+          a.order - b.order
         return results
 
+      # 解析并渲染下拉列表中单个项的模板
+      #
+      # @param tpl [String] 模板字符串
+      # @param map [Hash] 数据的键值对.
+      tpl_eval: (tpl, map) ->
+        try
+          el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
+            map[key]
+        catch error
+          ""
 
-    ###
-      maybe we can use $._unique.
-      But i don't know it will delete li element frequently or not.
-      I think we should not change DOM element frequently.
-      more, It seems batter not to call evalTpl function too much times.
-    ###
-    _unique = (list,query) ->
-        record = []
-        $.map list, (v, id) ->
-            value = if $.isPlainObject(v) then v[query] else v
-            if $.inArray(value,record) < 0
-                record.push value
-                return v
+      # 高亮关键字
+      #
+      # @param li [String] HTML String. 经过渲染后的模板
+      # @param query [String] 匹配得到的关键字
+      #
+      # @return [String] 高亮处理后的 HTML 字符串
+      highlighter: (li, query) ->
+        return li if not query
+        li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
+            '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
-    _isNil = (target) ->
-        not target \
-        or ($.isPlainObject(target) and $.isEmptyObject(target)) \
-        or ($.isArray(target) and target.length is 0) \
-        or (target instanceof $ and target.length is 0) \
-        or target is undefined
+      # 选择某列表项的动作
+      #
+      # @param $li [jQuery Object] 选中的列表项目
+      selector: ($li) ->
+        @controller.replace_str($li.data("value") || "") if $li.length > 0
 
-    _DEFAULT_TPL = "<li id='${id}' data-value='${name}'>${name}</li>"
 
-    log = () ->
-        #console.log(arguments)
+    # At.js 对数据操作(搜索, 匹配, 渲染) 的主控中心
+    class Controller
+
+      # @param inputor [HTML DOM Object] 输入框
+      constructor: (inputor) ->
+        @settings     = {}
+        @common_settings       = {}
+        @pos          = 0
+        @flags        = null
+        @current_flag = null
+        @query        = null
+
+        @$inputor = $(inputor)
+        @mirror = new Mirror(@$inputor)
+        @common_settings = $.extend {}, $.fn.atWho.default
+        @view = new View(this, @$el)
+        this.listen()
+
+      # 绑定对输入框的各种监听事件
+      listen: ->
+        @$inputor
+          .on "keyup.atWho", (e) =>
+            stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
+            can_lookup = not (stop and @view.visible())
+            this.look_up() if can_lookup
+          .on 'keyup.atWho', (e) =>
+            this.on_keyup(e)
+          .on 'keydown.atWho', (e) =>
+            this.on_keydown(e)
+          .on 'scroll.atWho', (e) =>
+            @view.hide()
+          .on 'blur.atWho', (e) =>
+            @view.hide(1000)
+
+      # At.js 可以对每个输入框绑定不同的监听标记. 比如同时监听 "@", ":" 字符
+      # 并且通过不同的 `settings` 给予不同的表现行为, 比如插入不同的内容(即不同的渲染模板)
+      #
+      # 控制器初始化的时候会将默认配置当作一个所有标记共有的配置. 而每个标记只存放针对自己的特定配置.
+      # 搜索配置的时候, 将先寻找标记里的配置. 如果找不到则去公用的配置里找.
+      #
+      # 当输入框已经注册了某个字符后, 再对该字符进行注册将会更新其配置, 比如改变 `data`, 其它的配置不变.
+      #
+      # @param flag [String] 要监听的字符
+      # @param settings [Hash] 配置哈希值
+      reg: (flag, settings) ->
+        if not flag
+          console.log settings
+          @common_settings = $.extend {}, @common_settings, settings
+        else if not @settings[flag]
+          @settings[flag] = $.extend {}, settings
+        else
+          @settings[flag] = $.extend {}, @settings[flag], settings
+
+        this
+
+      # At.js 允许开发者自定义控制器使用的一些功能函数
+      #
+      # @param func_name [String] 回调的函数名
+      # @return [Function] 该回调函数
+      callbacks: (func_name)->
+        # this.get_opt("callbacks", {})[func_name]
+        if not (func = this.get_opt("callbacks",{})[func_name])
+          func = @common_settings["callbacks"][func_name]
+        return func
+
+      # 由于可以绑定多字符, 但配置缺不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
+      #
+      # @param key [String] 某配置项的键名
+      # @param default_value [?] 没有找到任何值后自定义的默认值
+      # @return [?] 配置项的值
+      get_opt: (key, default_value) ->
+        try
+          value = @settings[@current_flag][key] if @current_flag
+          value = @common_settings[key] if value is undefined
+          value = if value is undefined then default_value else value
+        catch e
+          value = if default_value is undefined then null else default_value
+
+      # 获得标记字符在输入框中的位置
+      #
+      # @return [Hash] 位置信息. {top: y, left: x, bottom: bottom}
+      rect: ->
+        $inputor = @$inputor
+        if document.selection # for IE full
+          Sel = document.selection.createRange()
+          x = Sel.boundingLeft + $inputor.scrollLeft()
+          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
+          bottom = y + Sel.boundingHeight
+            # -2 : for some font style problem.
+          return {top:y-2, left:x-2, bottom:bottom-2}
+
+        format = (value) ->
+          value.replace(/</g, '&lt')
+          .replace(/>/g, '&gt')
+          .replace(/`/g,'&#96')
+          .replace(/"/g,'&quot')
+          .replace(/\r\n|\r|\n/g,"<br />")
+
+        ### 克隆完inputor后将原来的文本内容根据
+          @的位置进行分块,以获取@块在inputor(输入框)里的position
+        ###
+        start_range = $inputor.val().slice(0,@pos - 1)
+        html = "<span>"+format(start_range)+"</span>"
+        html += "<span id='flag'>?</span>"
+
+        ###
+          将inputor的 offset(相对于document)
+          和@在inputor里的position相加
+          就得到了@相对于document的offset.
+          当然,还要加上行高和滚动条的偏移量.
+        ###
+        offset = $inputor.offset()
+        at_rect = @mirror.create(html).get_flag_rect()
+
+        x = offset.left + at_rect.left - $inputor.scrollLeft()
+        y = offset.top - $inputor.scrollTop()
+        bottom = y + at_rect.bottom
+        y += at_rect.top
+
+        # bottom + 2: for some font style problem
+        return {top:y,left:x,bottom:bottom + 2}
+
+      # 捕获标记字符后的字符串
+      #
+      # @return [Hash] 该字符串的信息, 包括在输入框中的位置. {'text': "hello", 'head_pos': 0, 'end_pos': 0}
+      catch_query: ->
+        content = @$inputor.val()
+        ##获得inputor中插入符的position.
+        caret_pos = @$inputor.caretPos()
+        ### 向在插入符前的的文本进行正则匹配
+         * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
+        subtext = content.slice(0,caret_pos)
+
+        query = null
+        $.each @settings, (flag, settings) =>
+          query = this.callbacks("matcher").call(this, flag, subtext)
+          if query?
+            @current_flag = flag
+            return false
+
+        if typeof query is "string" and query.length <= 20
+          start = caret_pos - query.length
+          end = start + query.length
+          @pos = start
+          query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+        else
+          @view.hide()
+
+        @query = query
+
+      # 将选中的项的`data-value` 内容插入到输入框中
+      #
+      # @param str [String] 要插入的字符串, 一般为 `data-value` 的值.
+      replace_str: (str) ->
+        $inputor = @$inputor
+        source = $inputor.val()
+        flag_len = if this.get_opt("display_flag") then 0 else @current_flag.length
+        start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
+        text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
+
+        $inputor.val text
+        $inputor.caretPos start_str.length + str.length + 1
+        $inputor.change()
+
+      on_keyup: (e) ->
+        return unless @view.visible()
+        switch e.keyCode
+          when KEY_CODE.ESC
+            e.preventDefault()
+            @view.hide()
+          else
+            $.noop()
+            e.stopPropagation()
+
+      on_keydown: (e) ->
+        return if not @view.visible()
+        switch e.keyCode
+          when KEY_CODE.ESC
+            e.preventDefault()
+            @view.hide()
+          when KEY_CODE.UP
+            e.preventDefault()
+            @view.prev()
+          when KEY_CODE.DOWN
+            e.preventDefault()
+            @view.next()
+          when KEY_CODE.TAB, KEY_CODE.ENTER
+            return if not @view.visible()
+            e.preventDefault()
+            @view.choose()
+          else
+            $.noop()
+        e.stopPropagation()
+
+      # 将处理完的数据显示到下拉列表中
+      #
+      # @param data [Array] 处理过后的数据列表
+      render_view: (data) ->
+        search_key = this.get_opt("search_key")
+
+        data = this.callbacks("data_refactor").call(this, data)
+        data = this.callbacks("sorter").call(this, @query.text, data, search_key)
+        data = data.splice(0, this.get_opt('limit'))
+
+        @view.render data
+
+      # 根据关键字搜索数据
+      look_up: ->
+        query = this.catch_query()
+        return no if not query
+
+        origin_data = this.get_opt("data")
+        search_key = this.get_opt("search_key")
+        if typeof data is "string"
+          params =
+            q: query.text
+            limit: this.get_opt("limit")
+          callback = $.proxy(this.render_view, this.callbacks('remote_filter').call(this, params, callback))
+        else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
+            this.render_view data
+        else
+            @view.hide()
+        $.noop()
+
+
+    # 操作下拉列表所有表现行为的类
+    # 所有的这个类的对象都只操作一个视图.
+    class View
+
+      # @param controller [Object] 控制器对象.
+      constructor: (@controller) ->
+        @id = @controller.get_opt("view_id", "at-view")
+        @timeout_id = null
+        @$el = $("##{@id}")
+        this.create_view()
+
+      # 如果试图还不存在,则创建一个新的视图
+      create_view: ->
+        return if this.exist()
+        tpl = "<div id='#{@id}' class='at-view'><ul id='#{@id}-ul'></ul></div>"
+        $("body").append(tpl)
+        @$el = $("##{@id}")
+
+        $menu = @$el.find('ul')
+        $menu.on 'mouseenter.view','li', (e) ->
+          $menu.find('.cur').removeClass 'cur'
+          $(e.currentTarget).addClass 'cur'
+        .on 'click', (e) =>
+          e.stopPropagation()
+          e.preventDefault()
+          this.choose()
+
+      # 判断视图是否存在
+      #
+      # @return [Boolean]
+      exist: ->
+        $("##{@id}").length > 0
+
+      # 判断视图是否显示中
+      #
+      # @return [Boolean]
+      visible: ->
+        @$el.is(":visible")
+
+      # 选择某项的操作
+      choose: ->
+        $li = @$el.find ".cur"
+        @controller.callbacks("selector").call(this, $li)
+        this.hide()
+
+      # 重置视图在页面中的位置.
+      reposition: ->
+        rect = @controller.rect()
+        if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
+            rect.bottom = rect.top - @$el.height()
+        @$el.offset {left:rect.left, top:rect.bottom}
+
+      next: ->
+        cur = @$el.find('.cur').removeClass('cur')
+        next = cur.next()
+        next = $(@$el.find('li')[0]) if not next.length
+        next.addClass 'cur'
+
+      prev: ->
+        cur = @$el.find('.cur').removeClass('cur')
+        prev = cur.prev()
+        prev = @$el.find('li').last() if not prev.length
+        prev.addClass('cur')
+
+      show: ->
+        @$el.show() if not this.visible()
+        this.reposition()
+
+      hide: (time) ->
+        if isNaN time
+          @$el.hide() if this.visible()
+        else
+          callback = => this.hide()
+          clearTimeout @timeout_id
+          @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", 300)
+
+      clear: ->
+        @$el.find('ul').empty()
+
+      render: (list) ->
+        return no if not $.isArray(list)
+        if list.length <= 0
+          this.hide()
+          return yes
+
+        # holder.cache(list)
+        this.clear()
+
+        $ul = @$el.find('ul')
+        tpl = @controller.get_opt('tpl', DEFAULT_TPL)
+
+        $.each list, (i, item) =>
+          li = @controller.callbacks("tpl_eval").call(this, tpl, item)
+          $ul.append @controller.callbacks("highlighter").call(this, li, @controller.query.text)
+
+        this.show()
+        $ul.find("li:eq(0)").addClass "cur"
+
+
+    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
     $.fn.atWho = (flag, options) ->
-        AtView.init()
-        @.filter('textarea, input').each () ->
-            $this = $(this)
-            data = $this.data "AtWho"
+      @.filter('textarea, input').each () ->
+        $this = $(this)
+        data = $this.data "AtWho"
 
-            $this.data 'AtWho', (data = new At(this)) if not data
-            data.reg flag, options
+        $this.data 'AtWho', (data = new Controller(this)) if not data
+        data.reg flag, options
 
+    $.fn.atWho.Controller = Controller
+    $.fn.atWho.View = View
+    $.fn.atWho.Mirror = Mirror
     $.fn.atWho.default =
-        data: []
-        # Parameter: choose
-        ## specify the attribute on customer tpl,
-        ## so that we could append different value to the input other than the value we searched in
-        choose: "data-value"
-        callback: null
+        data: null
+        search_key: "name"
+        callbacks: DEFAULT_CALLBACKS
         cache: yes
         limit: 5
         display_flag: yes
-        tpl: _DEFAULT_TPL
+        display_timeout: 300
+        tpl: DEFAULT_TPL
 
 )(window.jQuery)

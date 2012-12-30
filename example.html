@@ -4,101 +4,96 @@
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
 	<title></title>
         <link rel="stylesheet" type="text/css" href="css/jquery.atwho.css"/>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script type="text/javascript" src="../lib/jquery.js"></script>
         <script type="text/javascript" src="js/jquery.caret.js" ></script>
         <script type="text/javascript" src="js/jquery.atwho.js"></script>
         <script type="text/javascript">
         $(function(){
-                var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","lepture","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你",
-"Jacob","Isabella","Ethan","reorx","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你"
-                ];
-                data = $.map(data,function(value,i) {
-                    return {'id':i,'name':value,'email':value+"@email.com"};
-                    });
+            var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","lepture","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你", "高富帅"
+            ];
 
-                $("textarea#inputor").atWho("@",{
-                    tpl: "<li id='${id}' data-value='${name}'>${name} <small>${email}</small></li>",
-                    'data':data
-                    })
-                .atWho(":",{
-                    tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
-                    ,callback:function(query,callback) {
-                        $.ajax({
-                            url:'data.json'
-                            ,type:'GET'
-                            ,success:function(data) {
-                                datas = $.map(data,function(value,i){
-                                    return {'id':i,'key':value+":",'name':value}
-                                    })
-                                callback(datas)
-                            }
+            $("textarea#inputor").atWho("@",{
+                tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
+                'data':data,
+                'callbacks': {
+                    filter: function (query, data) {
+                        return $.map(data, function(item, i) {
+                            return item.toLowerCase().indexOf(query) < 0 ? null : item
                         })
                     }
-                    }); 
-                
-                $("button#reflash").click(function(){
-                        $("textarea#inputor").atWho("@",{"data":data.splice(0,3)}) 
-                        })
-
-                emojis = [
-                    "six_pointed_star", "ski", "skull", "sleepy", "slot_machine", "smile",
-                    "smiley", "smirk", "smoking", "snake", "snowman", "sob", "soccer",
-                    "space_invader", "spades", "spaghetti", "sparkler", "sparkles",
-                    "speaker", "speedboat", "squirrel", "star", "star2", "stars", "station",
-                    "statue_of_liberty", "stew", "strawberry", "sunflower", "sunny",
-                    "sunrise", "sunrise_over_mountains", "surfer", "sushi", "suspect",
-                    "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
-                    "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
-                emojis = $.map(emojis,function(value,i){
-                    return {'id':i,'key':":"+value+":",'name':value}
-                    })
-                $("textarea#inputor2").atWho("@",{
-                    tpl: "<li id='${id}' data-value='${name}' data-choose='${email}'>${name} <small>${email}</small></li>",
-                    'data':data,
-                    choose:'data-choose'
-                    })
-                .atWho("/:",{
-                    tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
-                    ,'data':emojis
-                    ,display_flag: false
-                    })
-
-                $('input').atWho("@",{'data':data})
-
+                }
             });
-        </script>
-        <style type="text/css" media="screen">
-            body {
-                font: 14px/1.6 "Lucida Grande", "Helvetica", sans-serif;
-            }
-            .box {
-                background:gray;
-                height:100px;
-                width:100px;
-                margin:10px;
-            }
-            textarea {
-                width: 300px;
-            }
-            #inputor{
-                width:480px;
-                font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-            }
-        </style>
+
+            $("button#reflash").click(function(){
+                // $("textarea#inputor").atWho("@",{"data":data.splice(0,3)})
+                $("textarea#inputor").atWho({"data":data.splice(0,3)})
+            })
+
+            // =========================
+
+            emojis = [
+            "six_pointed_star", "ski", "skull", "sleepy", "slot_machine", "smile",
+            "smiley", "smirk", "smoking", "snake", "snowman", "sob", "soccer",
+            "space_invader", "spades", "spaghetti", "sparkler", "sparkles",
+            "speaker", "speedboat", "squirrel", "star", "star2", "stars", "station",
+            "statue_of_liberty", "stew", "strawberry", "sunflower", "sunny",
+            "sunrise", "sunrise_over_mountains", "surfer", "sushi", "suspect",
+            "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
+            "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
+            emojis = $.map(emojis,function(value,i){
+                return {'key':":"+value+":",'name':value}
+            })
+            data = $.map(data,function(value,i) {
+                return {'name':value,'email':value+"@email.com"};
+            });
+
+            $("textarea#inputor2").atWho("@",{
+                tpl: "<li data-value='${email}'>${name} <small>${email}</small></li>",
+                'data':data,
+                search_key: "email"
+            })
+            .atWho("/:",{
+                tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
+                ,'data':emojis
+                ,display_flag: false
+            })
+
+            $('input').atWho("@",{'data':data})
+
+        });
+</script>
+<style type="text/css" media="screen">
+body {
+    font: 14px/1.6 "Lucida Grande", "Helvetica", sans-serif;
+}
+.box {
+    background:gray;
+    height:100px;
+    width:100px;
+    margin:10px;
+}
+textarea {
+    width: 300px;
+}
+#inputor{
+    width:480px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+</style>
 </head>
 <body>
     <div class="box"></div>
     <div class="box"></div>
     <button id="reflash">reflash</button>
     <textarea id="inputor" name="at" rows="8" cols="40">
-        this textarea register "@" with static data 
+        this textarea register "@" with static data
         and ":" with ajax.
         type "@" to try
     </textarea>
     <textarea id="inputor2" name="Name" rows="8" cols="40">
         this register "/:" with static data
     </textarea>
-<br/>
-<input></input>
+    <br/>
+    <input></input>
 </body>
 </html>

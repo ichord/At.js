@@ -1,0 +1,10 @@
+--name       "Codo"
+--readme     README.md
+--title      "At.js Documentation"
+--private
+--quiet
+--output-dir ./doc
+./coffee
+-
+LICENSE
+CHANGELOG.md
