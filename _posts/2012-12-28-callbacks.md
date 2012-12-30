@@ -38,4 +38,7 @@ At.js 将所有处理数据的方法都独立出来, 组成一组可改变的回
     // 高亮搜索搜索关键字
     highlighter: function (li, query)
 
+    // 选中列表项时的操作
+    selector: function($li)
+
 {% endhighlight %}
