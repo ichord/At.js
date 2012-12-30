@@ -8,12 +8,14 @@ add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if yo
 
 ### Notice
 
-**the Stable version is living in branch `stable` and tag `v0.1.7`**
+**the Stable version is living in branch `stable` and tag `v0.1.7`**  
+This branch have updated to `v0.2.0`, read **CHANGELOG.md** please.  
+PS. English Documentation would be updated later. or **You can do me a favor?!**
 
 
 ### Demo
 
-[http://ichord.github.com/At.js][1]
+http://ichord.github.com/At.js
 
 
 ### Features
