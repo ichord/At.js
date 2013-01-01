@@ -1,3 +1,4 @@
 *.swp
 doc/
 public/
+node_modules/

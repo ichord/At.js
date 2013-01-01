@@ -1,0 +1,29 @@
+{
+  "name": "At",
+  "title": "At",
+  "description": "Add Github like mentions autocomplete to your application.",
+  "version": "0.2.0",
+  "homepage": "http://ichord.github.com/At.js/",
+  "author": {
+    "name": "ichord",
+    "email": "chord.luo@gmail.com",
+    "url": "http://ichord.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ichord/At.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ichord/At.js/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://ichord.github.com/At.js//blob/master/LICENSE-MIT"
+    }
+  ],
+  "dependencies": {
+    "jquery": "*"
+  },
+  "keywords": []
+}
