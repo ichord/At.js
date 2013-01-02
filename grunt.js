@@ -11,69 +11,52 @@ module.exports = function(grunt) {
       '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
       ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */'
     },
-    // concat: {
-    //   dist: {
-    //     src: ['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>.js>'],
-    //     dest: 'dist/<%= pkg.name %>.js'
-    //   }
-    // },
-    // min: {
-    //   dist: {
-    //     src: ['<banner:meta.banner>', '<config:concat.dist.dest>'],
-    //     dest: 'dist/<%= pkg.name %>.min.js'
-    //   }
-    // },
-    lint: {
-      files: ['grunt.js', 'src/**/*.js', 'test/**/*.js']
+    concat: {
+      dist: {
+        // src: ['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>.js>'],
+        src: ['src/*.js'],
+        dest: 'dist/js/<%= pkg.name %>.js'
+      }
+    },
+    min: {
+      dist: {
+        src: ['<banner:meta.banner>', '<config:concat.dist.dest>'],
+        dest: 'dist/js/<%= pkg.name %>.min.js'
+      }
+    },
+    mincss: {
+      compress: {
+        files: {
+          "dist/css/jquery.atwho.css": ["src/*.css"]
+        }
+      }
     },
     watch: {
-      files: '<config:lint.files>',
-      tasks: 'lint jasmine_node'
-    },
-    jshint: {
-      options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        browser: true
-      },
-      globals: {
-        jQuery: true
-      }
+      files: '<config:coffee.app.src>',
+      tasks: 'coffee'
     },
     coffee: {
       app: {
-        src: ['src/*.coffee'],
-        dest: 'js/'
+        src: ['**/*.coffee']
       }
     },
-    jasmine_node: {
-      specNameMatcher: "spec", // load only specs containing specNameMatcher
-      extensions: "coffee",
-      projectRoot: ".",
-      forceExit: true,
-      jUnit: {
-        report: false,
-        savePath : "./spec/reports/",
-        useDotNotation: true,
-        consolidate: true
-      }
+    'jasmine' : {
+      src : 'src/**/*.js',
+      helpers : 'spec/helpers/*.js',
+      specs : 'spec/**/*.spec.js',
+      template : 'spec/SpecRunner.tmpl'
+    },
+    'jasmine-server' : {
+      browser : true
     }
   });
 
-  // grunt.loadNpmTasks('grunt-jasmine-runner');
-  // grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-coffee');
-  grunt.loadNpmTasks('grunt-jasmine-node');
+  grunt.loadNpmTasks('grunt-jasmine-runner');
+  grunt.loadNpmTasks('grunt-contrib-mincss');
 
   // Default task.
-  grunt.registerTask('default', 'coffee lint jasmine_node');
+  grunt.registerTask('default', 'coffee jasmine concat mincss min');
+  grunt.registerTask('test', 'coffee jasmine')
 
 };

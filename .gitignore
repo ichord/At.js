@@ -1,4 +1,5 @@
 *.swp
 doc/
-public/
 node_modules/
+spec/**/*.js
+_*

@@ -7,14 +7,10 @@
   "scripts": {
     "test": "grunt jasmine_node"
   },
-  "dependencies": {
-    "jquery": ">= 1.7.0"
-  },
   "devDependencies": {
     "grunt": "~0.3.17",
-    "grunt-jasmine-node": "0.0.5",
     "grunt-coffee": "0.0.6",
-    "jasmine-jquery": "~1.3.3",
-    "jquery": ">=1.7.0"
+    "grunt-jasmine-runner": "~0.6.0",
+    "grunt-contrib-mincss": "~0.3.2"
   }
 }
