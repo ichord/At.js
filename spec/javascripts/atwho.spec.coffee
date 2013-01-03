@@ -1,39 +1,69 @@
 describe "jquery.atWho", ->
 
+  callbacks = null
+  controller = null
+  text = null
+  fixtures = null
+
   beforeEach ->
     loadFixtures("inputors.html")
+    $inputor = $("#inputor")
 
-  it "should defined jquery", ->
-    expect(jQuery).toBeDefined()
-    expect($).toBeDefined()
-    expect($.fn).toBeDefined()
+    fixtures = loadJSONFixtures("data.json")["data.json"]
+    text = $.trim $inputor.text()
+
+    callbacks = $.fn.atWho.default.callbacks
+    controller = new $.fn.atWho.Controller($inputor)
 
   it "should be defined", ->
     expect($.fn.atWho).toBeDefined()
 
+  describe "default callbacks work", ->
 
-  # callbacks = null
+    it "refactor the data", ->
+      items = callbacks.data_refactor.call(controller, fixtures["names"])
+      expect(items).toContain({"name":"Jacob"})
+      expect(items).toContain({"name":"Isabella"})
 
-  # beforeEach ->
-  #   loadFixtures("inputors.html")
-  #   $inputor = $("#inputor")
+    it "should match the key word following @", ->
+      query = callbacks.matcher.call(controller, "@", text)
+      expect(query).toBe("Jobs")
 
-  #   names = loadJSONFixtures("names.json")
-  #   emojis = loadJSONFixtures("emojis.json")
-  #   text = $inputor.text()
+    it "filter the data without data_refactor", ->
+      items = callbacks.filter.call(controller, "jo", fixtures["names"])
+      expect(items).toContain("Joshua")
 
-  #   callbacks = $.fn.atWho.default.callbacks
-  #   controller = new $.fn.atWho.Controller($inputor)
+    it "filter data after data_refactor", ->
+      names = callbacks.data_refactor.call(controller, fixtures["names"])
+      names = callbacks.filter.call(controller, "jo", fixtures["names"])
+      expect(names).toContain("Joshua")
 
-  # describe "default callbacks", ->
+    # it "request data from remote by ajax", ->
+    #   expect(false).toBe(true)
 
-  #   it "should match the key word following @", ->
-  #     callbacks.matcher.call(controller, "@", text)
+    it "can sort the data", ->
+      names = callbacks.data_refactor.call(controller, fixtures["names"])
+      names = callbacks.sorter.call(controller, "e", names, "name")
+      expect(names).toContain({ name : 'Ethan', order : 0 })
 
-  #   it "filter the data", ->
-  #     callbacks.filter.call(controller, "jo", "name")
+    it "can evl temple", ->
+      map = {name: "username", nick: "nick_name"}
+      tpl = '<li data-value="${name}">${nick}</li>'
+      html = '<li data-value="username">nick_name</li>'
+
+      result = callbacks.tpl_eval.call(controller, tpl, map)
+      expect(result).toBe(html)
+
+    it "can highlight the query", ->
+      html = '<li data-value="username">Ethan</li>'
+      highlighted = callbacks.highlighter.call(controller, html, "e")
+      result = '<li data-value="username"> <strong>E</strong>than </li>'
+      expect(highlighted).toBe(result)
+
+    # it "can insert the text which be choosed", ->
 
 
-  # describe "Mirror", ->
-  #   it "TODO", ->
-  #     expect(true).not.toBe(false)
+
+  describe "Mirror", ->
+    it "TODO", ->
+      expect(true).not.toBe(false)

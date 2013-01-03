@@ -3,10 +3,9 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
 	<title></title>
-        <link rel="stylesheet" type="text/css" href="css/jquery.atwho.css"/>
-        <script type="text/javascript" src="../lib/jquery.js"></script>
-        <script type="text/javascript" src="js/jquery.caret.js" ></script>
-        <script type="text/javascript" src="js/jquery.atwho.js"></script>
+        <link rel="stylesheet" type="text/css" href="dist/css/jquery.atwho.css"/>
+        <script type="text/javascript" src="libs/jquery/jquery.js"></script>
+        <script type="text/javascript" src="dist/js/jquery.atwho.js"></script>
         <script type="text/javascript">
         $(function(){
             var data = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","lepture","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你", "高富帅"
@@ -16,9 +15,9 @@
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
                 'data':data,
                 'callbacks': {
-                    filter: function (query, data) {
+                    filter: function (query, data, search_key) {
                         return $.map(data, function(item, i) {
-                            return item.toLowerCase().indexOf(query) < 0 ? null : item
+                            return item[search_key].toLowerCase().indexOf(query) < 0 ? null : item
                         })
                     }
                 }
