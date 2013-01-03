@@ -13,6 +13,10 @@ At.js 将所有处理数据的方法都独立出来, 组成一组可改变的回
 {% highlight javascript %}
 
     // ------ for data handler
+
+    // 重新组织数据的结构, 比如传入一组数组: ["hello", "heaaa", "tttss"]. 
+    // 你可以将其组织成 [{"name": "hello"}, {"name": "heaaa"}, ...]
+    data_refactor: function (data)
         
     // At.js 捕获至紧跟 flag("@", etc) 之后的文字后, 将调用此方法进行匹配.
     matcher: function (flag, subtext)
@@ -24,10 +28,6 @@ At.js 将所有处理数据的方法都独立出来, 组成一组可改变的回
     filter: function (query, data, search_key)
 
     // ------ for render
-
-    // 重新组织数据的结构, 比如传入一组数组: ["hello", "heaaa", "tttss"]. 
-    // 你可以将其组织成 [{"name": "hello"}, {"name": "heaaa"}, ...], 用于模板渲染
-    data_refactor: function (data)
 
     // 对过滤后的数据进行排序
     sorter: function (query, items, search_key)
