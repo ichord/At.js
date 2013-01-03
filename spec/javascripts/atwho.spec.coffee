@@ -1,24 +1,26 @@
 describe "jquery.atWho", ->
 
-  callbacks = null
-  controller = null
-  text = null
+  $inputor = null
   fixtures = null
 
   beforeEach ->
     loadFixtures("inputors.html")
-    $inputor = $("#inputor")
-
     fixtures = loadJSONFixtures("data.json")["data.json"]
-    text = $.trim $inputor.text()
-
-    callbacks = $.fn.atWho.default.callbacks
-    controller = new $.fn.atWho.Controller($inputor)
+    $inputor = $("#inputor").atWho "@",
+      data: fixtures["names"]
 
   it "should be defined", ->
     expect($.fn.atWho).toBeDefined()
 
   describe "default callbacks work", ->
+    callbacks = null
+    controller = null
+    text = null
+
+    beforeEach ->
+      text = $.trim $inputor.text()
+      callbacks = $.fn.atWho.default.callbacks
+      controller = $inputor.data("AtWho")
 
     it "refactor the data", ->
       items = callbacks.data_refactor.call(controller, fixtures["names"])
@@ -74,7 +76,18 @@ describe "jquery.atWho", ->
       result = '<li data-value="username"> <strong>E</strong>than </li>'
       expect(highlighted).toBe(result)
 
-    # it "can insert the text which be choosed", ->
+    it "can insert the text which be choosed", ->
+      spyOn(callbacks, "selector").andCallThrough()
+
+      controller.current_flag = "@"
+      $inputor.caretPos(31)
+      # controller.view.show()
+      e = $.Event("keydown.atWho", keyCode: 13)
+      $inputor.trigger("keyup.atWho").trigger(e)
+
+      expect(callbacks.selector).toHaveBeenCalled()
+      # FIXME: it work but, the $inputor fixture have be reset back.
+      # expect(controller.$inputor).toHaveText(/Jacob/)
 
   describe "Mirror", ->
     it "TODO", ->

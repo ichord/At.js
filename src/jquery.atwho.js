@@ -164,14 +164,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
 
     Controller.prototype.listen = function() {
       var _this = this;
-      return this.$inputor.on("keyup.atWho", function(e) {
-        var can_lookup, stop;
-        stop = e.keyCode === KEY_CODE.DOWN || e.keyCode === KEY_CODE.UP;
-        can_lookup = !(stop && _this.view.visible());
-        if (can_lookup) {
-          return _this.look_up();
-        }
-      }).on('keyup.atWho', function(e) {
+      return this.$inputor.on('keyup.atWho', function(e) {
         return _this.on_keyup(e);
       }).on('keydown.atWho', function(e) {
         return _this.on_keydown(e);
@@ -303,17 +296,19 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     };
 
     Controller.prototype.on_keyup = function(e) {
-      if (!this.view.visible()) {
-        return;
-      }
       switch (e.keyCode) {
         case KEY_CODE.ESC:
           e.preventDefault();
-          return this.view.hide();
-        default:
+          this.view.hide();
+          break;
+        case KEY_CODE.DOWN:
+        case KEY_CODE.UP:
           $.noop();
-          return e.stopPropagation();
+          break;
+        default:
+          this.look_up();
       }
+      return e.stopPropagation();
     };
 
     Controller.prototype.on_keydown = function(e) {

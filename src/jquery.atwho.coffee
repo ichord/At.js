@@ -196,10 +196,6 @@
     # 绑定对输入框的各种监听事件
     listen: ->
       @$inputor
-        .on "keyup.atWho", (e) =>
-          stop = e.keyCode is KEY_CODE.DOWN or e.keyCode is KEY_CODE.UP
-          can_lookup = not (stop and @view.visible())
-          this.look_up() if can_lookup
         .on 'keyup.atWho', (e) =>
           this.on_keyup(e)
         .on 'keydown.atWho', (e) =>
@@ -342,14 +338,15 @@
       $inputor.change()
 
     on_keyup: (e) ->
-      return unless @view.visible()
       switch e.keyCode
         when KEY_CODE.ESC
           e.preventDefault()
           @view.hide()
-        else
+        when KEY_CODE.DOWN, KEY_CODE.UP
           $.noop()
-          e.stopPropagation()
+        else
+          this.look_up()
+      e.stopPropagation()
 
     on_keydown: (e) ->
       return if not @view.visible()
