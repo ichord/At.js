@@ -75,6 +75,18 @@
   # @mixin
   DEFAULT_CALLBACKS =
 
+    # 用于插件最开始时对设置的数据进行重构.
+    # 默认情况下将数组组织成Hash形式.
+    #
+    # @param data [Array] 开发者自己在配置中设置的数据列表
+    #
+    # @return [Array] 重构后的数据列表
+    data_refactor: (data) ->
+      $.map data, (item, k) ->
+        if not $.isPlainObject item
+          item = {name:item}
+        return item
+
     # 匹配当前标记后面字符的匹配规则
     #
     # @param flag [String] 当前标记 ("@", etc)
@@ -88,6 +100,8 @@
       if match
         matched = if match[2] then match[2] else match[1]
       matched
+
+    # ---------------------
 
     # 根据匹配的的字符串搜索数据
     #
@@ -111,16 +125,6 @@
         names = $.parseJSON(data)
         render_view(names)
 
-    # 重构数据结构, 以便于渲染模板
-    #
-    # @param data [Array] 开发者自己在配置中设置的数据列表
-    #
-    # @return [Array] 重构后的数据列表
-    data_refactor: (data) ->
-      $.map data, (item, k) ->
-        if not $.isPlainObject item
-          item = {name:item}
-        return item
 
     # 对重构后的数据进行排序
     #
@@ -130,6 +134,7 @@
     #
     # @return [Array] 排序后的数据列表
     sorter: (query, items, search_key) ->
+      items if !query
       results = []
 
       for item in items
@@ -139,7 +144,7 @@
 
       results.sort (a,b) ->
         a.order - b.order
-      return results
+
 
     # 解析并渲染下拉列表中单个项的模板
     #
@@ -215,13 +220,15 @@
     # @param flag [String] 要监听的字符
     # @param settings [Hash] 配置哈希值
     reg: (flag, settings) ->
-      if not flag
-        console.log settings
+      current_settings = {}
+      current_settings = if not flag
         @common_settings = $.extend {}, @common_settings, settings
       else if not @settings[flag]
         @settings[flag] = $.extend {}, settings
       else
         @settings[flag] = $.extend {}, @settings[flag], settings
+
+      current_settings["data"] = data = this.callbacks("data_refactor").call(this, current_settings["data"])
 
       this
 
@@ -369,8 +376,6 @@
     # @param data [Array] 处理过后的数据列表
     render_view: (data) =>
       search_key = this.get_opt("search_key")
-
-      data = this.callbacks("data_refactor").call(this, data)
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
       data = data.splice(0, this.get_opt('limit'))
 

@@ -66,6 +66,16 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     ENTER: 13
   };
   DEFAULT_CALLBACKS = {
+    data_refactor: function(data) {
+      return $.map(data, function(item, k) {
+        if (!$.isPlainObject(item)) {
+          item = {
+            name: item
+          };
+        }
+        return item;
+      });
+    },
     matcher: function(flag, subtext) {
       var match, matched, regexp;
       regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
@@ -93,18 +103,12 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         return render_view(names);
       });
     },
-    data_refactor: function(data) {
-      return $.map(data, function(item, k) {
-        if (!$.isPlainObject(item)) {
-          item = {
-            name: item
-          };
-        }
-        return item;
-      });
-    },
     sorter: function(query, items, search_key) {
       var item, results, text, _i, _len;
+      if (!query) {
+        items;
+
+      }
       results = [];
       for (_i = 0, _len = items.length; _i < _len; _i++) {
         item = items[_i];
@@ -112,10 +116,9 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         item.order = text.toLowerCase().indexOf(query);
         results.push(item);
       }
-      results.sort(function(a, b) {
+      return results.sort(function(a, b) {
         return a.order - b.order;
       });
-      return results;
     },
     tpl_eval: function(tpl, map) {
       var el;
@@ -179,14 +182,10 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     };
 
     Controller.prototype.reg = function(flag, settings) {
-      if (!flag) {
-        console.log(settings);
-        this.common_settings = $.extend({}, this.common_settings, settings);
-      } else if (!this.settings[flag]) {
-        this.settings[flag] = $.extend({}, settings);
-      } else {
-        this.settings[flag] = $.extend({}, this.settings[flag], settings);
-      }
+      var current_settings, data;
+      current_settings = {};
+      current_settings = !flag ? this.common_settings = $.extend({}, this.common_settings, settings) : !this.settings[flag] ? this.settings[flag] = $.extend({}, settings) : this.settings[flag] = $.extend({}, this.settings[flag], settings);
+      current_settings["data"] = data = this.callbacks("data_refactor").call(this, current_settings["data"]);
       return this;
     };
 
@@ -350,7 +349,6 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     Controller.prototype.render_view = function(data) {
       var search_key;
       search_key = this.get_opt("search_key");
-      data = this.callbacks("data_refactor").call(this, data);
       data = this.callbacks("sorter").call(this, this.query.text, data, search_key);
       data = data.splice(0, this.get_opt('limit'));
       return this.view.render(data);
