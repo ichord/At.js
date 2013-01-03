@@ -97,10 +97,11 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       });
     },
     remote_filter: function(params, url, render_view) {
-      return $.ajax(url, params, function(data) {
-        var names;
-        names = $.parseJSON(data);
-        return render_view(names);
+      return $.ajax(url, {
+        data: params,
+        success: function(data) {
+          return render_view(data);
+        }
       });
     },
     sorter: function(query, items, search_key) {

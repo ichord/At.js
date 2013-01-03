@@ -38,8 +38,22 @@ describe "jquery.atWho", ->
       names = callbacks.filter.call(controller, "jo", fixtures["names"])
       expect(names).toContain("Joshua")
 
-    # it "request data from remote by ajax", ->
-    #   expect(false).toBe(true)
+    it "request data from remote by ajax", ->
+      jasmine.Ajax.useMock()
+
+      render_callback = jasmine.createSpy("render_view")
+      callbacks.remote_filter({}, "/", render_callback)
+
+      request = mostRecentAjaxRequest()
+      # response_data = ["Jacob", "Joshua", "Jayden"]
+      response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
+      request.response
+        status: 200
+        responseText: JSON.stringify(response_data)
+
+      expect(render_callback).toHaveBeenCalled()
+      names = render_callback.mostRecentCall.args[0]
+      expect(names).toContain({"name":'Jacob'})
 
     it "can sort the data", ->
       names = callbacks.data_refactor.call(controller, fixtures["names"])
@@ -61,8 +75,6 @@ describe "jquery.atWho", ->
       expect(highlighted).toBe(result)
 
     # it "can insert the text which be choosed", ->
-
-
 
   describe "Mirror", ->
     it "TODO", ->

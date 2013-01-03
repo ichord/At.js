@@ -121,10 +121,10 @@
     # @param url [String] 开发者自己设置的 url 地址
     # @param render_view [Function] 将数据渲染到下拉列表的回调
     remote_filter: (params, url, render_view) ->
-      $.ajax url, params, (data) ->
-        names = $.parseJSON(data)
-        render_view(names)
-
+      $.ajax url,
+        data: params
+        success: (data) ->
+          render_view(data)
 
     # 对重构后的数据进行排序
     #

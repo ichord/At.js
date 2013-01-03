@@ -5,7 +5,7 @@
     "node": ">= 0.6.0"
   },
   "scripts": {
-    "test": "grunt jasmine_node"
+    "test": "grunt test"
   },
   "devDependencies": {
     "grunt": "~0.3.17",
