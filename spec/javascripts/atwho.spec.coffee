@@ -3,16 +3,22 @@ describe "jquery.atWho", ->
   $inputor = null
   fixtures = null
 
+  trigger_atwho = ->
+    $inputor.data("AtWho").current_flag = "@"
+    $inputor.caretPos(31)
+    e = $.Event("keydown.atWho", keyCode: 13)
+    $inputor.trigger("keyup.atWho").trigger(e)
+
+  it "should be defined", ->
+    expect($.fn.atWho).toBeDefined()
+
   beforeEach ->
     loadFixtures("inputors.html")
     fixtures = loadJSONFixtures("data.json")["data.json"]
     $inputor = $("#inputor").atWho "@",
       data: fixtures["names"]
 
-  it "should be defined", ->
-    expect($.fn.atWho).toBeDefined()
-
-  describe "default callbacks work", ->
+  describe "default callbacks", ->
     callbacks = null
     controller = null
     text = null
@@ -62,7 +68,7 @@ describe "jquery.atWho", ->
       names = callbacks.sorter.call(controller, "e", names, "name")
       expect(names).toContain({ name : 'Ethan', order : 0 })
 
-    it "can evl temple", ->
+    it "can eval temple", ->
       map = {name: "username", nick: "nick_name"}
       tpl = '<li data-value="${name}">${nick}</li>'
       html = '<li data-value="username">nick_name</li>'
@@ -79,16 +85,56 @@ describe "jquery.atWho", ->
     it "can insert the text which be choosed", ->
       spyOn(callbacks, "selector").andCallThrough()
 
-      controller.current_flag = "@"
-      $inputor.caretPos(31)
-      # controller.view.show()
-      e = $.Event("keydown.atWho", keyCode: 13)
-      $inputor.trigger("keyup.atWho").trigger(e)
-
+      trigger_atwho()
       expect(callbacks.selector).toHaveBeenCalled()
       # FIXME: it work but, the $inputor fixture have be reset back.
       # expect(controller.$inputor).toHaveText(/Jacob/)
 
-  describe "Mirror", ->
-    it "TODO", ->
-      expect(true).not.toBe(false)
+  describe "settings", ->
+    controller = null
+    callbacks = null
+    beforeEach ->
+      controller = $inputor.data("AtWho")
+      callbacks = $.fn.atWho.default.callbacks
+
+    it "update common settings", ->
+      $inputor.atWho limit: 8
+      expect(controller.common_settings.limit).toBe(8)
+
+    it "update specific settings", ->
+      $inputor.atWho "@", limit: 3
+      expect(controller.settings["@"].limit).toBe(3)
+
+    it "update callbacks", ->
+      filter = jasmine.createSpy("filter")
+      spyOn(callbacks, "filter")
+      $inputor.atWho "@",
+        callbacks:
+          filter: filter
+
+      trigger_atwho()
+      expect(filter).toHaveBeenCalled()
+      expect(callbacks.filter).not.toHaveBeenCalled()
+
+    it "setting data as url", ->
+      jasmine.Ajax.useMock()
+      spyOn(callbacks, "remote_filter")
+
+      $inputor.atWho "@", data: "/"
+      trigger_atwho()
+
+      mostRecentAjaxRequest().response status: 200
+
+      expect(callbacks.remote_filter).toHaveBeenCalled()
+
+
+  describe "events", ->
+    it "trigger esc", ->
+
+    it "trigger up", ->
+
+    it "trigger down", ->
+
+    it "trigger tab or enter", ->
+
+

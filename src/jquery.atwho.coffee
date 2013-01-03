@@ -172,7 +172,7 @@
     #
     # @param $li [jQuery Object] 选中的列表项目
     selector: ($li) ->
-      @controller.replace_str($li.data("value") || "") if $li.length > 0
+      this.replace_str($li.data("value") || "") if $li.length > 0
 
 
   # At.js 对数据操作(搜索, 匹配, 渲染) 的主控中心
@@ -217,14 +217,18 @@
     # @param settings [Hash] 配置哈希值
     reg: (flag, settings) ->
       current_settings = {}
-      current_settings = if not flag
-        @common_settings = $.extend {}, @common_settings, settings
+      current_settings = if $.isPlainObject(flag)
+        @common_settings = $.extend {}, @common_settings, flag
       else if not @settings[flag]
         @settings[flag] = $.extend {}, settings
       else
         @settings[flag] = $.extend {}, @settings[flag], settings
 
-      current_settings["data"] = data = this.callbacks("data_refactor").call(this, current_settings["data"])
+      data = current_settings["data"]
+      if typeof data == "string"
+        current_settings["data"] = data
+      else if data
+        current_settings["data"] = this.callbacks("data_refactor").call(this, data)
 
       this
 
@@ -385,7 +389,7 @@
 
       origin_data = this.get_opt("data")
       search_key = this.get_opt("search_key")
-      if typeof data is "string"
+      if typeof origin_data is "string"
         params =
           q: query.text
           limit: this.get_opt("limit")
@@ -440,7 +444,7 @@
     # 选择某项的操作
     choose: ->
       $li = @$el.find ".cur"
-      @controller.callbacks("selector").call(this, $li)
+      @controller.callbacks("selector").call(@controller, $li)
       this.hide()
 
     # 重置视图在页面中的位置.
@@ -483,15 +487,14 @@
         this.hide()
         return yes
 
-      # holder.cache(list)
       this.clear()
 
       $ul = @$el.find('ul')
       tpl = @controller.get_opt('tpl', DEFAULT_TPL)
 
       $.each list, (i, item) =>
-        li = @controller.callbacks("tpl_eval").call(this, tpl, item)
-        $ul.append @controller.callbacks("highlighter").call(this, li, @controller.query.text)
+        li = @controller.callbacks("tpl_eval").call(@controller, tpl, item)
+        $ul.append @controller.callbacks("highlighter").call(@controller, li, @controller.query.text)
 
       this.show()
       $ul.find("li:eq(0)").addClass "cur"
@@ -514,7 +517,6 @@
       data: null
       search_key: "name"
       callbacks: DEFAULT_CALLBACKS
-      cache: yes
       limit: 5
       display_flag: yes
       display_timeout: 300
