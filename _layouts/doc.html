@@ -31,7 +31,7 @@
             <h1><a href="index.html" style="color:black;">At.js</a> <small>Documentation {% include version.html %}</small></h1>
             <div class="subnav">
                 <ul class="nav nav-pills">
-                    {% for post in site.posts %}
+                    {% for post in site.posts reversed %}
                         {%if forloop.first %}
                             <li class="active"><a href="#{{post.section_id}}">{{post.title}}</a></li>
                         {% else %}

@@ -1,2 +1,5 @@
 *.swp
 _site
+_*
+node_modules
+spec

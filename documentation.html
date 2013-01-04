@@ -3,7 +3,7 @@ layout: doc
 title: Documentation - At.js
 ---
 
-{% for post in site.posts %}
+{% for post in site.posts reversed %}
  <section id="{{post.section_id}}">
     <div class="page-header">
         <h2>{{post.title}} <small>{{post.sub_title}}</small></h2>

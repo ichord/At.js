@@ -14,10 +14,8 @@ Hi, type `@` for a try!
 <textarea></textarea>
 Actually it's not just a mention, there are more waiting for you! **Type** `:` and have fun!
 
-It is just designed to do the twitter-like mention job, however you can do whatever you want! 
+It is just designed to do the **Github-like mention job**, however you can do whatever you want! 
 For example, **Type** `:` to complete emoji as I mentioned above.
-
-**The only limitation is your imagination.**
 
 
 ## Support Browsers
