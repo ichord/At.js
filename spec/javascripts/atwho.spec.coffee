@@ -3,10 +3,17 @@ describe "jquery.atWho", ->
   $inputor = null
   fixtures = null
 
+  KEY_CODE =
+    DOWN: 40
+    UP: 38
+    ESC: 27
+    TAB: 9
+    ENTER: 13
+
   trigger_atwho = ->
     $inputor.data("AtWho").current_flag = "@"
     $inputor.caretPos(31)
-    e = $.Event("keydown.atWho", keyCode: 13)
+    e = $.Event("keydown.atWho", keyCode: KEY_CODE.ENTER)
     $inputor.trigger("keyup.atWho").trigger(e)
 
   it "should be defined", ->
@@ -129,12 +136,41 @@ describe "jquery.atWho", ->
 
 
   describe "events", ->
+    controller = null
+    callbacks = null
+    beforeEach ->
+      controller = $inputor.data("AtWho")
+      callbacks = $.fn.atWho.default.callbacks
+      $inputor.data("AtWho").current_flag = "@"
+      $inputor.caretPos(31)
+      $inputor.trigger("keyup.atWho")
+
     it "trigger esc", ->
+      esc_event = $.Event("keyup.atWho", keyCode: KEY_CODE.ESC)
+      $inputor.trigger(esc_event)
+      expect(controller.view.visible()).toBe(false)
+
+    it "trigger tab", ->
+      spyOn(callbacks, "selector").andCallThrough()
+      tab_event = $.Event("keydown.atWho", keyCode: KEY_CODE.TAB)
+      $inputor.trigger(tab_event)
+      expect(controller.view.visible()).toBe(false)
+      expect(callbacks.selector).toHaveBeenCalled()
+
+    it "trigger enter", ->
+      spyOn(callbacks, "selector").andCallThrough()
+      enter_event = $.Event("keydown.atWho", keyCode: KEY_CODE.ENTER)
+      $inputor.trigger(enter_event)
+      expect(callbacks.selector).toHaveBeenCalled()
 
     it "trigger up", ->
+      spyOn(controller.view, "prev").andCallThrough()
+      up_event = $.Event("keydown.atWho", keyCode: KEY_CODE.UP)
+      $inputor.trigger(up_event)
+      expect(controller.view.prev).toHaveBeenCalled()
 
     it "trigger down", ->
-
-    it "trigger tab or enter", ->
-
-
+      spyOn(controller.view, "next").andCallThrough()
+      down_event = $.Event("keydown.atWho", keyCode: KEY_CODE.DOWN)
+      $inputor.trigger(down_event)
+      expect(controller.view.next).toHaveBeenCalled()

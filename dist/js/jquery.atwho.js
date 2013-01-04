@@ -141,7 +141,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     },
     selector: function($li) {
       if ($li.length > 0) {
-        return this.controller.replace_str($li.data("value") || "");
+        return this.replace_str($li.data("value") || "");
       }
     }
   };
@@ -178,8 +178,13 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     Controller.prototype.reg = function(flag, settings) {
       var current_settings, data;
       current_settings = {};
-      current_settings = !flag ? this.common_settings = $.extend({}, this.common_settings, settings) : !this.settings[flag] ? this.settings[flag] = $.extend({}, settings) : this.settings[flag] = $.extend({}, this.settings[flag], settings);
-      current_settings["data"] = data = this.callbacks("data_refactor").call(this, current_settings["data"]);
+      current_settings = $.isPlainObject(flag) ? this.common_settings = $.extend({}, this.common_settings, flag) : !this.settings[flag] ? this.settings[flag] = $.extend({}, settings) : this.settings[flag] = $.extend({}, this.settings[flag], settings);
+      data = current_settings["data"];
+      if (typeof data === "string") {
+        current_settings["data"] = data;
+      } else if (data) {
+        current_settings["data"] = this.callbacks("data_refactor").call(this, data);
+      }
       return this;
     };
 
@@ -358,7 +363,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       }
       origin_data = this.get_opt("data");
       search_key = this.get_opt("search_key");
-      if (typeof data === "string") {
+      if (typeof origin_data === "string") {
         params = {
           q: query.text,
           limit: this.get_opt("limit")
@@ -416,7 +421,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     View.prototype.choose = function() {
       var $li;
       $li = this.$el.find(".cur");
-      this.controller.callbacks("selector").call(this, $li);
+      this.controller.callbacks("selector").call(this.controller, $li);
       return this.hide();
     };
 
@@ -494,8 +499,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       tpl = this.controller.get_opt('tpl', DEFAULT_TPL);
       $.each(list, function(i, item) {
         var li;
-        li = _this.controller.callbacks("tpl_eval").call(_this, tpl, item);
-        return $ul.append(_this.controller.callbacks("highlighter").call(_this, li, _this.controller.query.text));
+        li = _this.controller.callbacks("tpl_eval").call(_this.controller, tpl, item);
+        return $ul.append(_this.controller.callbacks("highlighter").call(_this.controller, li, _this.controller.query.text));
       });
       this.show();
       return $ul.find("li:eq(0)").addClass("cur");
@@ -523,7 +528,6 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     data: null,
     search_key: "name",
     callbacks: DEFAULT_CALLBACKS,
-    cache: true,
     limit: 5,
     display_flag: true,
     display_timeout: 300,
