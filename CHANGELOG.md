@@ -47,6 +47,9 @@
 * `-` tpl: _DEFAULT_TPL
 * `+` tpl: DEFAULT_TPL
 
+新版本暂时去掉了缓存功能.
+* `-` cache: false
+
 以下参数没有变化
 
 *     cache: true,

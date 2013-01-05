@@ -44,3 +44,12 @@ http://ichord.github.com/At.js
 ### Documentation
 
 http://ichord.github.com/At.js/documentation.html
+
+
+### Core Team Members
+
+* [@ichord](https://github.com/ichord)
+
+
+---
+Project is a member of the [OSS Manifesto](http://ossmanifesto.org/).
