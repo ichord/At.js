@@ -5,7 +5,10 @@
     "node": ">= 0.6.0"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test --verbose"
+  },
+  "dependencies": {
+    "jQuery": "~1.7.0"
   },
   "devDependencies": {
     "grunt": "~0.3.17",
