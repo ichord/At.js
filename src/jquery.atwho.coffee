@@ -71,8 +71,16 @@
     TAB: 9
     ENTER: 13
 
-
+  # Controller 用于处理渲染数据的一组方法.
+  #为了方便开发者可以自定义插件的部分功能而独立出来.
+  #
   # @mixin
+  #
+  # 以下所有方法的调用上下文都是 Controller. 并且按照文档显示的顺序调用
+  #
+  # 也就是这个顺序 [data_refactor, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
+  #
+  # 以默认配置的方式 Mixin 到 Controller 里.
   DEFAULT_CALLBACKS =
 
     # 用于插件最开始时对设置的数据进行重构.
@@ -87,7 +95,7 @@
           item = {name:item}
         return item
 
-    # 匹配当前标记后面字符的匹配规则
+    # 匹配当前标记后面字符串的匹配规则
     #
     # @param flag [String] 当前标记 ("@", etc)
     # @param subtext [String] 输入框从开始到插入符号前的字符串

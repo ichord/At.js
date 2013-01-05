@@ -4,7 +4,7 @@
 --private
 --quiet
 --output-dir ./doc
-./coffee
+./src
 -
 LICENSE
 CHANGELOG.md
