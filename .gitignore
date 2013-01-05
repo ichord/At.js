@@ -1,5 +1,5 @@
 *.swp
 doc/
 node_modules/
-spec/**/*.js
+spec/javascripts/*.js
 _*
