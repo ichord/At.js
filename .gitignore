@@ -1,5 +1,5 @@
 *.swp
 _site
-_*
+_SpecRunner.html
 node_modules
 spec
