@@ -1,5 +1,5 @@
 
-**Add Github like mentions autocomplete to your application.** [![Build Status](https://travis-ci.org/ichord/At.js.png?branch=master)](https://travis-ci.org/ichord/At.js)
+**Add Github like mentions autocomplete to your application.** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
 
 Let me know you are using it. So I will work harder on it, Thanks. :smile:
 
