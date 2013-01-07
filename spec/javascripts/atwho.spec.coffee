@@ -135,7 +135,7 @@ describe "jquery.atwho", ->
       expect(callbacks.remote_filter).toHaveBeenCalled()
 
 
-  describe "events", ->
+  describe "jquery events", ->
     controller = null
     callbacks = null
     beforeEach ->

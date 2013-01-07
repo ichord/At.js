@@ -247,6 +247,10 @@
 
       this
 
+    trigger: (name, data) ->
+      data.push this
+      @$inputor.trigger name, data
+
     # At.js 允许开发者自定义控制器使用的一些功能函数
     #
     # @param func_name [String] 回调的函数名
@@ -337,6 +341,7 @@
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+        this.trigger "matched.atwho", [@current_flag, query]
       else
         @view.hide()
 
@@ -460,6 +465,7 @@
     choose: ->
       $li = @$el.find ".cur"
       @controller.callbacks("selector").call(@controller, $li)
+      @controller.trigger "choose.atwho", [$li]
       this.hide()
 
     # 重置视图在页面中的位置.
@@ -467,19 +473,23 @@
       rect = @controller.rect()
       if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
           rect.bottom = rect.top - @$el.height()
-      @$el.offset {left:rect.left, top:rect.bottom}
+      offset = {left:rect.left, top:rect.bottom}
+      @$el.offset offset
+      @controller.trigger "reposition.atwho", [offset]
 
     next: ->
       cur = @$el.find('.cur').removeClass('cur')
       next = cur.next()
       next = $(@$el.find('li')[0]) if not next.length
       next.addClass 'cur'
+      @controller.trigger "next.atwho", [cur]
 
     prev: ->
       cur = @$el.find('.cur').removeClass('cur')
       prev = cur.prev()
       prev = @$el.find('li').last() if not prev.length
       prev.addClass('cur')
+      @controller.trigger "prev.atwho", [cur]
 
     show: ->
       @$el.show() if not this.visible()
@@ -489,9 +499,12 @@
       if isNaN time
         @$el.hide() if this.visible()
       else
-        callback = => this.hide()
+        time ||= 300
+        callback = =>
+          this.hide()
+          @controller.trigger "hide.atwho", [time, @controller]
         clearTimeout @timeout_id
-        @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", 300)
+        @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", time)
 
     clear: ->
       @$el.find('ul').empty()
@@ -510,7 +523,9 @@
 
       $.each list, (i, item) =>
         li = @controller.callbacks("tpl_eval").call(@controller, tpl, item)
-        $ul.append @controller.callbacks("highlighter").call(@controller, li, @controller.query.text)
+        $li = $ @controller.callbacks("highlighter").call(@controller, li, @controller.query.text)
+        $li.data("info", item)
+        $ul.append $li
 
       this.show()
       $ul.find("li:eq(0)").addClass "cur"

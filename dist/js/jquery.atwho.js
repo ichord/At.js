@@ -194,6 +194,11 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return this;
     };
 
+    Controller.prototype.trigger = function(name, data) {
+      data.push(this);
+      return this.$inputor.trigger(name, data);
+    };
+
     Controller.prototype.callbacks = function(func_name) {
       var func;
       if (!(func = this.get_opt("callbacks", {})[func_name])) {
@@ -288,6 +293,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           'head_pos': start,
           'end_pos': end
         };
+        this.trigger("matched.atwho", [this.current_flag, query]);
       } else {
         this.view.hide();
       }
@@ -428,19 +434,22 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       var $li;
       $li = this.$el.find(".cur");
       this.controller.callbacks("selector").call(this.controller, $li);
+      this.controller.trigger("choose.atwho", [$li]);
       return this.hide();
     };
 
     View.prototype.reposition = function() {
-      var rect;
+      var offset, rect;
       rect = this.controller.rect();
       if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
         rect.bottom = rect.top - this.$el.height();
       }
-      return this.$el.offset({
+      offset = {
         left: rect.left,
         top: rect.bottom
-      });
+      };
+      this.$el.offset(offset);
+      return this.controller.trigger("reposition.atwho", [offset]);
     };
 
     View.prototype.next = function() {
@@ -450,7 +459,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       if (!next.length) {
         next = $(this.$el.find('li')[0]);
       }
-      return next.addClass('cur');
+      next.addClass('cur');
+      return this.controller.trigger("next.atwho", [cur]);
     };
 
     View.prototype.prev = function() {
@@ -460,7 +470,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       if (!prev.length) {
         prev = this.$el.find('li').last();
       }
-      return prev.addClass('cur');
+      prev.addClass('cur');
+      return this.controller.trigger("prev.atwho", [cur]);
     };
 
     View.prototype.show = function() {
@@ -478,11 +489,13 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           return this.$el.hide();
         }
       } else {
+        time || (time = 300);
         callback = function() {
-          return _this.hide();
+          _this.hide();
+          return _this.controller.trigger("hide.atwho", [time, _this.controller]);
         };
         clearTimeout(this.timeout_id);
-        return this.timeout_id = setTimeout(callback, this.controller.get_opt("display_timeout", 300));
+        return this.timeout_id = setTimeout(callback, this.controller.get_opt("display_timeout", time));
       }
     };
 
@@ -504,9 +517,11 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       $ul = this.$el.find('ul');
       tpl = this.controller.get_opt('tpl', DEFAULT_TPL);
       $.each(list, function(i, item) {
-        var li;
+        var $li, li;
         li = _this.controller.callbacks("tpl_eval").call(_this.controller, tpl, item);
-        return $ul.append(_this.controller.callbacks("highlighter").call(_this.controller, li, _this.controller.query.text));
+        $li = $(_this.controller.callbacks("highlighter").call(_this.controller, li, _this.controller.query.text));
+        $li.data("info", item);
+        return $ul.append($li);
       });
       this.show();
       return $ul.find("li:eq(0)").addClass("cur");
