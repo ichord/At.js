@@ -8,7 +8,13 @@
 
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-(function($) {
+(function(factory) {
+  if (typeof define === 'function' && define.amd) {
+    return define(['jquery']);
+  } else {
+    return factory(window.jQuery);
+  }
+})(function($) {
   var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
   Mirror = (function() {
 
@@ -157,20 +163,20 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       this.query = null;
       this.$inputor = $(inputor);
       this.mirror = new Mirror(this.$inputor);
-      this.common_settings = $.extend({}, $.fn.atWho["default"]);
+      this.common_settings = $.extend({}, $.fn.atwho["default"]);
       this.view = new View(this, this.$el);
       this.listen();
     }
 
     Controller.prototype.listen = function() {
       var _this = this;
-      return this.$inputor.on('keyup.atWho', function(e) {
+      return this.$inputor.on('keyup.atwho', function(e) {
         return _this.on_keyup(e);
-      }).on('keydown.atWho', function(e) {
+      }).on('keydown.atwho', function(e) {
         return _this.on_keydown(e);
-      }).on('scroll.atWho', function(e) {
+      }).on('scroll.atwho', function(e) {
         return _this.view.hide();
-      }).on('blur.atWho', function(e) {
+      }).on('blur.atwho', function(e) {
         return _this.view.hide(1000);
       });
     };
@@ -510,7 +516,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
 
   })();
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
-  $.fn.atWho = function(flag, options) {
+  $.fn.atwho = function(flag, options) {
     return this.filter('textarea, input').each(function() {
       var $this, data;
       $this = $(this);
@@ -521,10 +527,10 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return data.reg(flag, options);
     });
   };
-  $.fn.atWho.Controller = Controller;
-  $.fn.atWho.View = View;
-  $.fn.atWho.Mirror = Mirror;
-  return $.fn.atWho["default"] = {
+  $.fn.atwho.Controller = Controller;
+  $.fn.atwho.View = View;
+  $.fn.atwho.Mirror = Mirror;
+  return $.fn.atwho["default"] = {
     data: null,
     search_key: "name",
     callbacks: DEFAULT_CALLBACKS,
@@ -533,7 +539,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     display_timeout: 300,
     tpl: DEFAULT_TPL
   };
-})(window.jQuery);
+});
 
 /*
   Implement Github like autocomplete mentions
@@ -549,7 +555,13 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
 插入符的位置.
 */
 
-(function($) {
+(function(factory) {
+  if (typeof define === 'function' && define.amd) {
+    return define(['jquery']);
+  } else {
+    return factory(window.jQuery);
+  }
+})(function($) {
   var getCaretPos, setCaretPos;
   getCaretPos = function(inputor) {
     var end, endRange, len, normalizedValue, pos, range, start, textInputRange;
@@ -647,4 +659,4 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return getCaretPos(inputor);
     }
   };
-})(window.jQuery);
+});

@@ -12,7 +12,13 @@
 插入符的位置.
 */
 
-(function($) {
+(function(factory) {
+  if (typeof define === 'function' && define.amd) {
+    return define(['jquery']);
+  } else {
+    return factory(window.jQuery);
+  }
+})(function($) {
   var getCaretPos, setCaretPos;
   getCaretPos = function(inputor) {
     var end, endRange, len, normalizedValue, pos, range, start, textInputRange;
@@ -110,4 +116,4 @@
       return getCaretPos(inputor);
     }
   };
-})(window.jQuery);
+});

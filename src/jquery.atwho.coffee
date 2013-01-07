@@ -6,7 +6,14 @@
   Licensed under the MIT license.
 ###
 
-(($) ->
+( (factory) ->
+  if typeof define is 'function' and define.amd
+    # Register as an anonymous AMD module:
+    define ['jquery']
+  else
+    # Browser globals
+    factory window.jQuery
+) ($) ->
 
   # At.js 使用这个类克隆输入框, 插入标记后获得该标记的位置.
   #
@@ -197,20 +204,20 @@
 
       @$inputor = $(inputor)
       @mirror = new Mirror(@$inputor)
-      @common_settings = $.extend {}, $.fn.atWho.default
+      @common_settings = $.extend {}, $.fn.atwho.default
       @view = new View(this, @$el)
       this.listen()
 
     # 绑定对输入框的各种监听事件
     listen: ->
       @$inputor
-        .on 'keyup.atWho', (e) =>
+        .on 'keyup.atwho', (e) =>
           this.on_keyup(e)
-        .on 'keydown.atWho', (e) =>
+        .on 'keydown.atwho', (e) =>
           this.on_keydown(e)
-        .on 'scroll.atWho', (e) =>
+        .on 'scroll.atwho', (e) =>
           @view.hide()
-        .on 'blur.atWho', (e) =>
+        .on 'blur.atwho', (e) =>
           @view.hide(1000)
 
     # At.js 可以对每个输入框绑定不同的监听标记. 比如同时监听 "@", ":" 字符
@@ -511,7 +518,7 @@
 
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
-  $.fn.atWho = (flag, options) ->
+  $.fn.atwho = (flag, options) ->
     @.filter('textarea, input').each () ->
       $this = $(this)
       data = $this.data "AtWho"
@@ -519,10 +526,10 @@
       $this.data 'AtWho', (data = new Controller(this)) if not data
       data.reg flag, options
 
-  $.fn.atWho.Controller = Controller
-  $.fn.atWho.View = View
-  $.fn.atWho.Mirror = Mirror
-  $.fn.atWho.default =
+  $.fn.atwho.Controller = Controller
+  $.fn.atwho.View = View
+  $.fn.atwho.Mirror = Mirror
+  $.fn.atwho.default =
       data: null
       search_key: "name"
       callbacks: DEFAULT_CALLBACKS
@@ -530,5 +537,3 @@
       display_flag: yes
       display_timeout: 300
       tpl: DEFAULT_TPL
-
-)(window.jQuery)

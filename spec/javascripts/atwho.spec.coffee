@@ -1,4 +1,4 @@
-describe "jquery.atWho", ->
+describe "jquery.atwho", ->
 
   $inputor = null
   fixtures = null
@@ -13,16 +13,16 @@ describe "jquery.atWho", ->
   trigger_atwho = ->
     $inputor.data("AtWho").current_flag = "@"
     $inputor.caretPos(31)
-    e = $.Event("keydown.atWho", keyCode: KEY_CODE.ENTER)
-    $inputor.trigger("keyup.atWho").trigger(e)
+    e = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
+    $inputor.trigger("keyup.atwho").trigger(e)
 
   it "should be defined", ->
-    expect($.fn.atWho).toBeDefined()
+    expect($.fn.atwho).toBeDefined()
 
   beforeEach ->
     loadFixtures("inputors.html")
     fixtures = loadJSONFixtures("data.json")["data.json"]
-    $inputor = $("#inputor").atWho "@",
+    $inputor = $("#inputor").atwho "@",
       data: fixtures["names"]
 
   describe "default callbacks", ->
@@ -32,7 +32,7 @@ describe "jquery.atWho", ->
 
     beforeEach ->
       text = $.trim $inputor.text()
-      callbacks = $.fn.atWho.default.callbacks
+      callbacks = $.fn.atwho.default.callbacks
       controller = $inputor.data("AtWho")
 
     it "refactor the data", ->
@@ -102,20 +102,20 @@ describe "jquery.atWho", ->
     callbacks = null
     beforeEach ->
       controller = $inputor.data("AtWho")
-      callbacks = $.fn.atWho.default.callbacks
+      callbacks = $.fn.atwho.default.callbacks
 
     it "update common settings", ->
-      $inputor.atWho limit: 8
+      $inputor.atwho limit: 8
       expect(controller.common_settings.limit).toBe(8)
 
     it "update specific settings", ->
-      $inputor.atWho "@", limit: 3
+      $inputor.atwho "@", limit: 3
       expect(controller.settings["@"].limit).toBe(3)
 
     it "update callbacks", ->
       filter = jasmine.createSpy("filter")
       spyOn(callbacks, "filter")
-      $inputor.atWho "@",
+      $inputor.atwho "@",
         callbacks:
           filter: filter
 
@@ -127,7 +127,7 @@ describe "jquery.atWho", ->
       jasmine.Ajax.useMock()
       spyOn(callbacks, "remote_filter")
 
-      $inputor.atWho "@", data: "/"
+      $inputor.atwho "@", data: "/"
       trigger_atwho()
 
       mostRecentAjaxRequest().response status: 200
@@ -140,37 +140,37 @@ describe "jquery.atWho", ->
     callbacks = null
     beforeEach ->
       controller = $inputor.data("AtWho")
-      callbacks = $.fn.atWho.default.callbacks
+      callbacks = $.fn.atwho.default.callbacks
       $inputor.data("AtWho").current_flag = "@"
       $inputor.caretPos(31)
-      $inputor.trigger("keyup.atWho")
+      $inputor.trigger("keyup.atwho")
 
     it "trigger esc", ->
-      esc_event = $.Event("keyup.atWho", keyCode: KEY_CODE.ESC)
+      esc_event = $.Event("keyup.atwho", keyCode: KEY_CODE.ESC)
       $inputor.trigger(esc_event)
       expect(controller.view.visible()).toBe(false)
 
     it "trigger tab", ->
       spyOn(callbacks, "selector").andCallThrough()
-      tab_event = $.Event("keydown.atWho", keyCode: KEY_CODE.TAB)
+      tab_event = $.Event("keydown.atwho", keyCode: KEY_CODE.TAB)
       $inputor.trigger(tab_event)
       expect(controller.view.visible()).toBe(false)
       expect(callbacks.selector).toHaveBeenCalled()
 
     it "trigger enter", ->
       spyOn(callbacks, "selector").andCallThrough()
-      enter_event = $.Event("keydown.atWho", keyCode: KEY_CODE.ENTER)
+      enter_event = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
       $inputor.trigger(enter_event)
       expect(callbacks.selector).toHaveBeenCalled()
 
     it "trigger up", ->
       spyOn(controller.view, "prev").andCallThrough()
-      up_event = $.Event("keydown.atWho", keyCode: KEY_CODE.UP)
+      up_event = $.Event("keydown.atwho", keyCode: KEY_CODE.UP)
       $inputor.trigger(up_event)
       expect(controller.view.prev).toHaveBeenCalled()
 
     it "trigger down", ->
       spyOn(controller.view, "next").andCallThrough()
-      down_event = $.Event("keydown.atWho", keyCode: KEY_CODE.DOWN)
+      down_event = $.Event("keydown.atwho", keyCode: KEY_CODE.DOWN)
       $inputor.trigger(down_event)
       expect(controller.view.next).toHaveBeenCalled()

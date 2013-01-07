@@ -11,7 +11,14 @@
 只实现了获得插入符在文本框中的位置，我设置
 插入符的位置.
 ###
-(($) ->
+( (factory) ->
+  if typeof define is 'function' and define.amd
+    # Register as an anonymous AMD module:
+    define ['jquery']
+  else
+    # Browser globals
+    factory window.jQuery
+) ($) ->
     getCaretPos = (inputor) ->
       if document.selection #IE
         # reference: http://tinyurl.com/86pyc4s
@@ -98,5 +105,3 @@
         setCaretPos(inputor, pos)
       else
         getCaretPos(inputor)
-
-)(window.jQuery)
