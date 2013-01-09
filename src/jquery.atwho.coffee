@@ -402,7 +402,7 @@
           q: query.text
           limit: this.get_opt("limit")
         # $.proxy(this.render_view, this)
-        this.callbacks('remote_filter').call(this, params, this.render_view)
+        this.callbacks('remote_filter').call(this, params, origin_data,this.render_view)
       else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
           this.render_view data
       else
