@@ -197,8 +197,9 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     };
 
     Controller.prototype.trigger = function(name, data) {
+      data || (data = []);
       data.push(this);
-      return this.$inputor.trigger(name, data);
+      return this.$inputor.trigger("" + name + ".atwho", data);
     };
 
     Controller.prototype.data = function() {
@@ -299,7 +300,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           'head_pos': start,
           'end_pos': end
         };
-        this.trigger("matched.atwho", [this.current_flag, query]);
+        this.trigger("matched", [this.current_flag, query]);
       } else {
         this.view.hide();
       }
@@ -374,7 +375,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     };
 
     Controller.prototype.look_up = function() {
-      var data, origin_data, params, query, search_key, url;
+      var data, origin_data, params, query, search_key;
       query = this.catch_query();
       if (!query) {
         return false;
@@ -386,8 +387,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           q: query.text,
           limit: this.get_opt("limit")
         };
-        url = this.data();
-        this.callbacks('remote_filter').call(this, params, url, this.render_view);
+        this.callbacks('remote_filter').call(this, params, origin_data, this.render_view);
       } else if ((data = this.callbacks('filter').call(this, query.text, origin_data, search_key))) {
         this.render_view(data);
       } else {
@@ -425,7 +425,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       }).on('click', function(e) {
         e.stopPropagation();
         e.preventDefault();
-        return _this.choose();
+        return _this.$el.data("_view").choose();
       });
     };
 
@@ -441,7 +441,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       var $li;
       $li = this.$el.find(".cur");
       this.controller.callbacks("selector").call(this.controller, $li);
-      this.controller.trigger("choose.atwho", [$li]);
+      this.controller.trigger("choose", [$li]);
       return this.hide();
     };
 
@@ -456,7 +456,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         top: rect.bottom
       };
       this.$el.offset(offset);
-      return this.controller.trigger("reposition.atwho", [offset]);
+      return this.controller.trigger("reposition", [offset]);
     };
 
     View.prototype.next = function() {
@@ -466,8 +466,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       if (!next.length) {
         next = $(this.$el.find('li')[0]);
       }
-      next.addClass('cur');
-      return this.controller.trigger("next.atwho", [cur]);
+      return next.addClass('cur');
     };
 
     View.prototype.prev = function() {
@@ -477,8 +476,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       if (!prev.length) {
         prev = this.$el.find('li').last();
       }
-      prev.addClass('cur');
-      return this.controller.trigger("prev.atwho", [cur]);
+      return prev.addClass('cur');
     };
 
     View.prototype.show = function() {
@@ -499,7 +497,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         time || (time = 300);
         callback = function() {
           _this.hide();
-          return _this.controller.trigger("hide.atwho", [time, _this.controller]);
+          return _this.controller.trigger("hide", [time, _this.controller]);
         };
         clearTimeout(this.timeout_id);
         return this.timeout_id = setTimeout(callback, this.controller.get_opt("display_timeout", time));
@@ -521,6 +519,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
         return true;
       }
       this.clear();
+      this.$el.data("_view", this);
       $ul = this.$el.find('ul');
       tpl = this.controller.get_opt('tpl', DEFAULT_TPL);
       $.each(list, function(i, item) {

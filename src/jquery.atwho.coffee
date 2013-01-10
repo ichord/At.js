@@ -251,8 +251,9 @@
       this
 
     trigger: (name, data) ->
+      data ||= []
       data.push this
-      @$inputor.trigger name, data
+      @$inputor.trigger "#{name}.atwho", data
 
     data: ->
       this.get_opt("data")
@@ -347,7 +348,7 @@
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
-        this.trigger "matched.atwho", [@current_flag, query]
+        this.trigger "matched", [@current_flag, query]
       else
         @view.hide()
 
@@ -470,7 +471,7 @@
     choose: ->
       $li = @$el.find ".cur"
       @controller.callbacks("selector").call(@controller, $li)
-      @controller.trigger "choose.atwho", [$li]
+      @controller.trigger "choose", [$li]
       this.hide()
 
     # 重置视图在页面中的位置.
@@ -480,21 +481,19 @@
           rect.bottom = rect.top - @$el.height()
       offset = {left:rect.left, top:rect.bottom}
       @$el.offset offset
-      @controller.trigger "reposition.atwho", [offset]
+      @controller.trigger "reposition", [offset]
 
     next: ->
       cur = @$el.find('.cur').removeClass('cur')
       next = cur.next()
       next = $(@$el.find('li')[0]) if not next.length
       next.addClass 'cur'
-      @controller.trigger "next.atwho", [cur]
 
     prev: ->
       cur = @$el.find('.cur').removeClass('cur')
       prev = cur.prev()
       prev = @$el.find('li').last() if not prev.length
       prev.addClass('cur')
-      @controller.trigger "prev.atwho", [cur]
 
     show: ->
       @$el.show() if not this.visible()
@@ -507,7 +506,7 @@
         time ||= 300
         callback = =>
           this.hide()
-          @controller.trigger "hide.atwho", [time, @controller]
+          @controller.trigger "hide", [time, @controller]
         clearTimeout @timeout_id
         @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", time)
 
