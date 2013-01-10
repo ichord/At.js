@@ -13,7 +13,9 @@
 */
 
 (function(factory) {
-  if (typeof define === 'function' && define.amd) {
+  if (typeof exports === 'object') {
+    return factory(require('jquery'));
+  } else if (typeof define === 'function' && define.amd) {
     return define(['jquery']);
   } else {
     return factory(window.jQuery);

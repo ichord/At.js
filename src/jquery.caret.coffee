@@ -12,7 +12,10 @@
 插入符的位置.
 ###
 ( (factory) ->
-  if typeof define is 'function' and define.amd
+  if typeof exports is 'object'
+    # Node/CommonJS
+    factory require('jquery')
+  else if typeof define is 'function' and define.amd
     # Register as an anonymous AMD module:
     define ['jquery']
   else

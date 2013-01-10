@@ -9,7 +9,9 @@
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 (function(factory) {
-  if (typeof define === 'function' && define.amd) {
+  if (typeof exports === 'object') {
+    return factory(require('jquery'));
+  } else if (typeof define === 'function' && define.amd) {
     return define(['jquery']);
   } else {
     return factory(window.jQuery);
@@ -199,6 +201,10 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       return this.$inputor.trigger(name, data);
     };
 
+    Controller.prototype.data = function() {
+      return this.get_opt("data");
+    };
+
     Controller.prototype.callbacks = function(func_name) {
       var func;
       if (!(func = this.get_opt("callbacks", {})[func_name])) {
@@ -368,7 +374,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     };
 
     Controller.prototype.look_up = function() {
-      var data, origin_data, params, query, search_key;
+      var data, origin_data, params, query, search_key, url;
       query = this.catch_query();
       if (!query) {
         return false;
@@ -380,7 +386,8 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           q: query.text,
           limit: this.get_opt("limit")
         };
-        this.callbacks('remote_filter').call(this, params, this.render_view);
+        url = this.data();
+        this.callbacks('remote_filter').call(this, params, url, this.render_view);
       } else if ((data = this.callbacks('filter').call(this, query.text, origin_data, search_key))) {
         this.render_view(data);
       } else {

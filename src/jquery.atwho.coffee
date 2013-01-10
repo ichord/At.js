@@ -7,7 +7,10 @@
 ###
 
 ( (factory) ->
-  if typeof define is 'function' and define.amd
+  if typeof exports is 'object'
+    # Node/CommonJS
+    factory require('jquery')
+  else if typeof define is 'function' and define.amd
     # Register as an anonymous AMD module:
     define ['jquery']
   else
@@ -251,6 +254,9 @@
       data.push this
       @$inputor.trigger name, data
 
+    data: ->
+      this.get_opt("data")
+
     # At.js 允许开发者自定义控制器使用的一些功能函数
     #
     # @param func_name [String] 回调的函数名
@@ -413,7 +419,6 @@
         params =
           q: query.text
           limit: this.get_opt("limit")
-        # $.proxy(this.render_view, this)
         this.callbacks('remote_filter').call(this, params, origin_data,this.render_view)
       else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
           this.render_view data
