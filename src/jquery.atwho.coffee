@@ -402,7 +402,7 @@
           q: query.text
           limit: this.get_opt("limit")
         # $.proxy(this.render_view, this)
-        this.callbacks('remote_filter').call(this, params, this.render_view)
+        this.callbacks('remote_filter').call(this, params, origin_data,this.render_view)
       else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
           this.render_view data
       else
@@ -435,7 +435,7 @@
       .on 'click', (e) =>
         e.stopPropagation()
         e.preventDefault()
-        this.choose()
+        @$el.data("_view").choose()
 
     # 判断视图是否存在
     #
@@ -496,6 +496,7 @@
         return yes
 
       this.clear()
+      @$el.data("_view",this)
 
       $ul = @$el.find('ul')
       tpl = @controller.get_opt('tpl', DEFAULT_TPL)
