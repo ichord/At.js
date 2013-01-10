@@ -435,7 +435,7 @@
       .on 'click', (e) =>
         e.stopPropagation()
         e.preventDefault()
-        this.choose()
+        @$el.data("_view").choose()
 
     # 判断视图是否存在
     #
@@ -496,6 +496,7 @@
         return yes
 
       this.clear()
+      @$el.data("_view",this)
 
       $ul = @$el.find('ul')
       tpl = @controller.get_opt('tpl', DEFAULT_TPL)
