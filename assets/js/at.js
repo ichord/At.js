@@ -27,10 +27,10 @@ var names = $.map(names,function(value,i) {
 var emojis = $.map(emojis, function(value, i) {return {key: value + ':', name:value}});
 
 $(function(){
-    $('textarea').atWho('@', {
+    $('textarea').atwho('@', {
         data: names,
         tpl: "<li data-value='${name}'>${name} <small>${email}</small></li>"
-    }).atWho(':', {
+    }).atwho(':', {
         data: emojis,
         tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
     })
