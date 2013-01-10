@@ -11,7 +11,7 @@ describe "jquery.atwho", ->
     ENTER: 13
 
   trigger_atwho = ->
-    $inputor.data("AtWho").current_flag = "@"
+    $inputor.data("atwho").current_flag = "@"
     $inputor.caretPos(31)
     e = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
     $inputor.trigger("keyup.atwho").trigger(e)
@@ -33,7 +33,7 @@ describe "jquery.atwho", ->
     beforeEach ->
       text = $.trim $inputor.text()
       callbacks = $.fn.atwho.default.callbacks
-      controller = $inputor.data("AtWho")
+      controller = $inputor.data("atwho")
 
     it "refactor the data", ->
       items = callbacks.data_refactor.call(controller, fixtures["names"])
@@ -94,14 +94,13 @@ describe "jquery.atwho", ->
 
       trigger_atwho()
       expect(callbacks.selector).toHaveBeenCalled()
-      # FIXME: it work but, the $inputor fixture have be reset back.
-      # expect(controller.$inputor).toHaveText(/Jacob/)
+      # expect(controller.$inputor).toHaveText("Jacob")
 
   describe "settings", ->
     controller = null
     callbacks = null
     beforeEach ->
-      controller = $inputor.data("AtWho")
+      controller = $inputor.data("atwho")
       callbacks = $.fn.atwho.default.callbacks
 
     it "update common settings", ->
@@ -134,14 +133,13 @@ describe "jquery.atwho", ->
 
       expect(callbacks.remote_filter).toHaveBeenCalled()
 
-
   describe "jquery events", ->
     controller = null
     callbacks = null
     beforeEach ->
-      controller = $inputor.data("AtWho")
+      controller = $inputor.data("atwho")
       callbacks = $.fn.atwho.default.callbacks
-      $inputor.data("AtWho").current_flag = "@"
+      $inputor.data("atwho").current_flag = "@"
       $inputor.caretPos(31)
       $inputor.trigger("keyup.atwho")
 
@@ -174,3 +172,21 @@ describe "jquery.atwho", ->
       down_event = $.Event("keydown.atwho", keyCode: KEY_CODE.DOWN)
       $inputor.trigger(down_event)
       expect(controller.view.next).toHaveBeenCalled()
+
+  describe "atwho events", ->
+
+    it "trigger matched", ->
+      matched_event = spyOnEvent($inputor, "matched.atwho")
+      trigger_atwho()
+      expect(matched_event).toHaveBeenTriggered()
+
+    it "trigger choose", ->
+      choose_event = spyOnEvent($inputor, "choose.atwho")
+      trigger_atwho()
+      expect(choose_event).toHaveBeenTriggered()
+
+    it "trigger reposition", ->
+      reposition_event = spyOnEvent($inputor, "reposition.atwho")
+      trigger_atwho()
+      expect(reposition_event).toHaveBeenTriggered()
+

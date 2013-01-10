@@ -179,7 +179,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
       }).on('scroll.atwho', function(e) {
         return _this.view.hide();
       }).on('blur.atwho', function(e) {
-        return _this.view.hide(1000);
+        return _this.view.hide(_this.get_opt("display_timeout"));
       });
     };
 
@@ -494,13 +494,12 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           return this.$el.hide();
         }
       } else {
-        time || (time = 300);
+        time || (time = 1000);
         callback = function() {
-          _this.hide();
-          return _this.controller.trigger("hide", [time, _this.controller]);
+          return _this.hide();
         };
         clearTimeout(this.timeout_id);
-        return this.timeout_id = setTimeout(callback, this.controller.get_opt("display_timeout", time));
+        return this.timeout_id = setTimeout(callback, time);
       }
     };
 
@@ -541,9 +540,9 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     return this.filter('textarea, input').each(function() {
       var $this, data;
       $this = $(this);
-      data = $this.data("AtWho");
+      data = $this.data("atwho");
       if (!data) {
-        $this.data('AtWho', (data = new Controller(this)));
+        $this.data('atwho', (data = new Controller(this)));
       }
       return data.reg(flag, options);
     });
@@ -557,7 +556,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     callbacks: DEFAULT_CALLBACKS,
     limit: 5,
     display_flag: true,
-    display_timeout: 300,
+    display_timeout: 1000,
     tpl: DEFAULT_TPL
   };
 });

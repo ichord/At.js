@@ -221,7 +221,7 @@
         .on 'scroll.atwho', (e) =>
           @view.hide()
         .on 'blur.atwho', (e) =>
-          @view.hide(1000)
+          @view.hide this.get_opt("display_timeout")
 
     # At.js 可以对每个输入框绑定不同的监听标记. 比如同时监听 "@", ":" 字符
     # 并且通过不同的 `settings` 给予不同的表现行为, 比如插入不同的内容(即不同的渲染模板)
@@ -250,11 +250,25 @@
 
       this
 
+    # 将自定义的 `jQueryEvent` 事件代理到当前输入框( inputor )
+    # 这个方法会自动为事件添加名为 `atwho` 的命名域(namespace), 并且将当前上下为作为最后一个参数传入.
+    #
+    # @example
+    #   this.trigger "roll_n_rock", [1,2,3,4]
+    #   # 对应的输入框可以如下监听事件.
+    #   $inputor.on "rool_n_rock", (e, one, two, three, four) ->
+    #     console.log one, two, three, four
+    #
+    # @param name [String] 事件名称
+    # @param data [Array] 传递给回调函数的数据.
     trigger: (name, data) ->
       data ||= []
       data.push this
       @$inputor.trigger "#{name}.atwho", data
 
+    # 获得当前数据, 方便回调接口访问数据.
+    #
+    # @return [Array] 当前数据, 数据元素一般为 Hash 对象.
     data: ->
       this.get_opt("data")
 
@@ -455,6 +469,7 @@
         e.preventDefault()
         @$el.data("_view").choose()
 
+
     # 判断视图是否存在
     #
     # @return [Boolean]
@@ -503,12 +518,11 @@
       if isNaN time
         @$el.hide() if this.visible()
       else
-        time ||= 300
+        time ||= 1000
         callback = =>
           this.hide()
-          @controller.trigger "hide", [time, @controller]
         clearTimeout @timeout_id
-        @timeout_id = setTimeout callback, @controller.get_opt("display_timeout", time)
+        @timeout_id = setTimeout callback, time
 
     clear: ->
       @$el.find('ul').empty()
@@ -540,9 +554,9 @@
   $.fn.atwho = (flag, options) ->
     @.filter('textarea, input').each () ->
       $this = $(this)
-      data = $this.data "AtWho"
+      data = $this.data "atwho"
 
-      $this.data 'AtWho', (data = new Controller(this)) if not data
+      $this.data 'atwho', (data = new Controller(this)) if not data
       data.reg flag, options
 
   $.fn.atwho.Controller = Controller
@@ -554,5 +568,5 @@
       callbacks: DEFAULT_CALLBACKS
       limit: 5
       display_flag: yes
-      display_timeout: 300
+      display_timeout: 1000
       tpl: DEFAULT_TPL
