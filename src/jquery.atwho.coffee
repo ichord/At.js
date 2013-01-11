@@ -518,7 +518,6 @@
       if isNaN time
         @$el.hide() if this.visible()
       else
-        time ||= 1000
         callback = =>
           this.hide()
         clearTimeout @timeout_id
@@ -568,5 +567,5 @@
       callbacks: DEFAULT_CALLBACKS
       limit: 5
       display_flag: yes
-      display_timeout: 1000
+      display_timeout: 300
       tpl: DEFAULT_TPL

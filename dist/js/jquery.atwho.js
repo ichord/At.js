@@ -494,7 +494,6 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           return this.$el.hide();
         }
       } else {
-        time || (time = 1000);
         callback = function() {
           return _this.hide();
         };
@@ -556,7 +555,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
     callbacks: DEFAULT_CALLBACKS,
     limit: 5,
     display_flag: true,
-    display_timeout: 1000,
+    display_timeout: 300,
     tpl: DEFAULT_TPL
   };
 });

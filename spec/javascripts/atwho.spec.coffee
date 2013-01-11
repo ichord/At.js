@@ -11,10 +11,17 @@ describe "jquery.atwho", ->
     ENTER: 13
 
   trigger_atwho = ->
+    simulate_input()
+    simulate_choose()
+
+  simulate_input = ->
     $inputor.data("atwho").current_flag = "@"
     $inputor.caretPos(31)
-    e = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
-    $inputor.trigger("keyup.atwho").trigger(e)
+    $inputor.trigger("keyup")
+
+  simulate_choose = ->
+    e = $.Event("keydown", keyCode: KEY_CODE.ENTER)
+    $inputor.trigger(e)
 
   it "should be defined", ->
     expect($.fn.atwho).toBeDefined()
@@ -133,15 +140,24 @@ describe "jquery.atwho", ->
 
       expect(callbacks.remote_filter).toHaveBeenCalled()
 
+    it "setting timeout", ->
+      jasmine.Clock.useMock()
+      $inputor.atwho display_timeout: 500
+
+      simulate_input()
+      $inputor.trigger "blur"
+      jasmine.Clock.tick 503
+      view = controller.view.$el
+      expect(view).toBeHidden()
+
+
   describe "jquery events", ->
     controller = null
     callbacks = null
     beforeEach ->
       controller = $inputor.data("atwho")
       callbacks = $.fn.atwho.default.callbacks
-      $inputor.data("atwho").current_flag = "@"
-      $inputor.caretPos(31)
-      $inputor.trigger("keyup.atwho")
+      simulate_input()
 
     it "trigger esc", ->
       esc_event = $.Event("keyup.atwho", keyCode: KEY_CODE.ESC)

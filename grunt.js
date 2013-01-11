@@ -33,7 +33,7 @@ module.exports = function(grunt) {
     },
     watch: {
       files: '<config:coffee.app.src>',
-      tasks: 'coffee'
+      tasks: 'test'
     },
     coffee: {
       app: {
