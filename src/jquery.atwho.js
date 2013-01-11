@@ -300,7 +300,7 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
           'head_pos': start,
           'end_pos': end
         };
-        this.trigger("matched", [this.current_flag, query]);
+        this.trigger("matched", [this.current_flag, query.text]);
       } else {
         this.view.hide();
       }

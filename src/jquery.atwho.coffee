@@ -362,7 +362,7 @@
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
-        this.trigger "matched", [@current_flag, query]
+        this.trigger "matched", [@current_flag, query.text]
       else
         @view.hide()
 
