@@ -37,7 +37,7 @@ module.exports = function(grunt) {
     },
     coffee: {
       app: {
-        src: ['**/*.coffee']
+        src: ['spec/**/*.coffee', 'src/**/*.coffee']
       }
     },
     'jasmine' : {
