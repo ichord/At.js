@@ -32,9 +32,9 @@
             <h1>
                 <a href="index.html" style="color:black;">At.js</a>
                 {%if page.category == "en" %}
-                    <a href="../cn/documentation.html"><small>chinese</small></a>
+                    <a href="documentation-cn.html"><small>chinese</small></a>
                 {% else %}
-                    <a href="../documentation.html"><small>english</small></a>
+                    <a href="documentation.html"><small>english</small></a>
                 {% endif %}
                 {% include version.html %}
             </h1>
@@ -67,7 +67,7 @@
     {% include footer.html %}
 
     {% include javascript.html %}
-    <script type="text/javascript" src="../assets/js/jquery.sticky.js"></script>
+    <script type="text/javascript" src="assets/js/jquery.sticky.js"></script>
     <script type="text/javascript">
         $(".subnav").sticky({topSpacing: 5});
     </script>
