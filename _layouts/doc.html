@@ -5,7 +5,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Documentation - At.js</title>
+    <title>{{page.title}}</title>
     {% include stylesheet.html %}
     <style type="text/css">
     h1,h2,h3,h4 {
@@ -23,21 +23,40 @@
     }
     </style>
 </head>
+
 <body data-spy="scroll" data-target=".subnav" data-offset="50">
 
     <div class="container" style="width:940px;">
         {% include fork_me.html %}
         <header id="overview">
-            <h1><a href="index.html" style="color:black;">At.js</a> <small>Documentation {% include version.html %}</small></h1>
+            <h1>
+                <a href="index.html" style="color:black;">At.js</a>
+                {%if page.category == "en" %}
+                    <a href="../cn/documentation.html"><small>chinese</small></a>
+                {% else %}
+                    <a href="../documentation.html"><small>english</small></a>
+                {% endif %}
+                {% include version.html %}
+            </h1>
             <div class="subnav">
                 <ul class="nav nav-pills">
-                    {% for post in site.posts reversed %}
-                        {%if forloop.first %}
-                            <li class="active"><a href="#{{post.section_id}}">{{post.title}}</a></li>
-                        {% else %}
-                            <li><a href="#{{post.section_id}}">{{post.title}}</a></li>
-                        {% endif %}
-                    {% endfor %}
+                    {%if page.category == "en" %}
+                        {% for post in site.categories.en reversed %}
+                            {%if forloop.first %}
+                                <li class="active"><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                            {% else %}
+                                <li><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for post in site.categories.cn reversed %}
+                            {%if forloop.first %}
+                                <li class="active"><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                            {% else %}
+                                <li><a href="#{{post.section_id}}">{{post.title}}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </ul>
             </div>
         </header>
@@ -48,7 +67,7 @@
     {% include footer.html %}
 
     {% include javascript.html %}
-    <script type="text/javascript" src="assets/js/jquery.sticky.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.sticky.js"></script>
     <script type="text/javascript">
         $(".subnav").sticky({topSpacing: 5});
     </script>
