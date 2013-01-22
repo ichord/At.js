@@ -14,6 +14,6 @@
     "grunt": "~0.3.17",
     "grunt-coffee": "0.0.6",
     "grunt-jasmine-runner": "~0.6.0",
-    "grunt-contrib-mincss": "~0.3.2",
+    "grunt-contrib-mincss": "~0.3.2"
   }
 }
