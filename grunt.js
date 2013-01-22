@@ -48,24 +48,15 @@ module.exports = function(grunt) {
     },
     'jasmine-server' : {
       browser : true
-    },
-    copy: {
-      dist: {
-        files: {
-          // "gh-pages/assets/": , // includes files in dir
-          "gh-pages/assets/": ["dist/css/*", "dist/js/*.min.js"]
-        }
-      }
     }
   });
 
   grunt.loadNpmTasks('grunt-coffee');
   grunt.loadNpmTasks('grunt-jasmine-runner');
   grunt.loadNpmTasks('grunt-contrib-mincss');
-  grunt.loadNpmTasks('grunt-contrib-copy')
 
   // Default task.
-  grunt.registerTask('default', 'coffee jasmine concat mincss min copy');
+  grunt.registerTask('default', 'coffee jasmine concat mincss min');
   grunt.registerTask('test', 'coffee jasmine')
 
 };
