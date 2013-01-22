@@ -37,7 +37,11 @@ module.exports = function(grunt) {
     },
     coffee: {
       app: {
-        src: ['spec/**/*.coffee', 'src/**/*.coffee']
+        src: ['spec/**/*.coffee', 'src/**/*.coffee'],
+        options: {
+          // add the safety wrapper.
+          bare: false
+        }
       }
     },
     'jasmine' : {

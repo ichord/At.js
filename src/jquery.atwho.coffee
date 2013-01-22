@@ -7,12 +7,14 @@
 ###
 
 ( (factory) ->
-  if typeof exports is 'object'
-    # Node/CommonJS
-    factory require('jquery')
-  else if typeof define is 'function' and define.amd
+  # Uses AMD or browser globals to create a jQuery plugin.
+  # It does not try to register in a CommonJS environment since
+  # jQuery is not likely to run in those environments.
+  #
+  # form [umd](https://github.com/umdjs/umd) project
+  if typeof define is 'function' and define.amd
     # Register as an anonymous AMD module:
-    define ['jquery']
+    define ['jquery'], factory
   else
     # Browser globals
     factory window.jQuery
@@ -416,7 +418,7 @@
     # 将处理完的数据显示到下拉列表中
     #
     # @param data [Array] 处理过后的数据列表
-    render_view: (data) =>
+    render_view: (data) ->
       search_key = this.get_opt("search_key")
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
       data = data.splice(0, this.get_opt('limit'))
@@ -434,7 +436,7 @@
         params =
           q: query.text
           limit: this.get_opt("limit")
-        this.callbacks('remote_filter').call(this, params, origin_data,this.render_view)
+        this.callbacks('remote_filter').call(this, params, origin_data, $.proxy(this.render_view, this))
       else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
           this.render_view data
       else
