@@ -3,14 +3,14 @@
 
 Let me know you are using it. So I will work harder on it, Thanks. :smile:
 
-add your websit on [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using **At.js**
+Add your website in [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using **At.js**
 
 
 ### Notice
 
-**the Stable version is living in branch `stable` and tag `v0.1.7`**  
-This branch have updated to `v0.2.0`, read **CHANGELOG.md** please.  
-PS. English Documentation would be updated later. or **You can do me a favor?!**
+**The Stable version is living in branch `stable` and tag `v0.1.7`**  
+This branch have updated to `v0.2.0`, read **CHANGELOG.md** for more details please.  
+English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 
 ### Demo
@@ -22,20 +22,13 @@ http://ichord.github.com/At.js
 
 * Can listen to any character
     not just '@', and set up multiple listeners for different characters with different behavior and data.
-* TODO: Supports static data and dynamic data(via AJAX) at the same time
-    static data will be searched first, and then use AJAX to fetch non-existing values.
 * Listener events can be bound to multiple textareas
-* TODO: Cacheable
 * Format returned data using templates
-* Keyboard controls in addition to mouse
-    `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values
-
-* 可自定义数据过滤方法.
-* 过滤前可重组数据.
-* 可自定义匹配规则. 比如匹配中文
-* 可自定义排序规则.
-* 可自定义高亮.
-* 可自定义模板解析.
+* Keyboard controls in addition to mouse  
+    `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values  
+    `Right` and `left` will research the keyword.  
+* Customer data handlers and template renders by a group of configurable callbacks.
+* Support **AMD**
 
 
 ### Requirements
