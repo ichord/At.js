@@ -31,6 +31,10 @@ http://ichord.github.com/At.js
 * Support **AMD**
 
 
+### Rails support
+If you are working with `Rails`. This gem: [jquery-atwho-rails](https://github.com/ichord/jquery-atwho-rails) may help you.
+
+
 ### Requirements
 * jQuery >= 1.7.0.
 
