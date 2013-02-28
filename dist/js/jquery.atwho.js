@@ -75,6 +75,9 @@
     };
     DEFAULT_CALLBACKS = {
       data_refactor: function(data) {
+        if (!$.isArray(data)) {
+          return data;
+        }
         return $.map(data, function(item, k) {
           if (!$.isPlainObject(item)) {
             item = {
@@ -188,11 +191,7 @@
         current_settings = {};
         current_settings = $.isPlainObject(flag) ? this.common_settings = $.extend({}, this.common_settings, flag) : !this.settings[flag] ? this.settings[flag] = $.extend({}, settings) : this.settings[flag] = $.extend({}, this.settings[flag], settings);
         data = current_settings["data"];
-        if (typeof data === "string") {
-          current_settings["data"] = data;
-        } else if (data) {
-          current_settings["data"] = this.callbacks("data_refactor").call(this, data);
-        }
+        current_settings["data"] = this.callbacks("data_refactor").call(this, data);
         return this;
       };
 
@@ -374,21 +373,33 @@
         return this.view.render(data);
       };
 
+      Controller.prototype.remote_call = function(data, query) {
+        var params, _callback;
+        params = {
+          q: query.text,
+          limit: this.get_opt("limit")
+        };
+        _callback = function(data) {
+          this.reg(this.current_flag, {
+            data: data
+          });
+          return this.render_view(this.data());
+        };
+        _callback = $.proxy(_callback, this);
+        return this.callbacks('remote_filter').call(this, params, data, _callback);
+      };
+
       Controller.prototype.look_up = function() {
-        var data, origin_data, params, query, search_key;
+        var data, query, search_key;
         query = this.catch_query();
         if (!query) {
           return false;
         }
-        origin_data = this.get_opt("data");
+        data = this.data();
         search_key = this.get_opt("search_key");
-        if (typeof origin_data === "string") {
-          params = {
-            q: query.text,
-            limit: this.get_opt("limit")
-          };
-          this.callbacks('remote_filter').call(this, params, origin_data, $.proxy(this.render_view, this));
-        } else if ((data = this.callbacks('filter').call(this, query.text, origin_data, search_key))) {
+        if (typeof data === "string") {
+          this.remote_call(data, query);
+        } else if ((data = this.callbacks('filter').call(this, query.text, data, search_key))) {
           this.render_view(data);
         } else {
           this.view.hide();

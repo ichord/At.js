@@ -102,6 +102,7 @@
     #
     # @return [Array] 重构后的数据列表
     data_refactor: (data) ->
+      return data if not $.isArray(data)
       $.map data, (item, k) ->
         if not $.isPlainObject item
           item = {name:item}
@@ -248,10 +249,7 @@
         @settings[flag] = $.extend {}, @settings[flag], settings
 
       data = current_settings["data"]
-      if typeof data == "string"
-        current_settings["data"] = data
-      else if data
-        current_settings["data"] = this.callbacks("data_refactor").call(this, data)
+      current_settings["data"] = this.callbacks("data_refactor").call(this, data)
 
       this
 
@@ -428,20 +426,29 @@
 
       @view.render data
 
+    remote_call: (data, query) ->
+      params =
+          q: query.text
+          limit: this.get_opt("limit")
+      _callback = (data) ->
+        this.reg @current_flag,
+          data: data
+        this.render_view this.data()
+      _callback = $.proxy _callback, this
+      this.callbacks('remote_filter').call(this, params, data, _callback)
+
+
     # 根据关键字搜索数据
     look_up: ->
       query = this.catch_query()
       return no if not query
 
-      origin_data = this.get_opt("data")
+      data = this.data()
       search_key = this.get_opt("search_key")
-      if typeof origin_data is "string"
-        params =
-          q: query.text
-          limit: this.get_opt("limit")
-        this.callbacks('remote_filter').call(this, params, origin_data, $.proxy(this.render_view, this))
-      else if (data = this.callbacks('filter').call(this, query.text, origin_data, search_key))
-          this.render_view data
+      if typeof data is "string"
+        this.remote_call(data, query)
+      else if (data = this.callbacks('filter').call(this, query.text, data, search_key))
+        this.render_view data
       else
           @view.hide()
       $.noop()
