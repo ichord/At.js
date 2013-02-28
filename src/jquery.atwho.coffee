@@ -154,7 +154,7 @@
     #
     # @return [Array] 排序后的数据列表
     sorter: (query, items, search_key) ->
-      items if !query
+      return items if !query
       results = []
 
       for item in items
