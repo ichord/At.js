@@ -154,7 +154,10 @@
     #
     # @return [Array] 排序后的数据列表
     sorter: (query, items, search_key) ->
-      items if !query
+      if !query
+        return items.sort (a, b) ->
+          a[search_key].toLowerCase() > b[search_key].toLowerCase()
+
       results = []
 
       for item in items

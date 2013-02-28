@@ -115,8 +115,9 @@
       sorter: function(query, items, search_key) {
         var item, results, text, _i, _len;
         if (!query) {
-          items;
-
+          return items.sort(function(a, b) {
+            return a[search_key].toLowerCase() > b[search_key].toLowerCase();
+          });
         }
         results = [];
         for (_i = 0, _len = items.length; _i < _len; _i++) {
