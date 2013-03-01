@@ -30,8 +30,9 @@
     css_attr: [
       "overflowY", "height", "width", "paddingTop", "paddingLeft",
       "paddingRight", "paddingBottom", "marginTop", "marginLeft",
-      "marginRight", "marginBottom",'fontFamily', 'borderStyle',
-      'borderWidth','wordWrap', 'fontSize', 'lineHeight', 'overflowX'
+      "marginRight", "marginBottom","fontFamily", "borderStyle",
+      "borderWidth","wordWrap", "fontSize", "lineHeight", "overflowX",
+      "text-align",
     ]
 
     # @param $inputor [Object] 输入框的 jQuery 对象
@@ -284,7 +285,7 @@
         func = @common_settings["callbacks"][func_name]
       return func
 
-    # 由于可以绑定多字符, 但配置缺不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
+    # 由于可以绑定多字符, 但配置却不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
     #
     # @param key [String] 某配置项的键名
     # @param default_value [?] 没有找到任何值后自定义的默认值
