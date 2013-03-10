@@ -158,7 +158,7 @@
     sorter: (query, items, search_key) ->
       if !query
         return items.sort (a, b) ->
-          a[search_key].toLowerCase() > b[search_key].toLowerCase()
+          if a[search_key].toLowerCase() > b[search_key].toLowerCase() then 1 else -1
 
       results = []
 
