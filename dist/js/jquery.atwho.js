@@ -119,7 +119,11 @@
         var item, results, text, _i, _len;
         if (!query) {
           return items.sort(function(a, b) {
-            return a[search_key].toLowerCase() > b[search_key].toLowerCase();
+            if (a[search_key].toLowerCase() > b[search_key].toLowerCase()) {
+              return 1;
+            } else {
+              return -1;
+            }
           });
         }
         results = [];
