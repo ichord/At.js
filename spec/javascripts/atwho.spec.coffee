@@ -82,6 +82,11 @@ describe "jquery.atwho", ->
       names = callbacks.sorter.call(controller, "e", names, "name")
       expect(names).toContain({ name : 'Ethan', order : 0 })
 
+    it "can sort the data without a query", ->
+      names = callbacks.data_refactor.call(controller, fixtures["names"])
+      names = callbacks.sorter.call(controller, "", names, "name")
+      expect(names[0]).toEqual({ name : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })
+
     it "can eval temple", ->
       map = {name: "username", nick: "nick_name"}
       tpl = '<li data-value="${name}">${nick}</li>'
@@ -205,4 +210,3 @@ describe "jquery.atwho", ->
       reposition_event = spyOnEvent($inputor, "reposition.atwho")
       trigger_atwho()
       expect(reposition_event).toHaveBeenTriggered()
-
