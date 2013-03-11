@@ -210,3 +210,33 @@ describe "jquery.atwho", ->
       reposition_event = spyOnEvent($inputor, "reposition.atwho")
       trigger_atwho()
       expect(reposition_event).toHaveBeenTriggered()
+
+  describe "api", ->
+    controller = null
+    callbacks = null
+    beforeEach ->
+      controller = $inputor.data("atwho")
+      simulate_input()
+
+    it "can get current data", ->
+      expect(controller.data().length).toBe 3
+
+    it "can set current data", ->
+      data = [{id: 1, name: "one"}, {id: 2, name: "two"}]
+      controller.data(data)
+      expect(controller.data()).toBe data
+
+    it "cant get current while using remote filter", ->
+      jasmine.Ajax.useMock()
+      $inputor.atwho "@",
+        data: "/atwho.json"
+
+      request = mostRecentAjaxRequest()
+      response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
+      request.response
+        status: 200
+        responseText: JSON.stringify(response_data)
+
+      expect(controller.get_opt("data")).toBe "/atwho.json"
+      expect(controller.data().length).toBe 3
+

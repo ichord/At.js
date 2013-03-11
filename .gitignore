@@ -1,4 +1,5 @@
 *.swp
+.DS_Store
 doc/
 node_modules/
 spec/javascripts/*.js

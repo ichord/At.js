@@ -270,11 +270,15 @@
       data.push this
       @$inputor.trigger "#{name}.atwho", data
 
-    # 获得当前数据, 方便回调接口访问数据.
+    # get or set current data which would be shown on the list view.
     #
-    # @return [Array] 当前数据, 数据元素一般为 Hash 对象.
-    data: ->
-      this.get_opt("data")
+    # @param data [Array] set data
+    # @return [Array|undefined] 当前数据, 数据元素一般为 Hash 对象.
+    data: (data)->
+      if data
+        @$inputor.data("atwho-data", data)
+      else
+        @$inputor.data("atwho-data")
 
     # At.js 允许开发者自定义控制器使用的一些功能函数
     #
@@ -425,6 +429,7 @@
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
       data = data.splice(0, this.get_opt('limit'))
 
+      this.data(data)
       @view.render data
 
     remote_call: (data, query) ->
@@ -432,9 +437,7 @@
           q: query.text
           limit: this.get_opt("limit")
       _callback = (data) ->
-        this.reg @current_flag,
-          data: data
-        this.render_view this.data()
+        this.render_view data
       _callback = $.proxy _callback, this
       this.callbacks('remote_filter').call(this, params, data, _callback)
 
@@ -444,7 +447,7 @@
       query = this.catch_query()
       return no if not query
 
-      data = this.data()
+      data = this.get_opt("data")
       search_key = this.get_opt("search_key")
       if typeof data is "string"
         this.remote_call(data, query)
