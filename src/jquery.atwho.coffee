@@ -164,14 +164,14 @@
 
       for item in items
         text = item[search_key]
-        item.order = text.toLowerCase().indexOf query
+        item.atwho_order = text.toLowerCase().indexOf query
         results.push(item)
 
       results.sort (a,b) ->
-        a.order - b.order
+        a.atwho_order - b.atwho_order
 
       results = for item in results
-        delete item["order"]
+        delete item["atwho_order"]
         item
 
 

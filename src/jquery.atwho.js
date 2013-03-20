@@ -130,18 +130,18 @@
         for (_i = 0, _len = items.length; _i < _len; _i++) {
           item = items[_i];
           text = item[search_key];
-          item.order = text.toLowerCase().indexOf(query);
+          item.atwho_order = text.toLowerCase().indexOf(query);
           results.push(item);
         }
         results.sort(function(a, b) {
-          return a.order - b.order;
+          return a.atwho_order - b.atwho_order;
         });
         return results = (function() {
           var _j, _len1, _results;
           _results = [];
           for (_j = 0, _len1 = results.length; _j < _len1; _j++) {
             item = results[_j];
-            delete item["order"];
+            delete item["atwho_order"];
             _results.push(item);
           }
           return _results;
