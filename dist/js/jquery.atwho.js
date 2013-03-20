@@ -133,9 +133,19 @@
           item.order = text.toLowerCase().indexOf(query);
           results.push(item);
         }
-        return results.sort(function(a, b) {
+        results.sort(function(a, b) {
           return a.order - b.order;
         });
+        return results = (function() {
+          var _j, _len1, _results;
+          _results = [];
+          for (_j = 0, _len1 = results.length; _j < _len1; _j++) {
+            item = results[_j];
+            delete item["order"];
+            _results.push(item);
+          }
+          return _results;
+        })();
       },
       tpl_eval: function(tpl, map) {
         var el;
@@ -377,7 +387,7 @@
         var search_key;
         search_key = this.get_opt("search_key");
         data = this.callbacks("sorter").call(this, this.query.text, data, search_key);
-        data = data.splice(0, this.get_opt('limit'));
+        data = data.slice(0, this.get_opt('limit'));
         this.data(data);
         return this.view.render(data);
       };

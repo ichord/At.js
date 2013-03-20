@@ -80,7 +80,7 @@ describe "jquery.atwho", ->
     it "can sort the data", ->
       names = callbacks.data_refactor.call(controller, fixtures["names"])
       names = callbacks.sorter.call(controller, "e", names, "name")
-      expect(names).toContain({ name : 'Ethan', order : 0 })
+      expect(names).toContain({ name : 'Ethan'})
 
     it "can sort the data without a query", ->
       names = callbacks.data_refactor.call(controller, fixtures["names"])

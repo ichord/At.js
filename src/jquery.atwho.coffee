@@ -170,6 +170,10 @@
       results.sort (a,b) ->
         a.order - b.order
 
+      results = for item in results
+        delete item["order"]
+        item
+
 
     # 解析并渲染下拉列表中单个项的模板
     #
@@ -427,7 +431,7 @@
     render_view: (data) ->
       search_key = this.get_opt("search_key")
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
-      data = data.splice(0, this.get_opt('limit'))
+      data = data.slice(0, this.get_opt('limit'))
 
       this.data(data)
       @view.render data
