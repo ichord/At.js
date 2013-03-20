@@ -27,16 +27,17 @@
     TAB: 9
     ENTER: 13
 
-  # Controller 用于处理渲染数据的一组方法.
-  #为了方便开发者可以自定义插件的部分功能而独立出来.
+  # Functions set for handling and rendering the data.
+  # Others developers can override these methods to tweak At.js such as matcher.
+  # We can override them in `callbacks` settings.
   #
   # @mixin
   #
   # 以下所有方法的调用上下文都是 Controller. 并且按照文档显示的顺序调用
+  # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
   #
-  # 也就是这个顺序 [data_refactor, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
+  # [data_refactor, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
   #
-  # 以默认配置的方式 Mixin 到 Controller 里.
   DEFAULT_CALLBACKS =
 
     # 用于插件最开始时对设置的数据进行重构.
