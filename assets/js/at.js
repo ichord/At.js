@@ -19,7 +19,7 @@ var emojis = [
     "womans_hat", "womens", "x", "yellow_heart", "zap", "zzz", "+1",
     "-1", "0", "1", "109", "2", "3", "4", "5", "6", "7", "8", "8ball", "9"
 ]
-var names = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","你好","你你你"];
+var names = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","你好","你你你"];
 
 var names = $.map(names,function(value,i) {
     return {'id':i,'name':value,'email':value+"@email.com"};
