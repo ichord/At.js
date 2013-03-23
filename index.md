@@ -40,7 +40,7 @@ $('textarea').atwho('@', {
 
 **More details at [Documentation](documentation.html) or [Wiki][wiki]**
 
-If you have any problem, feel free to [post a issue][issues]
+If you have any problem, feel free to [post an issue][issues]
 
 
 ## Requirements
@@ -54,7 +54,7 @@ If you have any problem, feel free to [post a issue][issues]
 
 Find more on the [Wiki Sites][wiki_sites]
 
-**Adn if you are using At.js, please add your site into this wiki**
+**And if you are using At.js, please add your site into this wiki**
 
 [wiki]: https://github.com/ichord/At.js/wiki "At.js - Wiki"
 [issues]: https://github.com/ichord/At.js/issues "Github Issues"
