@@ -18,7 +18,7 @@ It is just designed to do the **Github-like mention job**, however you can do wh
 For example, **Type** `:` to complete emoji as I mentioned above.
 
 
-## Support Browsers
+## Browser Support
 
 * ![chrome](assets/img/chrome.gif)
 * ![firefox](assets/img/firefox.gif)
@@ -26,7 +26,7 @@ For example, **Type** `:` to complete emoji as I mentioned above.
 * ![ie](assets/img/ie.gif)
 
 
-## How to use
+## How to Use
 
 {% highlight javascript%}
 var names = ["Jacob","Isabella","Ethan","Emma"];
@@ -38,23 +38,23 @@ $('textarea').atwho('@', {
 });
 {% endhighlight %}
 
-**More details at [Documentation](documentation.html) or [Wiki][wiki]**
+**More details at [Documentation](documentation.html) or [Wiki][wiki]**.
 
-If you have any problem, feel free to [post a issue][issues]
+If you have any problem, feel free to [post an issue][issues].
 
 
 ## Requirements
 
 * jQuery 1.7.0+
 
-## Who is using
+## Who is Using
 
 * [Ruby China][ruby_china]
 * [Python China][python_china]
 
-Find more on the [Wiki Sites][wiki_sites]
+Find more on the [Wiki Sites][wiki_sites].
 
-**Adn if you are using At.js, please add your site into this wiki**
+**And if you are using At.js, please add your site into this wiki**.
 
 [wiki]: https://github.com/ichord/At.js/wiki "At.js - Wiki"
 [issues]: https://github.com/ichord/At.js/issues "Github Issues"
