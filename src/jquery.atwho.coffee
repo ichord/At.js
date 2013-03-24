@@ -210,7 +210,6 @@
     # @param inputor [HTML DOM Object] 输入框
     constructor: (inputor) ->
       @settings     = {}
-      @common_settings       = {}
       @pos          = 0
       @flags        = null
       @current_flag = null
@@ -218,7 +217,6 @@
 
       @$inputor = $(inputor)
       @mirror = new Mirror(@$inputor)
-      @common_settings = $.extend {}, $.fn.atwho.default
       @view = new View(this, @$el)
       this.listen()
 
@@ -245,18 +243,16 @@
     # @param flag [String] 要监听的字符
     # @param settings [Hash] 配置哈希值
     reg: (flag, settings) ->
-      current_settings = {}
-      current_settings = if $.isPlainObject(flag)
-        @common_settings = $.extend {}, @common_settings, flag
-      else if not @settings[flag]
-        @settings[flag] = $.extend {}, settings
-      else
+      @current_flag = flag
+      current_settings = if @settings[flag]
         @settings[flag] = $.extend {}, @settings[flag], settings
+      else
+        @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
-      data = current_settings["data"]
-      current_settings["data"] = this.callbacks("data_refactor").call(this, data)
+      current_settings["data"] = this.callbacks("data_refactor").call(this, current_settings["data"])
 
       this
+
 
     # 将自定义的 `jQueryEvent` 事件代理到当前输入框( inputor )
     # 这个方法会自动为事件添加名为 `atwho` 的命名域(namespace), 并且将当前上下为作为最后一个参数传入.
@@ -289,10 +285,9 @@
     # @param func_name [String] 回调的函数名
     # @return [Function] 该回调函数
     callbacks: (func_name)->
-      # this.get_opt("callbacks", {})[func_name]
-      if not (func = this.get_opt("callbacks",{})[func_name])
-        func = @common_settings["callbacks"][func_name]
-      return func
+      func = this.get_opt("callbacks")[func_name]
+      func = DEFAULT_CALLBACKS[func_name] unless func
+      func
 
     # 由于可以绑定多字符, 但配置却不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
     #
@@ -301,11 +296,9 @@
     # @return [?] 配置项的值
     get_opt: (key, default_value) ->
       try
-        value = @settings[@current_flag][key] if @current_flag
-        value = @common_settings[key] if value is undefined
-        value = if value is undefined then default_value else value
+        @settings[@current_flag][key]
       catch e
-        value = if default_value is undefined then null else default_value
+        null
 
     # 获得标记字符在输入框中的位置
     #
@@ -468,7 +461,7 @@
 
     # @param controller [Object] 控制器对象.
     constructor: (@controller) ->
-      @id = @controller.get_opt("view_id", "at-view")
+      @id = @controller.get_opt("view_id") || "at-view"
       @timeout_id = null
       @$el = $("##{@id}")
       this.create_view()

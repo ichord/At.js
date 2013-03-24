@@ -23,6 +23,7 @@ describe "jquery.atwho", ->
     e = $.Event("keydown", keyCode: KEY_CODE.ENTER)
     $inputor.trigger(e)
 
+
   it "should be defined", ->
     expect($.fn.atwho).toBeDefined()
 
@@ -116,15 +117,22 @@ describe "jquery.atwho", ->
       callbacks = $.fn.atwho.default.callbacks
 
     it "update common settings", ->
-      $inputor.atwho limit: 8
-      expect(controller.common_settings.limit).toBe(8)
+      func = () ->
+        $.noop
+      old = $.extend {}, $.fn.atwho.default.callbacks
+      $.fn.atwho.default.callbacks.filter = func
+      $.fn.atwho.default.limit = 8
+      $inputor = $("<input/>").atwho "@"
+      expect($inputor.data("atwho").callbacks("filter")).toBe func
+      expect($inputor.data("atwho").get_opt("limit")).toBe 8
+      $.extend $.fn.atwho.default.callbacks, old
 
     it "update specific settings", ->
       $inputor.atwho "@", limit: 3
       expect(controller.settings["@"].limit).toBe(3)
 
     it "update callbacks", ->
-      filter = jasmine.createSpy("filter")
+      filter = jasmine.createSpy("custom filter")
       spyOn(callbacks, "filter")
       $inputor.atwho "@",
         callbacks:

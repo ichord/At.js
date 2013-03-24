@@ -175,14 +175,12 @@
 
       function Controller(inputor) {
         this.settings = {};
-        this.common_settings = {};
         this.pos = 0;
         this.flags = null;
         this.current_flag = null;
         this.query = null;
         this.$inputor = $(inputor);
         this.mirror = new Mirror(this.$inputor);
-        this.common_settings = $.extend({}, $.fn.atwho["default"]);
         this.view = new View(this, this.$el);
         this.listen();
       }
@@ -201,11 +199,10 @@
       };
 
       Controller.prototype.reg = function(flag, settings) {
-        var current_settings, data;
-        current_settings = {};
-        current_settings = $.isPlainObject(flag) ? this.common_settings = $.extend({}, this.common_settings, flag) : !this.settings[flag] ? this.settings[flag] = $.extend({}, settings) : this.settings[flag] = $.extend({}, this.settings[flag], settings);
-        data = current_settings["data"];
-        current_settings["data"] = this.callbacks("data_refactor").call(this, data);
+        var current_settings;
+        this.current_flag = flag;
+        current_settings = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
+        current_settings["data"] = this.callbacks("data_refactor").call(this, current_settings["data"]);
         return this;
       };
 
@@ -225,24 +222,18 @@
 
       Controller.prototype.callbacks = function(func_name) {
         var func;
-        if (!(func = this.get_opt("callbacks", {})[func_name])) {
-          func = this.common_settings["callbacks"][func_name];
+        func = this.get_opt("callbacks")[func_name];
+        if (!func) {
+          func = DEFAULT_CALLBACKS[func_name];
         }
         return func;
       };
 
       Controller.prototype.get_opt = function(key, default_value) {
-        var value;
         try {
-          if (this.current_flag) {
-            value = this.settings[this.current_flag][key];
-          }
-          if (value === void 0) {
-            value = this.common_settings[key];
-          }
-          return value = value === void 0 ? default_value : value;
+          return this.settings[this.current_flag][key];
         } catch (e) {
-          return value = default_value === void 0 ? null : default_value;
+          return null;
         }
       };
 
@@ -430,7 +421,7 @@
 
       function View(controller) {
         this.controller = controller;
-        this.id = this.controller.get_opt("view_id", "at-view");
+        this.id = this.controller.get_opt("view_id") || "at-view";
         this.timeout_id = null;
         this.$el = $("#" + this.id);
         this.create_view();

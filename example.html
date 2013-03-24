@@ -16,6 +16,7 @@
                 'data':data,
                 'callbacks': {
                     filter: function (query, data, search_key) {
+                        console.log("custom filter");
                         return $.map(data, function(item, i) {
                             return item[search_key].toLowerCase().indexOf(query) < 0 ? null : item
                         })

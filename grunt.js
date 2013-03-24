@@ -61,6 +61,7 @@ module.exports = function(grunt) {
 
   // Default task.
   grunt.registerTask('default', 'coffee jasmine concat mincss min');
+  grunt.registerTask('ugly', 'coffee concat mincss min');
   grunt.registerTask('test', 'coffee jasmine')
 
 };
