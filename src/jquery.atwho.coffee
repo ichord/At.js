@@ -20,63 +20,6 @@
     factory window.jQuery
 ) ($) ->
 
-  # At.js 使用这个类克隆输入框, 插入标记后获得该标记的位置.
-  #
-  # @example
-  #   mirror = new Mirror($("textarea#inputor"))
-  #   html = "<p>We will get the rect of <span>@</span>icho</p>"
-  #   mirror.create(html).get_flag_rect()
-  class Mirror
-    css_attr: [
-      "overflowY", "height", "width", "paddingTop", "paddingLeft",
-      "paddingRight", "paddingBottom", "marginTop", "marginLeft",
-      "marginRight", "marginBottom","fontFamily", "borderStyle",
-      "borderWidth","wordWrap", "fontSize", "lineHeight", "overflowX",
-      "text-align",
-    ]
-
-    # @param $inputor [Object] 输入框的 jQuery 对象
-    constructor: (@$inputor) ->
-
-    # 克隆输入框的样式
-    #
-    # @return [Object] 返回克隆得到样式
-    copy_inputor_css: ->
-      css =
-        position: 'absolute'
-        left: -9999
-        top:0
-        zIndex: -20000
-        'white-space': 'pre-wrap'
-      $.each @css_attr, (i,p) =>
-        css[p] = @$inputor.css p
-      css
-
-    # 在页面中创建克隆后的镜像.
-    #
-    # @param html [String] 将输入框内容转换成 html 后的内容.
-    #   主要是为了给 `flag` (@, etc.) 打上标记
-    #
-    # @return [Object] 返回当前对象
-    create: (html) ->
-      @$mirror = $('<div></div>')
-      @$mirror.css this.copy_inputor_css()
-      @$mirror.html(html)
-      @$inputor.after(@$mirror)
-      this
-
-    # 获得标记的位置
-    #
-    # @return [Object] 标记的坐标
-    #   {left: 0, top: 0, bottom: 0}
-    get_flag_rect: ->
-      $flag = @$mirror.find "span#flag"
-      pos = $flag.position()
-      rect = {left: pos.left, top: pos.top, bottom: $flag.height() + pos.top}
-      @$mirror.remove()
-      rect
-
-
   KEY_CODE =
     DOWN: 40
     UP: 38
@@ -216,7 +159,6 @@
       @query        = null
 
       @$inputor = $(inputor)
-      @mirror = new Mirror(@$inputor)
       @view = new View(this, @$el)
       this.listen()
 
@@ -304,45 +246,13 @@
     #
     # @return [Hash] 位置信息. {top: y, left: x, bottom: bottom}
     rect: ->
-      $inputor = @$inputor
-      if document.selection # for IE full
-        Sel = document.selection.createRange()
-        x = Sel.boundingLeft + $inputor.scrollLeft()
-        y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
-        bottom = y + Sel.boundingHeight
-          # -2 : for some font style problem.
-        return {top:y-2, left:x-2, bottom:bottom-2}
-
-      format = (value) ->
-        value.replace(/</g, '&lt')
-        .replace(/>/g, '&gt')
-        .replace(/`/g,'&#96')
-        .replace(/"/g,'&quot')
-        .replace(/\r\n|\r|\n/g,"<br />")
-
-      ### 克隆完inputor后将原来的文本内容根据
-        @的位置进行分块,以获取@块在inputor(输入框)里的position
-      ###
-      start_range = $inputor.val().slice(0,@pos - 1)
-      html = "<span>"+format(start_range)+"</span>"
-      html += "<span id='flag'>?</span>"
-
-      ###
-        将inputor的 offset(相对于document)
-        和@在inputor里的position相加
-        就得到了@相对于document的offset.
-        当然,还要加上行高和滚动条的偏移量.
-      ###
-      offset = $inputor.offset()
-      at_rect = @mirror.create(html).get_flag_rect()
-
-      x = offset.left + at_rect.left - $inputor.scrollLeft()
-      y = offset.top - $inputor.scrollTop()
-      bottom = y + at_rect.bottom
-      y += at_rect.top
-
-      # bottom + 2: for some font style problem
-      return {top:y,left:x,bottom:bottom + 2}
+      c = @$inputor.caret('offset', @pos - 1)
+      if document.selection
+        scale_bottom = scale = -2
+      else
+        scale = 0
+        scale_bottom = 2
+      {left:c.left + scale, top:c.top + scale, bottom: c.top+c.height + scale_bottom}
 
     # 捕获标记字符后的字符串
     #
@@ -350,7 +260,7 @@
     catch_query: ->
       content = @$inputor.val()
       ##获得inputor中插入符的position.
-      caret_pos = @$inputor.caretPos()
+      caret_pos = @$inputor.caret('pos')
       ### 向在插入符前的的文本进行正则匹配
        * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
       subtext = content.slice(0,caret_pos)
@@ -384,7 +294,7 @@
       text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
 
       $inputor.val text
-      $inputor.caretPos start_str.length + str.length + 1
+      $inputor.caret 'pos',start_str.length + str.length + 1
       $inputor.change()
 
     on_keyup: (e) ->
@@ -573,7 +483,6 @@
 
   $.fn.atwho.Controller = Controller
   $.fn.atwho.View = View
-  $.fn.atwho.Mirror = Mirror
   $.fn.atwho.default =
       data: null
       search_key: "name"

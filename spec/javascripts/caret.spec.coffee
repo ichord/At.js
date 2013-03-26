@@ -7,8 +7,8 @@ describe "jquery.caret", ->
     $inputor = $("#inputor")
 
   it "was defined", ->
-    expect($.fn.caretPos).toBeDefined()
+    expect($.fn.caret).toBeDefined()
 
   it "work", ->
-    $inputor.caretPos(5)
-    expect($inputor.caretPos()).toBe(5)
+    $inputor.caret('pos', 5)
+    expect($inputor.caret('pos')).toBe(5)

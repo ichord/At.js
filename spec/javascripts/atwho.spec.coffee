@@ -16,7 +16,7 @@ describe "jquery.atwho", ->
 
   simulate_input = ->
     $inputor.data("atwho").current_flag = "@"
-    $inputor.caretPos(31)
+    $inputor.caret('pos', 31)
     $inputor.trigger("keyup")
 
   simulate_choose = ->

@@ -17,55 +17,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
-    Mirror = (function() {
-
-      Mirror.prototype.css_attr = ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", "fontFamily", "borderStyle", "borderWidth", "wordWrap", "fontSize", "lineHeight", "overflowX", "text-align"];
-
-      function Mirror($inputor) {
-        this.$inputor = $inputor;
-      }
-
-      Mirror.prototype.copy_inputor_css = function() {
-        var css,
-          _this = this;
-        css = {
-          position: 'absolute',
-          left: -9999,
-          top: 0,
-          zIndex: -20000,
-          'white-space': 'pre-wrap'
-        };
-        $.each(this.css_attr, function(i, p) {
-          return css[p] = _this.$inputor.css(p);
-        });
-        return css;
-      };
-
-      Mirror.prototype.create = function(html) {
-        this.$mirror = $('<div></div>');
-        this.$mirror.css(this.copy_inputor_css());
-        this.$mirror.html(html);
-        this.$inputor.after(this.$mirror);
-        return this;
-      };
-
-      Mirror.prototype.get_flag_rect = function() {
-        var $flag, pos, rect;
-        $flag = this.$mirror.find("span#flag");
-        pos = $flag.position();
-        rect = {
-          left: pos.left,
-          top: pos.top,
-          bottom: $flag.height() + pos.top
-        };
-        this.$mirror.remove();
-        return rect;
-      };
-
-      return Mirror;
-
-    })();
+    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, View;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -180,7 +132,6 @@
         this.current_flag = null;
         this.query = null;
         this.$inputor = $(inputor);
-        this.mirror = new Mirror(this.$inputor);
         this.view = new View(this, this.$el);
         this.listen();
       }
@@ -238,46 +189,18 @@
       };
 
       Controller.prototype.rect = function() {
-        var $inputor, Sel, at_rect, bottom, format, html, offset, start_range, x, y;
-        $inputor = this.$inputor;
+        var c, scale, scale_bottom;
+        c = this.$inputor.caret('offset', this.pos - 1);
         if (document.selection) {
-          Sel = document.selection.createRange();
-          x = Sel.boundingLeft + $inputor.scrollLeft();
-          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop();
-          bottom = y + Sel.boundingHeight;
-          return {
-            top: y - 2,
-            left: x - 2,
-            bottom: bottom - 2
-          };
+          scale_bottom = scale = -2;
+        } else {
+          scale = 0;
+          scale_bottom = 2;
         }
-        format = function(value) {
-          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
-        };
-        /* 克隆完inputor后将原来的文本内容根据
-          @的位置进行分块,以获取@块在inputor(输入框)里的position
-        */
-
-        start_range = $inputor.val().slice(0, this.pos - 1);
-        html = "<span>" + format(start_range) + "</span>";
-        html += "<span id='flag'>?</span>";
-        /*
-                将inputor的 offset(相对于document)
-                和@在inputor里的position相加
-                就得到了@相对于document的offset.
-                当然,还要加上行高和滚动条的偏移量.
-        */
-
-        offset = $inputor.offset();
-        at_rect = this.mirror.create(html).get_flag_rect();
-        x = offset.left + at_rect.left - $inputor.scrollLeft();
-        y = offset.top - $inputor.scrollTop();
-        bottom = y + at_rect.bottom;
-        y += at_rect.top;
         return {
-          top: y,
-          left: x,
-          bottom: bottom + 2
+          left: c.left + scale,
+          top: c.top + scale,
+          bottom: c.top + c.height + scale_bottom
         };
       };
 
@@ -285,7 +208,7 @@
         var caret_pos, content, end, query, start, subtext,
           _this = this;
         content = this.$inputor.val();
-        caret_pos = this.$inputor.caretPos();
+        caret_pos = this.$inputor.caret('pos');
         /* 向在插入符前的的文本进行正则匹配
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
         */
@@ -323,7 +246,7 @@
         start_str = source.slice(0, (this.query['head_pos'] || 0) - flag_len);
         text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
         $inputor.val(text);
-        $inputor.caretPos(start_str.length + str.length + 1);
+        $inputor.caret('pos', start_str.length + str.length + 1);
         return $inputor.change();
       };
 
@@ -566,7 +489,6 @@
     };
     $.fn.atwho.Controller = Controller;
     $.fn.atwho.View = View;
-    $.fn.atwho.Mirror = Mirror;
     return $.fn.atwho["default"] = {
       data: null,
       search_key: "name",
@@ -600,109 +522,231 @@
 (function() {
 
   (function(factory) {
-    if (typeof exports === 'object') {
-      return factory(require('jquery'));
-    } else if (typeof define === 'function' && define.amd) {
-      return define(['jquery']);
+    if (typeof define === 'function' && define.amd) {
+      return define(['jquery'], factory);
     } else {
       return factory(window.jQuery);
     }
   })(function($) {
-    var getCaretPos, setCaretPos;
-    getCaretPos = function(inputor) {
-      var end, endRange, len, normalizedValue, pos, range, start, textInputRange;
-      if (document.selection) {
-        /*
-                #assume we select "HATE" in the inputor such as textarea -> { }.
-                 *               start end-point.
-                 *              /
-                 * <  I really [HATE] IE   > between the brackets is the selection range.
-                 *                   \
-                 *                    end end-point.
-        */
+    "use strict";
 
-        range = document.selection.createRange();
-        pos = 0;
-        if (range && range.parentElement() === inputor) {
-          normalizedValue = inputor.value.replace(/\r\n/g, "\n");
-          /* SOMETIME !!!
-           "/r/n" is counted as two char.
-            one line is two, two will be four. balalala.
-            so we have to using the normalized one's length.;
-          */
+    var Caret, Mirror, methods, pluginName;
+    pluginName = 'caret';
+    Caret = (function() {
 
-          len = normalizedValue.length;
+      function Caret($inputor) {
+        this.$inputor = $inputor;
+        this.dom_inputor = this.$inputor[0];
+      }
+
+      Caret.prototype.getPos = function() {
+        var end, endRange, inputor, len, normalizedValue, pos, range, start, textInputRange;
+        inputor = this.dom_inputor;
+        inputor.focus();
+        if (document.selection) {
           /*
-                       <[  I really HATE IE   ]>:
-                        the whole content in the inputor will be the textInputRange.
+                  #assume we select "HATE" in the inputor such as textarea -> { }.
+                   *               start end-point.
+                   *              /
+                   * <  I really [HATE] IE   > between the brackets is the selection range.
+                   *                   \
+                   *                    end end-point.
           */
 
-          textInputRange = inputor.createTextRange();
-          /*                 _here must be the position of bookmark.
-                           /
-             <[  I really [HATE] IE   ]>
-              [---------->[           ] : this is what moveToBookmark do.
-             <   I really [[HATE] IE   ]> : here is result.
-                            \ two brackets in should be in line.
-          */
-
-          textInputRange.moveToBookmark(range.getBookmark());
-          endRange = inputor.createTextRange();
-          /*  [--------------------->[] : if set false all end-point goto end.
-            <  I really [[HATE] IE  []]>
-          */
-
-          endRange.collapse(false);
-          /*
-                                    ___VS____
-                                   /         \
-                     <   I really [[HATE] IE []]>
-                                              \_endRange end-point.
-          
-                    " > -1" mean the start end-point will be the same or right to the end end-point
-                   * simplelly, all in the end.
-          */
-
-          if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
-            start = end = len;
-          } else {
-            /*
-                                I really |HATE] IE   ]>
-                                       <-|
-                              I really[ [HATE] IE   ]>
-                                    <-[
-                            I reall[y  [HATE] IE   ]>
-            
-                          will return how many unit have moved.
+          range = document.selection.createRange();
+          pos = 0;
+          if (range && range.parentElement() === inputor) {
+            normalizedValue = inputor.value.replace(/\r\n/g, "\n");
+            /* SOMETIME !!!
+             "/r/n" is counted as two char.
+              one line is two, two will be four. balalala.
+              so we have to using the normalized one's length.;
             */
 
-            start = -textInputRange.moveStart("character", -len);
-            end = -textInputRange.moveEnd("character", -len);
+            len = normalizedValue.length;
+            /*
+                         <[  I really HATE IE   ]>:
+                          the whole content in the inputor will be the textInputRange.
+            */
+
+            textInputRange = inputor.createTextRange();
+            /*                 _here must be the position of bookmark.
+                             /
+               <[  I really [HATE] IE   ]>
+                [---------->[           ] : this is what moveToBookmark do.
+               <   I really [[HATE] IE   ]> : here is result.
+                              \ two brackets in should be in line.
+            */
+
+            textInputRange.moveToBookmark(range.getBookmark());
+            endRange = inputor.createTextRange();
+            /*  [--------------------->[] : if set false all end-point goto end.
+              <  I really [[HATE] IE  []]>
+            */
+
+            endRange.collapse(false);
+            /*
+                                      ___VS____
+                                     /         \
+                       <   I really [[HATE] IE []]>
+                                                \_endRange end-point.
+            
+                      " > -1" mean the start end-point will be the same or right to the end end-point
+                     * simplelly, all in the end.
+            */
+
+            if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+              start = end = len;
+            } else {
+              /*
+                                  I really |HATE] IE   ]>
+                                         <-|
+                                I really[ [HATE] IE   ]>
+                                      <-[
+                              I reall[y  [HATE] IE   ]>
+              
+                            will return how many unit have moved.
+              */
+
+              start = -textInputRange.moveStart("character", -len);
+              end = -textInputRange.moveEnd("character", -len);
+            }
           }
+        } else {
+          start = inputor.selectionStart;
         }
-      } else {
-        start = inputor.selectionStart;
+        return start;
+      };
+
+      Caret.prototype.setPos = function(pos) {
+        var inputor, range;
+        inputor = this.dom_inputor;
+        if (document.selection) {
+          range = inputor.createTextRange();
+          range.move("character", pos);
+          return range.select();
+        } else {
+          return inputor.setSelectionRange(pos, pos);
+        }
+      };
+
+      Caret.prototype.getPosition = function(pos) {
+        var $inputor, at_rect, format, h, html, mirror, start_range, x, y;
+        $inputor = this.$inputor;
+        format = function(value) {
+          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
+        };
+        pos = pos || this.getPos();
+        start_range = $inputor.val().slice(0, pos);
+        html = "<span>" + format(start_range) + "</span>";
+        html += "<span id='caret'>|</span>";
+        mirror = new Mirror($inputor);
+        at_rect = mirror.create(html).rect();
+        x = at_rect.left - $inputor.scrollLeft();
+        y = at_rect.top - $inputor.scrollTop();
+        h = at_rect.height;
+        return {
+          left: x,
+          top: y,
+          height: h
+        };
+      };
+
+      Caret.prototype.getOffset = function(pos) {
+        var $inputor, Sel, h, offset, position, x, y;
+        $inputor = this.$inputor;
+        if (document.selection) {
+          Sel = document.selection.createRange();
+          x = Sel.boundingLeft + $inputor.scrollLeft();
+          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop();
+          h = Sel.boundingHeight;
+        } else {
+          offset = $inputor.offset();
+          position = this.getPosition(pos);
+          x = offset.left + position.left;
+          y = offset.top + position.top;
+          h = position.height;
+        }
+        return {
+          left: x,
+          top: y,
+          height: h
+        };
+      };
+
+      return Caret;
+
+    })();
+    Mirror = (function() {
+
+      Mirror.prototype.css_attr = ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", "fontFamily", "borderStyle", "borderWidth", "wordWrap", "fontSize", "lineHeight", "overflowX", "text-align"];
+
+      function Mirror($inputor) {
+        this.$inputor = $inputor;
       }
-      return start;
-    };
-    setCaretPos = function(inputor, pos) {
-      var range;
-      if (document.selection) {
-        range = inputor.createTextRange();
-        range.move("character", pos);
-        return range.select();
-      } else {
-        return inputor.setSelectionRange(pos, pos);
+
+      Mirror.prototype.mirrorCss = function() {
+        var css,
+          _this = this;
+        css = {
+          position: 'absolute',
+          left: -9999,
+          top: 0,
+          zIndex: -20000,
+          'white-space': 'pre-wrap'
+        };
+        $.each(this.css_attr, function(i, p) {
+          return css[p] = _this.$inputor.css(p);
+        });
+        return css;
+      };
+
+      Mirror.prototype.create = function(html) {
+        this.$mirror = $('<div></div>');
+        this.$mirror.css(this.mirrorCss());
+        this.$mirror.html(html);
+        this.$inputor.after(this.$mirror);
+        return this;
+      };
+
+      Mirror.prototype.rect = function() {
+        var $flag, pos, rect;
+        $flag = this.$mirror.find("#caret");
+        pos = $flag.position();
+        rect = {
+          left: pos.left,
+          top: pos.top,
+          height: $flag.height()
+        };
+        this.$mirror.remove();
+        return rect;
+      };
+
+      return Mirror;
+
+    })();
+    methods = {
+      pos: function(pos) {
+        if (pos) {
+          return this.setPos(pos);
+        } else {
+          return this.getPos();
+        }
+      },
+      position: function(pos) {
+        return this.getPositlon(pos);
+      },
+      offset: function(pos) {
+        return this.getOffset(pos);
       }
     };
-    return $.fn.caretPos = function(pos) {
-      var inputor;
-      inputor = this[0];
-      inputor.focus();
-      if (pos) {
-        return setCaretPos(inputor, pos);
+    return $.fn.caret = function(method) {
+      var caret;
+      caret = new Caret(this);
+      if (methods[method]) {
+        return methods[method].apply(caret, Array.prototype.slice.call(arguments, 1));
       } else {
-        return getCaretPos(inputor);
+        return $.error("Method " + method + " does not exist on jQuery.caret");
       }
     };
   });

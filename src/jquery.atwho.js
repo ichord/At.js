@@ -17,55 +17,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Mirror, View;
-    Mirror = (function() {
-
-      Mirror.prototype.css_attr = ["overflowY", "height", "width", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom", "marginTop", "marginLeft", "marginRight", "marginBottom", "fontFamily", "borderStyle", "borderWidth", "wordWrap", "fontSize", "lineHeight", "overflowX", "text-align"];
-
-      function Mirror($inputor) {
-        this.$inputor = $inputor;
-      }
-
-      Mirror.prototype.copy_inputor_css = function() {
-        var css,
-          _this = this;
-        css = {
-          position: 'absolute',
-          left: -9999,
-          top: 0,
-          zIndex: -20000,
-          'white-space': 'pre-wrap'
-        };
-        $.each(this.css_attr, function(i, p) {
-          return css[p] = _this.$inputor.css(p);
-        });
-        return css;
-      };
-
-      Mirror.prototype.create = function(html) {
-        this.$mirror = $('<div></div>');
-        this.$mirror.css(this.copy_inputor_css());
-        this.$mirror.html(html);
-        this.$inputor.after(this.$mirror);
-        return this;
-      };
-
-      Mirror.prototype.get_flag_rect = function() {
-        var $flag, pos, rect;
-        $flag = this.$mirror.find("span#flag");
-        pos = $flag.position();
-        rect = {
-          left: pos.left,
-          top: pos.top,
-          bottom: $flag.height() + pos.top
-        };
-        this.$mirror.remove();
-        return rect;
-      };
-
-      return Mirror;
-
-    })();
+    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, View;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -180,7 +132,6 @@
         this.current_flag = null;
         this.query = null;
         this.$inputor = $(inputor);
-        this.mirror = new Mirror(this.$inputor);
         this.view = new View(this, this.$el);
         this.listen();
       }
@@ -238,46 +189,18 @@
       };
 
       Controller.prototype.rect = function() {
-        var $inputor, Sel, at_rect, bottom, format, html, offset, start_range, x, y;
-        $inputor = this.$inputor;
+        var c, scale, scale_bottom;
+        c = this.$inputor.caret('offset', this.pos - 1);
         if (document.selection) {
-          Sel = document.selection.createRange();
-          x = Sel.boundingLeft + $inputor.scrollLeft();
-          y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop();
-          bottom = y + Sel.boundingHeight;
-          return {
-            top: y - 2,
-            left: x - 2,
-            bottom: bottom - 2
-          };
+          scale_bottom = scale = -2;
+        } else {
+          scale = 0;
+          scale_bottom = 2;
         }
-        format = function(value) {
-          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
-        };
-        /* 克隆完inputor后将原来的文本内容根据
-          @的位置进行分块,以获取@块在inputor(输入框)里的position
-        */
-
-        start_range = $inputor.val().slice(0, this.pos - 1);
-        html = "<span>" + format(start_range) + "</span>";
-        html += "<span id='flag'>?</span>";
-        /*
-                将inputor的 offset(相对于document)
-                和@在inputor里的position相加
-                就得到了@相对于document的offset.
-                当然,还要加上行高和滚动条的偏移量.
-        */
-
-        offset = $inputor.offset();
-        at_rect = this.mirror.create(html).get_flag_rect();
-        x = offset.left + at_rect.left - $inputor.scrollLeft();
-        y = offset.top - $inputor.scrollTop();
-        bottom = y + at_rect.bottom;
-        y += at_rect.top;
         return {
-          top: y,
-          left: x,
-          bottom: bottom + 2
+          left: c.left + scale,
+          top: c.top + scale,
+          bottom: c.top + c.height + scale_bottom
         };
       };
 
@@ -285,7 +208,7 @@
         var caret_pos, content, end, query, start, subtext,
           _this = this;
         content = this.$inputor.val();
-        caret_pos = this.$inputor.caretPos();
+        caret_pos = this.$inputor.caret('pos');
         /* 向在插入符前的的文本进行正则匹配
          * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
         */
@@ -323,7 +246,7 @@
         start_str = source.slice(0, (this.query['head_pos'] || 0) - flag_len);
         text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
         $inputor.val(text);
-        $inputor.caretPos(start_str.length + str.length + 1);
+        $inputor.caret('pos', start_str.length + str.length + 1);
         return $inputor.change();
       };
 
@@ -566,7 +489,6 @@
     };
     $.fn.atwho.Controller = Controller;
     $.fn.atwho.View = View;
-    $.fn.atwho.Mirror = Mirror;
     return $.fn.atwho["default"] = {
       data: null,
       search_key: "name",

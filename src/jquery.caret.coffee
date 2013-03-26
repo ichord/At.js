@@ -12,17 +12,32 @@
 插入符的位置.
 ###
 ( (factory) ->
-  if typeof exports is 'object'
-    # Node/CommonJS
-    factory require('jquery')
-  else if typeof define is 'function' and define.amd
+  # Uses AMD or browser globals to create a jQuery plugin.
+  # It does not try to register in a CommonJS environment since
+  # jQuery is not likely to run in those environments.
+  #
+  # form [umd](https://github.com/umdjs/umd) project
+  if typeof define is 'function' and define.amd
     # Register as an anonymous AMD module:
-    define ['jquery']
+    define ['jquery'], factory
   else
     # Browser globals
     factory window.jQuery
 ) ($) ->
-    getCaretPos = (inputor) ->
+
+  "use strict";
+
+  pluginName = 'caret'
+
+  class Caret
+
+    constructor: (@$inputor) ->
+      @dom_inputor = @$inputor[0]
+
+    getPos: ->
+      inputor = @dom_inputor
+      inputor.focus()
+
       if document.selection #IE
         # reference: http://tinyurl.com/86pyc4s
 
@@ -93,7 +108,8 @@
         start = inputor.selectionStart
       return start
 
-    setCaretPos = (inputor, pos) ->
+    setPos: (pos) ->
+      inputor = @dom_inputor
       if document.selection #IE
         range = inputor.createTextRange()
         range.move "character", pos
@@ -101,10 +117,113 @@
       else
         inputor.setSelectionRange pos, pos
 
-    $.fn.caretPos = (pos) ->
-      inputor = this[0]
-      inputor.focus()
-      if pos
-        setCaretPos(inputor, pos)
+    getPosition: (pos)->
+      $inputor = @$inputor
+      format = (value) ->
+        value.replace(/</g, '&lt')
+        .replace(/>/g, '&gt')
+        .replace(/`/g,'&#96')
+        .replace(/"/g,'&quot')
+        .replace(/\r\n|\r|\n/g,"<br />")
+
+      pos = pos || this.getPos()
+      start_range = $inputor.val().slice(0, pos)
+      html = "<span>"+format(start_range)+"</span>"
+      html += "<span id='caret'>|</span>"
+
+      mirror = new Mirror($inputor)
+      at_rect = mirror.create(html).rect()
+
+      x = at_rect.left - $inputor.scrollLeft()
+      y = at_rect.top - $inputor.scrollTop()
+      h = at_rect.height
+
+      {left: x, top: y, height: h}
+
+    getOffset: (pos) ->
+      $inputor = @$inputor
+      if document.selection # for IE full
+        Sel = document.selection.createRange()
+        x = Sel.boundingLeft + $inputor.scrollLeft()
+        y = Sel.boundingTop + $(window).scrollTop() + $inputor.scrollTop()
+        h = Sel.boundingHeight
       else
-        getCaretPos(inputor)
+        offset = $inputor.offset()
+        position = this.getPosition(pos)
+
+        x = offset.left + position.left
+        y = offset.top + position.top
+        h = position.height
+
+      {left: x, top: y, height: h}
+
+
+  # @example
+  #   mirror = new Mirror($("textarea#inputor"))
+  #   html = "<p>We will get the rect of <span>@</span>icho</p>"
+  #   mirror.create(html).rect()
+  class Mirror
+    css_attr: [
+      "overflowY", "height", "width", "paddingTop", "paddingLeft",
+      "paddingRight", "paddingBottom", "marginTop", "marginLeft",
+      "marginRight", "marginBottom","fontFamily", "borderStyle",
+      "borderWidth","wordWrap", "fontSize", "lineHeight", "overflowX",
+      "text-align",
+    ]
+
+    constructor: (@$inputor) ->
+
+    mirrorCss: ->
+      css =
+        position: 'absolute'
+        left: -9999
+        top:0
+        zIndex: -20000
+        'white-space': 'pre-wrap'
+      $.each @css_attr, (i,p) =>
+        css[p] = @$inputor.css p
+      css
+
+    create: (html) ->
+      @$mirror = $('<div></div>')
+      @$mirror.css this.mirrorCss()
+      @$mirror.html(html)
+      @$inputor.after(@$mirror)
+      this
+
+    # 获得标记的位置
+    #
+    # @return [Object] 标记的坐标
+    #   {left: 0, top: 0, bottom: 0}
+    rect: ->
+      $flag = @$mirror.find "#caret"
+      pos = $flag.position()
+      rect = {left: pos.left, top: pos.top, height: $flag.height() }
+      @$mirror.remove()
+      rect
+
+
+  methods =
+    pos: (pos) ->
+      if pos
+        this.setPos pos
+      else
+        this.getPos()
+
+    position: (pos) ->
+      this.getPositlon pos
+
+    offset: (pos) ->
+      this.getOffset pos
+
+
+  $.fn.caret = (method) ->
+    caret = new Caret this
+
+    if methods[method]
+      methods[method].apply caret, Array::slice.call(arguments, 1)
+    else
+      $.error "Method #{method} does not exist on jQuery.caret"
+
+
+
