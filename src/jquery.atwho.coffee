@@ -33,19 +33,18 @@
   #
   # @mixin
   #
-  # 以下所有方法的调用上下文都是 Controller. 并且按照文档显示的顺序调用
   # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
   #
   # [data_refactor, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
   #
   DEFAULT_CALLBACKS =
 
-    # 用于插件最开始时对设置的数据进行重构.
-    # 默认情况下将数组组织成Hash形式.
+    # It would be called to restrcture the data when reg a `flag`("@", etc).
+    # In default, At.js will convert it to a Hash Array.
     #
-    # @param data [Array] 开发者自己在配置中设置的数据列表
+    # @param data [Array] Given data in `settings`
     #
-    # @return [Array] 重构后的数据列表
+    # @return [Array] Data after refactor.
     data_refactor: (data) ->
       return data if not $.isArray(data)
       $.map data, (item, k) ->
@@ -53,12 +52,12 @@
           item = {name:item}
         return item
 
-    # 匹配当前标记后面字符串的匹配规则
+    # It would be called to match the `flag`
     #
-    # @param flag [String] 当前标记 ("@", etc)
-    # @param subtext [String] 输入框从开始到插入符号前的字符串
+    # @param flag [String] current `flag` ("@", etc)
+    # @param subtext [String] Text from start to current caret position.
     #
-    # @return [String] 匹配后得到的字符串
+    # @return [String] Matched string.
     matcher: (flag, subtext) ->
       regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
       match = regexp.exec subtext
@@ -69,36 +68,36 @@
 
     # ---------------------
 
-    # 根据匹配的的字符串搜索数据
+    # Filter data by matched string.
     #
-    # @param query [String] 匹配得到的字符串
-    # @param data [Array] 数据列表
-    # @param search_key [String] 用于搜索的关键字
+    # @param query [String] Matched string.
+    # @param data [Array] data list
+    # @param search_key [String] key word for seaching.
     #
-    # @return [Array] 过滤后的数据
+    # @return [Array] result data.
     filter: (query, data, search_key) ->
       $.map data, (item,i) =>
         name = if $.isPlainObject(item) then item[search_key] else item
         item if name.toLowerCase().indexOf(query) >= 0
 
-    # 当 `data` 设置为 url 的时候, 我们使用这个 filter 来发起 ajax 请求
+    # When `data` is string type, At.js using it as a URL to lanuch a Ajax request.
     #
-    # @param params [Hash] ajax 请求参数. {q: query, limit: 5}
-    # @param url [String] 开发者自己设置的 url 地址
-    # @param render_view [Function] 将数据渲染到下拉列表的回调
+    # @param params [Hash] Query for Ajax. {q: query, limit: 5}
+    # @param url [String] URL to request data.
+    # @param render_view [Function] render page callback.
     remote_filter: (params, url, render_view) ->
       $.ajax url,
         data: params
         success: (data) ->
           render_view(data)
 
-    # 对重构后的数据进行排序
+    # Sorter data of course.
     #
-    # @param query [String] 匹配后的关键字
-    # @param items [Array] 重构后的数据列表
-    # @param search_key [String] 用于搜索的关键字
+    # @param query [String] matched string
+    # @param items [Array] data that was refactored
+    # @param search_key [String] key word to search
     #
-    # @return [Array] 排序后的数据列表
+    # @return [Array] sorted data
     sorter: (query, items, search_key) ->
       if !query
         return items.sort (a, b) ->
@@ -119,10 +118,10 @@
         item
 
 
-    # 解析并渲染下拉列表中单个项的模板
+    # Eval template for every single item in display list.
     #
-    # @param tpl [String] 模板字符串
-    # @param map [Hash] 数据的键值对.
+    # @param tpl [String] The template string.
+    # @param map [Hash] Data map to eval.
     tpl_eval: (tpl, map) ->
       try
         el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
@@ -130,28 +129,28 @@
       catch error
         ""
 
-    # 高亮关键字
+    # Hightlight the `matched query` string.
     #
-    # @param li [String] HTML String. 经过渲染后的模板
-    # @param query [String] 匹配得到的关键字
+    # @param li [String] HTML String after eval.
+    # @param query [String] matched query.
     #
-    # @return [String] 高亮处理后的 HTML 字符串
+    # @return [String] hightlighted string.
     highlighter: (li, query) ->
       return li if not query
       li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
           '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
-    # 选择某列表项的动作
+    # What to do after use choose a item.
     #
-    # @param $li [jQuery Object] 选中的列表项目
+    # @param $li [jQuery Object] Chosen item
     selector: ($li) ->
       this.replace_str($li.data("value") || "") if $li.length > 0
 
 
-  # At.js 对数据操作(搜索, 匹配, 渲染) 的主控中心
+  # At.js central contoller(searching, matching, evaluating and rendering.)
   class Controller
 
-    # @param inputor [HTML DOM Object] 输入框
+    # @param inputor [HTML DOM Object] `input` or `textarea`
     constructor: (inputor) ->
       @settings     = {}
       @pos          = 0
@@ -163,7 +162,7 @@
       @view = new View(this, @$el)
       this.listen()
 
-    # 绑定对输入框的各种监听事件
+    # binding jQuery events of `inputor`'s
     listen: ->
       @$inputor
         .on 'keyup.atwho', (e) =>
