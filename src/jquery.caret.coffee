@@ -211,7 +211,7 @@
         this.getPos()
 
     position: (pos) ->
-      this.getPositlon pos
+      this.getPosition pos
 
     offset: (pos) ->
       this.getOffset pos
