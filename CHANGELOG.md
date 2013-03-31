@@ -1,3 +1,9 @@
+### 2013-04
+
+* remove ability of changing common setting after inputor binded
+* can fix list view after matched query in IE now.
+* separated core function (get offset of inputor) as a jquery plugins.
+
 ### v0.2.0 - 2012-12
 
 **No more testing in IEs browsers.**
