@@ -309,9 +309,9 @@
       Controller.prototype.remote_call = function(data, query) {
         var params, _callback;
         params = {
-          q: query.text,
           limit: this.get_opt("limit")
         };
+        params[this.get_opt("search_term")] = query.text;
         _callback = function(data) {
           return this.render_view(data);
         };
@@ -492,6 +492,7 @@
     return $.fn.atwho["default"] = {
       data: null,
       search_key: "name",
+      search_term: "q",
       callbacks: DEFAULT_CALLBACKS,
       limit: 5,
       display_flag: true,
