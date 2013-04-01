@@ -82,7 +82,7 @@
 
     # 当 `data` 设置为 url 的时候, 我们使用这个 filter 来发起 ajax 请求
     #
-    # @param params [Hash] ajax 请求参数. {q: query, limit: 5}
+    # @param params [Hash] ajax 请求参数. {"search_term": query, limit: 5}
     # @param url [String] 开发者自己设置的 url 地址
     # @param render_view [Function] 将数据渲染到下拉列表的回调
     remote_filter: (params, url, render_view) ->
@@ -341,8 +341,8 @@
 
     remote_call: (data, query) ->
       params =
-          q: query.text
           limit: this.get_opt("limit")
+      params[this.get_opt("search_term")] = query.text
       _callback = (data) ->
         this.render_view data
       _callback = $.proxy _callback, this
@@ -486,6 +486,7 @@
   $.fn.atwho.default =
       data: null
       search_key: "name"
+      search_term: "q"
       callbacks: DEFAULT_CALLBACKS
       limit: 5
       display_flag: yes
