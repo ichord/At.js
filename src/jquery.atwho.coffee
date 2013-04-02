@@ -72,7 +72,7 @@
     #
     # @param query [String] Matched string.
     # @param data [Array] data list
-    # @param search_key [String] key word for seaching.
+    # @param search_key [String] key char for seaching.
     #
     # @return [Array] result data.
     filter: (query, data, search_key) ->
@@ -95,7 +95,7 @@
     #
     # @param query [String] matched string
     # @param items [Array] data that was refactored
-    # @param search_key [String] key word to search
+    # @param search_key [String] key char to search
     #
     # @return [Array] sorted data
     sorter: (query, items, search_key) ->
@@ -174,16 +174,12 @@
         .on 'blur.atwho', (e) =>
           @view.hide this.get_opt("display_timeout")
 
-    # At.js 可以对每个输入框绑定不同的监听标记. 比如同时监听 "@", ":" 字符
-    # 并且通过不同的 `settings` 给予不同的表现行为, 比如插入不同的内容(即不同的渲染模板)
+    # At.js can register multipule key char (flag) to every inputor such as "@" and ":"
+    # And their has it's own `settings` so that it work differently.
+    # After register, we still can update their `settings` such as updating `data`
     #
-    # 控制器初始化的时候会将默认配置当作一个所有标记共有的配置. 而每个标记只存放针对自己的特定配置.
-    # 搜索配置的时候, 将先寻找标记里的配置. 如果找不到则去公用的配置里找.
-    #
-    # 当输入框已经注册了某个字符后, 再对该字符进行注册将会更新其配置, 比如改变 `data`, 其它的配置不变.
-    #
-    # @param flag [String] 要监听的字符
-    # @param settings [Hash] 配置哈希值
+    # @param flag [String] key char (flag)
+    # @param settings [Hash] the settings
     reg: (flag, settings) ->
       @current_flag = flag
       current_settings = if @settings[flag]
@@ -196,17 +192,18 @@
       this
 
 
-    # 将自定义的 `jQueryEvent` 事件代理到当前输入框( inputor )
-    # 这个方法会自动为事件添加名为 `atwho` 的命名域(namespace), 并且将当前上下为作为最后一个参数传入.
+    # Delegate custom `jQueryEvent` to the inputor
+    # This function will add `atwho` as namespace to every jQuery event
+    # and pass current context as the last param to it.
     #
     # @example
     #   this.trigger "roll_n_rock", [1,2,3,4]
-    #   # 对应的输入框可以如下监听事件.
+    #
     #   $inputor.on "rool_n_rock", (e, one, two, three, four) ->
     #     console.log one, two, three, four
     #
-    # @param name [String] 事件名称
-    # @param data [Array] 传递给回调函数的数据.
+    # @param name [String] Event name
+    # @param data [Array] data to callback
     trigger: (name, data) ->
       data ||= []
       data.push this
@@ -215,36 +212,37 @@
     # get or set current data which would be shown on the list view.
     #
     # @param data [Array] set data
-    # @return [Array|undefined] 当前数据, 数据元素一般为 Hash 对象.
-    data: (data)->
+    # @return [Array|undefined] current data that showing on the list view.
+    data: (data) ->
       if data
         @$inputor.data("atwho-data", data)
       else
         @$inputor.data("atwho-data")
 
-    # At.js 允许开发者自定义控制器使用的一些功能函数
+    # Get callback either in settings which was set by plugin user or in default callbacks list.
     #
-    # @param func_name [String] 回调的函数名
-    # @return [Function] 该回调函数
+    # @param func_name [String] callback's name
+    # @return [Function] The callback.
     callbacks: (func_name)->
       func = this.get_opt("callbacks")[func_name]
       func = DEFAULT_CALLBACKS[func_name] unless func
       func
 
-    # 由于可以绑定多字符, 但配置却不相同, 而且有公用配置.所以会根据当前标记获得对应的配置
+    # Because different reigstered key char has different settings.
+    # so we should give their own for them.
     #
-    # @param key [String] 某配置项的键名
-    # @param default_value [?] 没有找到任何值后自定义的默认值
-    # @return [?] 配置项的值
+    # @param key [String] setting's key name
+    # @param default_value [?] return this if get nothing from current settings.
+    # @return [?] setting's value
     get_opt: (key, default_value) ->
       try
         @settings[@current_flag][key]
       catch e
         null
 
-    # 获得标记字符在输入框中的位置
+    # Get offset of current key char(`flag`)
     #
-    # @return [Hash] 位置信息. {top: y, left: x, bottom: bottom}
+    # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
       if document.selection
@@ -254,15 +252,12 @@
         scale_bottom = 2
       {left:c.left + scale, top:c.top + scale, bottom: c.top+c.height + scale_bottom}
 
-    # 捕获标记字符后的字符串
+    # Catch query string behind the key char
     #
-    # @return [Hash] 该字符串的信息, 包括在输入框中的位置. {'text': "hello", 'head_pos': 0, 'end_pos': 0}
+    # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
     catch_query: ->
       content = @$inputor.val()
-      ##获得inputor中插入符的position.
       caret_pos = @$inputor.caret('pos')
-      ### 向在插入符前的的文本进行正则匹配
-       * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个###
       subtext = content.slice(0,caret_pos)
 
       query = null
@@ -283,9 +278,9 @@
 
       @query = query
 
-    # 将选中的项的`data-value` 内容插入到输入框中
+    # Insert value of `data-value` attribute of choosed item into inputor
     #
-    # @param str [String] 要插入的字符串, 一般为 `data-value` 的值.
+    # @param str [String] string to insert
     replace_str: (str) ->
       $inputor = @$inputor
       source = $inputor.val()
@@ -328,9 +323,9 @@
           $.noop()
       e.stopPropagation()
 
-    # 将处理完的数据显示到下拉列表中
+    # Render list view
     #
-    # @param data [Array] 处理过后的数据列表
+    # @param data [Array] The data
     render_view: (data) ->
       search_key = this.get_opt("search_key")
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
@@ -350,6 +345,7 @@
 
 
     # 根据关键字搜索数据
+    #
     look_up: ->
       query = this.catch_query()
       return no if not query
