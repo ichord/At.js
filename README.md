@@ -1,15 +1,15 @@
+**Add Github like mentions autocomplete to your application.** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)  
 
-**Add Github like mentions autocomplete to your application.** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
 
-Let me know you are using it. So I will work harder on it, Thanks. :smile:
-
-Add your website in [THIS LIST](https://github.com/ichord/At.js/wiki/Sites) if you are using **At.js**
-
+### Hi
+Let me know you are using it, so I will work harder on it.  
+And if you like **At.js** ?! Tell me by adding website [here](https://github.com/ichord/At.js/wiki/Sites)  
+Hope you like it, Thanks.! :)
 
 ### Notice
 
 **The Stable version is living in branch `stable` and tag `v0.1.7`**  
-This branch have updated to `v0.2.0`, read **CHANGELOG.md** for more details please.  
+This branch have updated to `v0.2.0`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 
@@ -46,6 +46,11 @@ http://ichord.github.com/At.js/documentation.html
 ### Core Team Members
 
 * [@ichord](https://github.com/ichord)
+
+### One More Thing...
+
+Core function, that get the correct offset of caret, of At.js had been separated as a jQuery plugin [Caret.js](https://github.com/ichord/Caret.js)  
+If you want to build your own 'At.js', welcome to use it. And [here](http://ichord.github.io/Caret.js) is a Demo.
 
 
 ---
