@@ -59,14 +59,7 @@
           }
         });
       },
-      remote_filter: function(params, url, render_view) {
-        return $.ajax(url, {
-          data: params,
-          success: function(data) {
-            return render_view(data);
-          }
-        });
-      },
+      remote_filter: null,
       sorter: function(query, items, search_key) {
         var item, results, text, _i, _len;
         if (!query) {
@@ -131,6 +124,7 @@
         this.flags = null;
         this.current_flag = null;
         this.query = null;
+        this._data_sets = {};
         this.$inputor = $(inputor);
         this.view = new View(this, this.$el);
         this.listen();
@@ -150,10 +144,15 @@
       };
 
       Controller.prototype.reg = function(flag, settings) {
-        var current_settings;
+        var current_settings, data;
         this.current_flag = flag;
         current_settings = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
-        current_settings["data"] = this.callbacks("data_refactor").call(this, current_settings["data"]);
+        data = current_settings.data;
+        if (typeof data === "string") {
+          this.load_remote_data(data);
+        } else {
+          this.save_data(data);
+        }
         return this;
       };
 
@@ -163,12 +162,12 @@
         return this.$inputor.trigger("" + name + ".atwho", data);
       };
 
-      Controller.prototype.data = function(data) {
-        if (data) {
-          return this.$inputor.data("atwho-data", data);
-        } else {
-          return this.$inputor.data("atwho-data");
-        }
+      Controller.prototype.get_data = function(key) {
+        return this._data_sets[key || (key = this.current_flag)];
+      };
+
+      Controller.prototype.save_data = function(data, key) {
+        return this._data_sets[key || (key = this.current_flag)] = this.callbacks("data_refactor").call(this, data);
       };
 
       Controller.prototype.callbacks = function(func_name) {
@@ -209,10 +208,6 @@
           _this = this;
         content = this.$inputor.val();
         caret_pos = this.$inputor.caret('pos');
-        /* 向在插入符前的的文本进行正则匹配
-         * 考虑会有多个 @ 的存在, 匹配离插入符最近的一个
-        */
-
         subtext = content.slice(0, caret_pos);
         query = null;
         $.each(this.settings, function(flag, settings) {
@@ -302,21 +297,23 @@
         search_key = this.get_opt("search_key");
         data = this.callbacks("sorter").call(this, this.query.text, data, search_key);
         data = data.slice(0, this.get_opt('limit'));
-        this.data(data);
         return this.view.render(data);
       };
 
-      Controller.prototype.remote_call = function(data, query) {
-        var params, _callback;
-        params = {
-          q: query.text,
-          limit: this.get_opt("limit")
-        };
+      Controller.prototype.remote_call = function(query) {
+        var _callback;
         _callback = function(data) {
           return this.render_view(data);
         };
         _callback = $.proxy(_callback, this);
-        return this.callbacks('remote_filter').call(this, params, data, _callback);
+        return this.callbacks('remote_filter').call(this, query.text, _callback);
+      };
+
+      Controller.prototype.load_remote_data = function(url) {
+        var _this = this;
+        return $.get(url).done(function(data) {
+          return _this.save_data(data);
+        });
       };
 
       Controller.prototype.look_up = function() {
@@ -325,12 +322,13 @@
         if (!query) {
           return false;
         }
-        data = this.get_opt("data");
+        data = this.get_data();
         search_key = this.get_opt("search_key");
-        if (typeof data === "string") {
-          this.remote_call(data, query);
-        } else if ((data = this.callbacks('filter').call(this, query.text, data, search_key))) {
+        data = this.callbacks('filter').call(this, query.text, data || [], search_key);
+        if (data && data.length > 0) {
           this.render_view(data);
+        } else if (this.callbacks('remote_filter')) {
+          this.remote_call(query);
         } else {
           this.view.hide();
         }

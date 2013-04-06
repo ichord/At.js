@@ -39,10 +39,11 @@
   #
   DEFAULT_CALLBACKS =
 
-    # It would be called to restrcture the data when reg a `flag`("@", etc).
+    # It would be called to restrcture the data when At.js invoke `save_data` to save data
+    # Often invoke it when reg a `flag`("@", etc).
     # In default, At.js will convert it to a Hash Array.
     #
-    # @param data [Array] Given data in `settings`
+    # @param data [Array] data to refacotor.
     #
     # @return [Array] Data after refactor.
     data_refactor: (data) ->
@@ -80,16 +81,17 @@
         name = if $.isPlainObject(item) then item[search_key] else item
         item if name.toLowerCase().indexOf(query) >= 0
 
-    # When `data` is string type, At.js using it as a URL to lanuch a Ajax request.
+    # It function is given, At.js will invoke it if local filter can not find any data
     #
-    # @param params [Hash] Query for Ajax. {q: query, limit: 5}
-    # @param url [String] URL to request data.
-    # @param render_view [Function] render page callback.
-    remote_filter: (params, url, render_view) ->
-      $.ajax url,
-        data: params
-        success: (data) ->
-          render_view(data)
+    # @param params [String] matched query
+    # @param callback [Function] callback to render page.
+    remote_filter: null
+    # remote_filter: (query, callback) ->
+    #   $.ajax url,
+    #     data: params
+    #     success: (data) ->
+    #       render_view(data)
+
 
     # Sorter data of course.
     #
@@ -157,6 +159,8 @@
       @flags        = null
       @current_flag = null
       @query        = null
+      # all data either from `settings` or from anywhere be saved by `save_data` function.
+      @_data_sets = {}
 
       @$inputor = $(inputor)
       @view = new View(this, @$el)
@@ -187,9 +191,14 @@
       else
         @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
-      current_settings["data"] = this.callbacks("data_refactor").call(this, current_settings["data"])
+      data = current_settings.data
+      if typeof data is "string"
+        this.load_remote_data(data)
+      else
+        this.save_data data
 
       this
+
 
 
     # Delegate custom `jQueryEvent` to the inputor
@@ -213,11 +222,11 @@
     #
     # @param data [Array] set data
     # @return [Array|undefined] current data that showing on the list view.
-    data: (data) ->
-      if data
-        @$inputor.data("atwho-data", data)
-      else
-        @$inputor.data("atwho-data")
+    get_data: (key) ->
+      @_data_sets[key ||= @current_flag]
+
+    save_data: (data, key) ->
+      @_data_sets[key ||= @current_flag] = this.callbacks("data_refactor").call(this, data)
 
     # Get callback either in settings which was set by plugin user or in default callbacks list.
     #
@@ -331,38 +340,42 @@
       data = this.callbacks("sorter").call(this, @query.text, data, search_key)
       data = data.slice(0, this.get_opt('limit'))
 
-      this.data(data)
       @view.render data
 
-    remote_call: (data, query) ->
-      params =
-          q: query.text
-          limit: this.get_opt("limit")
+    remote_call: (query) ->
+
       _callback = (data) ->
         this.render_view data
       _callback = $.proxy _callback, this
-      this.callbacks('remote_filter').call(this, params, data, _callback)
 
+      this.callbacks('remote_filter').call(this, query.text, _callback)
 
-    # 根据关键字搜索数据
+    load_remote_data: (url) ->
+      $.get(url).done (data) =>
+        this.save_data(data)
+
+    # Searching!
     #
     look_up: ->
       query = this.catch_query()
       return no if not query
 
-      data = this.get_opt("data")
+      data = this.get_data()
       search_key = this.get_opt("search_key")
-      if typeof data is "string"
-        this.remote_call(data, query)
-      else if (data = this.callbacks('filter').call(this, query.text, data, search_key))
+
+      data = this.callbacks('filter').call(this, query.text, data || [], search_key)
+      if data and data.length > 0
         this.render_view data
+      else if this.callbacks('remote_filter')
+        this.remote_call query
       else
-          @view.hide()
+        @view.hide()
+
       $.noop()
 
 
-  # 操作下拉列表所有表现行为的类
-  # 所有的这个类的对象都只操作一个视图.
+  # View class to controll how At.js's view showing.
+  # All classes share the some DOM view.
   class View
 
     # @param controller [Object] 控制器对象.
@@ -389,26 +402,24 @@
         @$el.data("_view").choose()
 
 
-    # 判断视图是否存在
+    # Check if the view is exists
     #
     # @return [Boolean]
     exist: ->
       $("##{@id}").length > 0
 
-    # 判断视图是否显示中
+    # Check if view is visible
     #
     # @return [Boolean]
     visible: ->
       @$el.is(":visible")
 
-    # 选择某项的操作
     choose: ->
       $li = @$el.find ".cur"
       @controller.callbacks("selector").call(@controller, $li)
       @controller.trigger "choose", [$li]
       this.hide()
 
-    # 重置视图在页面中的位置.
     reposition: ->
       rect = @controller.rect()
       if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()

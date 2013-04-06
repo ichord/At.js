@@ -61,22 +61,14 @@ describe "jquery.atwho", ->
       names = callbacks.filter.call(controller, "jo", fixtures["names"])
       expect(names).toContain("Joshua")
 
-    it "request data from remote by ajax", ->
-      jasmine.Ajax.useMock()
-
-      render_callback = jasmine.createSpy("render_view")
-      callbacks.remote_filter({}, "/", render_callback)
-
-      request = mostRecentAjaxRequest()
-      # response_data = ["Jacob", "Joshua", "Jayden"]
-      response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
-      request.response
-        status: 200
-        responseText: JSON.stringify(response_data)
-
-      expect(render_callback).toHaveBeenCalled()
-      names = render_callback.mostRecentCall.args[0]
-      expect(names).toContain({"name":'Jacob'})
+    it "request data from remote by ajax if set remote_filter", ->
+      remote_call = jasmine.createSpy("remote_call")
+      $inputor.atwho "@",
+        data: null,
+        callbacks:
+          remote_filter: remote_call
+      simulate_input()
+      expect(remote_call).toHaveBeenCalled()
 
     it "can sort the data", ->
       names = callbacks.data_refactor.call(controller, fixtures["names"])
@@ -142,16 +134,24 @@ describe "jquery.atwho", ->
       expect(filter).toHaveBeenCalled()
       expect(callbacks.filter).not.toHaveBeenCalled()
 
-    it "setting data as url", ->
+    it "setting data as url and load remote data", ->
       jasmine.Ajax.useMock()
-      spyOn(callbacks, "remote_filter")
+      spyOn(controller, "load_remote_data").andCallThrough()
 
-      $inputor.atwho "@", data: "/"
-      trigger_atwho()
+      controller.save_data null
+      $inputor.atwho "@",
+        data: "/atwho.json"
 
-      mostRecentAjaxRequest().response status: 200
+      expect(controller.get_data()).toBe null
 
-      expect(callbacks.remote_filter).toHaveBeenCalled()
+      expect(controller.load_remote_data).toHaveBeenCalled()
+      request = mostRecentAjaxRequest()
+      response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
+      request.response
+        status: 200
+        responseText: JSON.stringify(response_data)
+
+      expect(controller.get_data().length).toBe 3
 
     it "setting timeout", ->
       jasmine.Clock.useMock()
@@ -227,12 +227,12 @@ describe "jquery.atwho", ->
       simulate_input()
 
     it "can get current data", ->
-      expect(controller.data().length).toBe 3
+      expect(controller.get_data().length).toBe 23
 
-    it "can set current data", ->
+    it "can save current data", ->
       data = [{id: 1, name: "one"}, {id: 2, name: "two"}]
-      controller.data(data)
-      expect(controller.data()).toBe data
+      controller.save_data(data)
+      expect(controller.get_data().length).toBe 2
 
     it "cant get current while using remote filter", ->
       jasmine.Ajax.useMock()
@@ -246,5 +246,5 @@ describe "jquery.atwho", ->
         responseText: JSON.stringify(response_data)
 
       expect(controller.get_opt("data")).toBe "/atwho.json"
-      expect(controller.data().length).toBe 3
+      expect(controller.get_data().length).toBe 3
 
