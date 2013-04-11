@@ -292,6 +292,9 @@
     # @param str [String] string to insert
     replace_str: (str) ->
       $inputor = @$inputor
+      # ensure str is str.
+      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
+      str = '' + str
       source = $inputor.val()
       flag_len = if this.get_opt("display_flag") then 0 else @current_flag.length
       start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len

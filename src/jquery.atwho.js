@@ -236,6 +236,7 @@
       Controller.prototype.replace_str = function(str) {
         var $inputor, flag_len, source, start_str, text;
         $inputor = this.$inputor;
+        str = '' + str;
         source = $inputor.val();
         flag_len = this.get_opt("display_flag") ? 0 : this.current_flag.length;
         start_str = source.slice(0, (this.query['head_pos'] || 0) - flag_len);
