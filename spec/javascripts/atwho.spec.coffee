@@ -15,7 +15,7 @@ describe "jquery.atwho", ->
     simulate_choose()
 
   simulate_input = ->
-    $inputor.data("atwho").current_flag = "@"
+    $inputor.data("atwho").current_flag ||= "@"
     $inputor.caret('pos', 31)
     $inputor.trigger("keyup")
 
@@ -162,6 +162,14 @@ describe "jquery.atwho", ->
       jasmine.Clock.tick 503
       view = controller.view.$el
       expect(view).toBeHidden()
+
+    it "escape RegExp flag", ->
+      $inputor = $('#inputor2').atwho "$",
+        data: fixtures["names"]
+      controller = $inputor.data('atwho')
+      controller.current_flag = "$"
+      simulate_input()
+      expect(controller.view.visible()).toBe true
 
 
   describe "jquery events", ->

@@ -41,6 +41,7 @@
       },
       matcher: function(flag, subtext) {
         var match, matched, regexp;
+        flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
         regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
         match = regexp.exec(subtext);
         matched = null;
