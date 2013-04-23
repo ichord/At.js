@@ -356,7 +356,9 @@
       this.callbacks('remote_filter').call(this, query.text, _callback)
 
     load_remote_data: (url) ->
-      $.get(url).done (data) =>
+      $.ajax(url,
+        dataType: "json"
+      ).done (data) =>
         this.save_data(data)
 
     # Searching!

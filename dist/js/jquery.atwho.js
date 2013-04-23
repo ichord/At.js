@@ -313,7 +313,9 @@
 
       Controller.prototype.load_remote_data = function(url) {
         var _this = this;
-        return $.get(url).done(function(data) {
+        return $.ajax(url, {
+          dataType: "json"
+        }).done(function(data) {
           return _this.save_data(data);
         });
       };
