@@ -17,9 +17,14 @@
                 'callbacks': {
                     filter: function (query, data, search_key) {
                         console.log("custom filter",query, data);
-                        return $.map(data, function(item, i) {
-                            return item[search_key].toLowerCase().indexOf(query) < 0 ? null : item
-                        })
+                        return this.super_call("filter", query, data, search_key)
+                        // return $.map(data, function(item, i) {
+                        //     return item[search_key].toLowerCase().indexOf(query) < 0 ? null : item
+                        // })
+                    },
+                    remote_filter: function (query, callback) {
+                        // this.super_call("remote_filter", query, callback)
+                        callback(null)
                     }
                 }
             });

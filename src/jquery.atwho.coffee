@@ -164,6 +164,9 @@
         callback(data)
       else if (remote_filter = @context.callbacks('remote_filter'))
         remote_filter.call(@context, query.text, callback)
+      else
+        return no
+      yes
 
     # get or set current data which would be shown on the list view.
     #
@@ -250,6 +253,12 @@
       data ||= []
       data.push this
       @$inputor.trigger "#{name}.atwho", data
+
+    super_call: (func_name, args...) ->
+      try
+        DEFAULT_CALLBACKS[func_name].apply this, args
+      catch error
+        $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
 
     # Get callback either in settings which was set by plugin user or in default callbacks list.
     #
@@ -381,7 +390,7 @@
           @view.hide()
       _callback = $.proxy _callback, this
 
-      @model.query query.text, _callback
+      @view.hide() unless @model.query(query.text, _callback)
 
       yes
 

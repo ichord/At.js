@@ -9,6 +9,7 @@
 
 
 (function() {
+  var __slice = [].slice;
 
   (function(factory) {
     if (typeof define === 'function' && define.amd) {
@@ -130,10 +131,13 @@
         search_key = this.context.get_opt("search_key");
         data = this.context.callbacks('filter').call(this.context, query, data, search_key);
         if (data && data.length > 0) {
-          return callback(data);
+          callback(data);
         } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
-          return remote_filter.call(this.context, query.text, callback);
+          remote_filter.call(this.context, query.text, callback);
+        } else {
+          return false;
         }
+        return true;
       };
 
       Model.prototype.all = function(key) {
@@ -203,6 +207,16 @@
         data || (data = []);
         data.push(this);
         return this.$inputor.trigger("" + name + ".atwho", data);
+      };
+
+      Controller.prototype.super_call = function() {
+        var args, func_name;
+        func_name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+        try {
+          return DEFAULT_CALLBACKS[func_name].apply(this, args);
+        } catch (error) {
+          return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
+        }
       };
 
       Controller.prototype.callbacks = function(func_name) {
@@ -350,7 +364,9 @@
           }
         };
         _callback = $.proxy(_callback, this);
-        this.model.query(query.text, _callback);
+        if (!this.model.query(query.text, _callback)) {
+          this.view.hide();
+        }
         return true;
       };
 
