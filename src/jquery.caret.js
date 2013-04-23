@@ -1,4 +1,3 @@
-
 /*
   Implement Github like autocomplete mentions
   http://ichord.github.com/At.js
@@ -152,7 +151,11 @@
         var $inputor, h, offset, position, range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
-          range = this.domInputor.createRange();
+          if(this.domInputor.createRange){  //测试 支持ie10
+        			range = this.domInputor.createRange();  //ie10 提示错误
+      			}else{
+      				range = this.domInputor.createTextRange();
+      			}
           if (pos) {
             range.move('character', pos);
           }
