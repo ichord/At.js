@@ -136,22 +136,22 @@ describe "jquery.atwho", ->
 
     it "setting data as url and load remote data", ->
       jasmine.Ajax.useMock()
-      spyOn(controller, "load_remote_data").andCallThrough()
+      spyOn(controller.model, "_load_remote_data").andCallThrough()
 
-      controller.save_data null
+      controller.model.reset null
       $inputor.atwho "@",
         data: "/atwho.json"
 
-      expect(controller.get_data()).toBe null
+      expect(controller.model.all()).toBe null
 
-      expect(controller.load_remote_data).toHaveBeenCalled()
+      expect(controller.model._load_remote_data).toHaveBeenCalled()
       request = mostRecentAjaxRequest()
       response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
       request.response
         status: 200
         responseText: JSON.stringify(response_data)
 
-      expect(controller.get_data().length).toBe 3
+      expect(controller.model.all().length).toBe 3
 
     it "setting timeout", ->
       jasmine.Clock.useMock()
@@ -235,12 +235,12 @@ describe "jquery.atwho", ->
       simulate_input()
 
     it "can get current data", ->
-      expect(controller.get_data().length).toBe 23
+      expect(controller.model.all().length).toBe 23
 
     it "can save current data", ->
       data = [{id: 1, name: "one"}, {id: 2, name: "two"}]
-      controller.save_data(data)
-      expect(controller.get_data().length).toBe 2
+      controller.model.reset(data)
+      expect(controller.model.all().length).toBe 2
 
     it "cant get current while using remote filter", ->
       jasmine.Ajax.useMock()
@@ -254,5 +254,5 @@ describe "jquery.atwho", ->
         responseText: JSON.stringify(response_data)
 
       expect(controller.get_opt("data")).toBe "/atwho.json"
-      expect(controller.get_data().length).toBe 3
+      expect(controller.model.all().length).toBe 3
 

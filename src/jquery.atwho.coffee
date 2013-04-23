@@ -39,7 +39,7 @@
   #
   DEFAULT_CALLBACKS =
 
-    # It would be called to restrcture the data when At.js invoke `save_data` to save data
+    # It would be called to restrcture the data when At.js invoke `reset` to save data
     # Often invoke it when reg a `flag`("@", etc).
     # In default, At.js will convert it to a Hash Array.
     #
@@ -150,6 +150,43 @@
     selector: ($li) ->
       this.replace_str($li.data("value") || "") if $li.length > 0
 
+  class Model
+    constructor: (@context) ->
+      # all data either from `settings` or from anywhere be saved by `reset` function.
+      @_data_sets = {}
+
+    query: (query, callback) ->
+      data = this.all() || []
+      search_key = @context.get_opt("search_key")
+
+      data = @context.callbacks('filter').call(@context, query, data, search_key)
+      if data and data.length > 0
+        callback(data)
+      else if (remote_filter = @context.callbacks('remote_filter'))
+        remote_filter.call(@context, query.text, callback)
+
+    # get or set current data which would be shown on the list view.
+    #
+    # @param data [Array] set data
+    # @return [Array|undefined] current data that showing on the list view.
+    all: (key) ->
+      @_data_sets[key ||= @context.current_flag]
+
+    reset: (data, key) ->
+      @_data_sets[key ||= @context.current_flag] = @context.callbacks("data_refactor").call(@context, data)
+
+    load: (data) ->
+      if typeof data is "string"
+        this._load_remote_data(data)
+      else
+        this.reset data
+
+    _load_remote_data: (url) ->
+      $.ajax(url,
+        dataType: "json"
+      ).done (data) =>
+        this.reset(data)
+
 
   # At.js central contoller(searching, matching, evaluating and rendering.)
   class Controller
@@ -161,11 +198,11 @@
       @flags        = null
       @current_flag = null
       @query        = null
-      # all data either from `settings` or from anywhere be saved by `save_data` function.
-      @_data_sets = {}
 
       @$inputor = $(inputor)
       @view = new View(this, @$el)
+      @model = new Model(this)
+
       this.listen()
 
     # binding jQuery events of `inputor`'s
@@ -193,15 +230,9 @@
       else
         @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
-      data = current_settings.data
-      if typeof data is "string"
-        this.load_remote_data(data)
-      else
-        this.save_data data
+      @model.load(current_settings.data)
 
       this
-
-
 
     # Delegate custom `jQueryEvent` to the inputor
     # This function will add `atwho` as namespace to every jQuery event
@@ -219,16 +250,6 @@
       data ||= []
       data.push this
       @$inputor.trigger "#{name}.atwho", data
-
-    # get or set current data which would be shown on the list view.
-    #
-    # @param data [Array] set data
-    # @return [Array|undefined] current data that showing on the list view.
-    get_data: (key) ->
-      @_data_sets[key ||= @current_flag]
-
-    save_data: (data, key) ->
-      @_data_sets[key ||= @current_flag] = this.callbacks("data_refactor").call(this, data)
 
     # Get callback either in settings which was set by plugin user or in default callbacks list.
     #
@@ -347,52 +368,36 @@
 
       @view.render data
 
-    remote_call: (query) ->
-
-      _callback = (data) ->
-        this.render_view data
-      _callback = $.proxy _callback, this
-
-      this.callbacks('remote_filter').call(this, query.text, _callback)
-
-    load_remote_data: (url) ->
-      $.ajax(url,
-        dataType: "json"
-      ).done (data) =>
-        this.save_data(data)
-
     # Searching!
     #
     look_up: ->
       query = this.catch_query()
       return no if not query
 
-      data = this.get_data()
-      search_key = this.get_opt("search_key")
+      _callback = (data) ->
+        if data
+          this.render_view data
+        else
+          @view.hide()
+      _callback = $.proxy _callback, this
 
-      data = this.callbacks('filter').call(this, query.text, data || [], search_key)
-      if data and data.length > 0
-        this.render_view data
-      else if this.callbacks('remote_filter')
-        this.remote_call query
-      else
-        @view.hide()
+      @model.query query.text, _callback
 
-      $.noop()
+      yes
 
 
   # View class to controll how At.js's view showing.
   # All classes share the some DOM view.
   class View
 
-    # @param controller [Object] 控制器对象.
-    constructor: (@controller) ->
-      @id = @controller.get_opt("view_id") || "at-view"
+    # @param controller [Object] The Controller.
+    constructor: (@context) ->
+      @id = @context.get_opt("view_id") || "at-view"
       @timeout_id = null
       @$el = $("##{@id}")
       this.create_view()
 
-    # 如果试图还不存在,则创建一个新的视图
+    # create HTML DOM of list view if it does not exists
     create_view: ->
       return if this.exist()
       tpl = "<div id='#{@id}' class='at-view'><ul id='#{@id}-ul'></ul></div>"
@@ -423,17 +428,17 @@
 
     choose: ->
       $li = @$el.find ".cur"
-      @controller.callbacks("selector").call(@controller, $li)
-      @controller.trigger "choose", [$li]
+      @context.callbacks("selector").call(@context, $li)
+      @context.trigger "choose", [$li]
       this.hide()
 
     reposition: ->
-      rect = @controller.rect()
+      rect = @context.rect()
       if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
           rect.bottom = rect.top - @$el.height()
       offset = {left:rect.left, top:rect.bottom}
       @$el.offset offset
-      @controller.trigger "reposition", [offset]
+      @context.trigger "reposition", [offset]
 
     next: ->
       cur = @$el.find('.cur').removeClass('cur')
@@ -473,11 +478,11 @@
       @$el.data("_view",this)
 
       $ul = @$el.find('ul')
-      tpl = @controller.get_opt('tpl', DEFAULT_TPL)
+      tpl = @context.get_opt('tpl', DEFAULT_TPL)
 
       $.each list, (i, item) =>
-        li = @controller.callbacks("tpl_eval").call(@controller, tpl, item)
-        $li = $ @controller.callbacks("highlighter").call(@controller, li, @controller.query.text)
+        li = @context.callbacks("tpl_eval").call(@context, tpl, item)
+        $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
         $li.data("info", item)
         $ul.append $li
 
@@ -496,7 +501,6 @@
       data.reg flag, options
 
   $.fn.atwho.Controller = Controller
-  $.fn.atwho.View = View
   $.fn.atwho.default =
       data: null
       search_key: "name"
