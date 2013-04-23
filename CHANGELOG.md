@@ -1,3 +1,8 @@
+### 2013-04-23
+
+* group all data handlers as `Model` class. 
+* All callbacks's context would be current `Controller`
+
 ### 2013-04-05
 
 * `data` setting will be used to load data either local or remote. If it's String as URL it will preload data from remote by launch a ajax request (every times At.js call `reg` to update settings)
