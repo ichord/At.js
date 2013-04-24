@@ -143,7 +143,7 @@
     getOffset: (pos) ->
       $inputor = @$inputor
       if document.selection # for IE full
-        range = @domInputor.createRange()
+        range = @domInputor.createTextRange()
         range.move('character', pos) if pos
         x = range.boundingLeft + $inputor.scrollLeft()
         y = range.boundingTop + $(window).scrollTop() + $inputor.scrollTop()

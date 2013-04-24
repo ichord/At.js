@@ -286,8 +286,8 @@
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
-      if document.selection
-        scale_bottom = scale = -2
+      if document.selection # IE
+        scale_bottom = scale = 0
       else
         scale = 0
         scale_bottom = 2

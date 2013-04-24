@@ -240,7 +240,7 @@
         var c, scale, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
         if (document.selection) {
-          scale_bottom = scale = -2;
+          scale_bottom = scale = 0;
         } else {
           scale = 0;
           scale_bottom = 2;
@@ -688,7 +688,7 @@
         var $inputor, h, offset, position, range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
-          range = this.domInputor.createRange();
+          range = this.domInputor.createTextRange();
           if (pos) {
             range.move('character', pos);
           }

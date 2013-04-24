@@ -152,7 +152,7 @@
         var $inputor, h, offset, position, range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
-          range = this.domInputor.createRange();
+          range = this.domInputor.createTextRange();
           if (pos) {
             range.move('character', pos);
           }
