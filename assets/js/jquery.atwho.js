@@ -9,6 +9,7 @@
 
 
 (function() {
+  var __slice = [].slice;
 
   (function(factory) {
     if (typeof define === 'function' && define.amd) {
@@ -17,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, View;
+    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -117,6 +118,56 @@
         }
       }
     };
+    Model = (function() {
+
+      function Model(context) {
+        this.context = context;
+        this._data_sets = {};
+      }
+
+      Model.prototype.query = function(query, callback) {
+        var data, remote_filter, search_key;
+        data = this.all() || [];
+        search_key = this.context.get_opt("search_key");
+        data = this.context.callbacks('filter').call(this.context, query, data, search_key);
+        if (data && data.length > 0) {
+          callback(data);
+        } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
+          remote_filter.call(this.context, query.text, callback);
+        } else {
+          return false;
+        }
+        return true;
+      };
+
+      Model.prototype.all = function(key) {
+        return this._data_sets[key || (key = this.context.current_flag)];
+      };
+
+      Model.prototype.reset = function(data, key) {
+        return this._data_sets[key || (key = this.context.current_flag)] = this.context.callbacks("data_refactor").call(this.context, data);
+      };
+
+      Model.prototype.load = function(data) {
+        if (typeof data === "string") {
+          return this._load_remote_data(data);
+        } else {
+          return this.reset(data);
+        }
+      };
+
+      Model.prototype._load_remote_data = function(url) {
+        var _this = this;
+        return $.ajax(url, {
+          dataType: "json"
+        }).done(function(data) {
+          return _this.reset(data);
+        });
+      };
+
+      return Model;
+
+    })();
     Controller = (function() {
 
       function Controller(inputor) {
@@ -125,9 +176,9 @@
         this.flags = null;
         this.current_flag = null;
         this.query = null;
-        this._data_sets = {};
         this.$inputor = $(inputor);
         this.view = new View(this, this.$el);
+        this.model = new Model(this);
         this.listen();
       }
 
@@ -145,15 +196,10 @@
       };
 
       Controller.prototype.reg = function(flag, settings) {
-        var current_settings, data;
+        var current_settings;
         this.current_flag = flag;
         current_settings = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
-        data = current_settings.data;
-        if (typeof data === "string") {
-          this.load_remote_data(data);
-        } else {
-          this.save_data(data);
-        }
+        this.model.load(current_settings.data);
         return this;
       };
 
@@ -163,12 +209,14 @@
         return this.$inputor.trigger("" + name + ".atwho", data);
       };
 
-      Controller.prototype.get_data = function(key) {
-        return this._data_sets[key || (key = this.current_flag)];
-      };
-
-      Controller.prototype.save_data = function(data, key) {
-        return this._data_sets[key || (key = this.current_flag)] = this.callbacks("data_refactor").call(this, data);
+      Controller.prototype.super_call = function() {
+        var args, func_name;
+        func_name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+        try {
+          return DEFAULT_CALLBACKS[func_name].apply(this, args);
+        } catch (error) {
+          return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
+        }
       };
 
       Controller.prototype.callbacks = function(func_name) {
@@ -192,7 +240,7 @@
         var c, scale, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
         if (document.selection) {
-          scale_bottom = scale = -2;
+          scale_bottom = scale = 0;
         } else {
           scale = 0;
           scale_bottom = 2;
@@ -302,41 +350,24 @@
         return this.view.render(data);
       };
 
-      Controller.prototype.remote_call = function(query) {
-        var _callback;
-        _callback = function(data) {
-          return this.render_view(data);
-        };
-        _callback = $.proxy(_callback, this);
-        return this.callbacks('remote_filter').call(this, query.text, _callback);
-      };
-
-      Controller.prototype.load_remote_data = function(url) {
-        var _this = this;
-        return $.ajax(url, {
-          dataType: "json"
-        }).done(function(data) {
-          return _this.save_data(data);
-        });
-      };
-
       Controller.prototype.look_up = function() {
-        var data, query, search_key;
+        var query, _callback;
         query = this.catch_query();
         if (!query) {
           return false;
         }
-        data = this.get_data();
-        search_key = this.get_opt("search_key");
-        data = this.callbacks('filter').call(this, query.text, data || [], search_key);
-        if (data && data.length > 0) {
-          this.render_view(data);
-        } else if (this.callbacks('remote_filter')) {
-          this.remote_call(query);
-        } else {
+        _callback = function(data) {
+          if (data) {
+            return this.render_view(data);
+          } else {
+            return this.view.hide();
+          }
+        };
+        _callback = $.proxy(_callback, this);
+        if (!this.model.query(query.text, _callback)) {
           this.view.hide();
         }
-        return $.noop();
+        return true;
       };
 
       return Controller;
@@ -344,9 +375,9 @@
     })();
     View = (function() {
 
-      function View(controller) {
-        this.controller = controller;
-        this.id = this.controller.get_opt("view_id") || "at-view";
+      function View(context) {
+        this.context = context;
+        this.id = this.context.get_opt("view_id") || "at-view";
         this.timeout_id = null;
         this.$el = $("#" + this.id);
         this.create_view();
@@ -383,14 +414,14 @@
       View.prototype.choose = function() {
         var $li;
         $li = this.$el.find(".cur");
-        this.controller.callbacks("selector").call(this.controller, $li);
-        this.controller.trigger("choose", [$li]);
+        this.context.callbacks("selector").call(this.context, $li);
+        this.context.trigger("choose", [$li]);
         return this.hide();
       };
 
       View.prototype.reposition = function() {
         var offset, rect;
-        rect = this.controller.rect();
+        rect = this.context.rect();
         if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
           rect.bottom = rect.top - this.$el.height();
         }
@@ -399,7 +430,7 @@
           top: rect.bottom
         };
         this.$el.offset(offset);
-        return this.controller.trigger("reposition", [offset]);
+        return this.context.trigger("reposition", [offset]);
       };
 
       View.prototype.next = function() {
@@ -462,11 +493,11 @@
         this.clear();
         this.$el.data("_view", this);
         $ul = this.$el.find('ul');
-        tpl = this.controller.get_opt('tpl', DEFAULT_TPL);
+        tpl = this.context.get_opt('tpl', DEFAULT_TPL);
         $.each(list, function(i, item) {
           var $li, li;
-          li = _this.controller.callbacks("tpl_eval").call(_this.controller, tpl, item);
-          $li = $(_this.controller.callbacks("highlighter").call(_this.controller, li, _this.controller.query.text));
+          li = _this.context.callbacks("tpl_eval").call(_this.context, tpl, item);
+          $li = $(_this.context.callbacks("highlighter").call(_this.context, li, _this.context.query.text));
           $li.data("info", item);
           return $ul.append($li);
         });
@@ -490,7 +521,6 @@
       });
     };
     $.fn.atwho.Controller = Controller;
-    $.fn.atwho.View = View;
     return $.fn.atwho["default"] = {
       data: null,
       search_key: "name",
@@ -658,7 +688,7 @@
         var $inputor, h, offset, position, range, x, y;
         $inputor = this.$inputor;
         if (document.selection) {
-          range = this.domInputor.createRange();
+          range = this.domInputor.createTextRange();
           if (pos) {
             range.move('character', pos);
           }
