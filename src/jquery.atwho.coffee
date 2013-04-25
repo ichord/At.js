@@ -345,6 +345,8 @@
           $.noop()
         else
           this.look_up()
+      # coffeescript will return everywhere!!
+      return
 
     on_keydown: (e) ->
       return if not @view.visible()
@@ -364,6 +366,7 @@
           @view.choose()
         else
           $.noop()
+      return
 
     # Render list view
     #
@@ -379,7 +382,7 @@
     #
     look_up: ->
       query = this.catch_query()
-      return no if not query
+      return if not query
 
       _callback = (data) ->
         if data
@@ -389,8 +392,6 @@
       _callback = $.proxy _callback, this
 
       @view.hide() unless @model.query(query.text, _callback)
-
-      yes
 
 
   # View class to controll how At.js's view showing.

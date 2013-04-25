@@ -299,12 +299,14 @@
         switch (e.keyCode) {
           case KEY_CODE.ESC:
             e.preventDefault();
-            return this.view.hide();
+            this.view.hide();
+            break;
           case KEY_CODE.DOWN:
           case KEY_CODE.UP:
-            return $.noop();
+            $.noop();
+            break;
           default:
-            return this.look_up();
+            this.look_up();
         }
       };
 
@@ -315,22 +317,26 @@
         switch (e.keyCode) {
           case KEY_CODE.ESC:
             e.preventDefault();
-            return this.view.hide();
+            this.view.hide();
+            break;
           case KEY_CODE.UP:
             e.preventDefault();
-            return this.view.prev();
+            this.view.prev();
+            break;
           case KEY_CODE.DOWN:
             e.preventDefault();
-            return this.view.next();
+            this.view.next();
+            break;
           case KEY_CODE.TAB:
           case KEY_CODE.ENTER:
             if (!this.view.visible()) {
               return;
             }
             e.preventDefault();
-            return this.view.choose();
+            this.view.choose();
+            break;
           default:
-            return $.noop();
+            $.noop();
         }
       };
 
@@ -346,7 +352,7 @@
         var query, _callback;
         query = this.catch_query();
         if (!query) {
-          return false;
+          return;
         }
         _callback = function(data) {
           if (data) {
@@ -357,9 +363,8 @@
         };
         _callback = $.proxy(_callback, this);
         if (!this.model.query(query.text, _callback)) {
-          this.view.hide();
+          return this.view.hide();
         }
-        return true;
       };
 
       return Controller;
