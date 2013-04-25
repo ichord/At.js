@@ -299,16 +299,13 @@
         switch (e.keyCode) {
           case KEY_CODE.ESC:
             e.preventDefault();
-            this.view.hide();
-            break;
+            return this.view.hide();
           case KEY_CODE.DOWN:
           case KEY_CODE.UP:
-            $.noop();
-            break;
+            return $.noop();
           default:
-            this.look_up();
+            return this.look_up();
         }
-        return e.stopPropagation();
       };
 
       Controller.prototype.on_keydown = function(e) {
@@ -318,28 +315,23 @@
         switch (e.keyCode) {
           case KEY_CODE.ESC:
             e.preventDefault();
-            this.view.hide();
-            break;
+            return this.view.hide();
           case KEY_CODE.UP:
             e.preventDefault();
-            this.view.prev();
-            break;
+            return this.view.prev();
           case KEY_CODE.DOWN:
             e.preventDefault();
-            this.view.next();
-            break;
+            return this.view.next();
           case KEY_CODE.TAB:
           case KEY_CODE.ENTER:
             if (!this.view.visible()) {
               return;
             }
             e.preventDefault();
-            this.view.choose();
-            break;
+            return this.view.choose();
           default:
-            $.noop();
+            return $.noop();
         }
-        return e.stopPropagation();
       };
 
       Controller.prototype.render_view = function(data) {
@@ -397,7 +389,6 @@
           $menu.find('.cur').removeClass('cur');
           return $(e.currentTarget).addClass('cur');
         }).on('click', function(e) {
-          e.stopPropagation();
           e.preventDefault();
           return _this.$el.data("_view").choose();
         });

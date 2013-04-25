@@ -345,7 +345,6 @@
           $.noop()
         else
           this.look_up()
-      e.stopPropagation()
 
     on_keydown: (e) ->
       return if not @view.visible()
@@ -365,7 +364,6 @@
           @view.choose()
         else
           $.noop()
-      e.stopPropagation()
 
     # Render list view
     #
@@ -418,7 +416,6 @@
         $menu.find('.cur').removeClass 'cur'
         $(e.currentTarget).addClass 'cur'
       .on 'click', (e) =>
-        e.stopPropagation()
         e.preventDefault()
         @$el.data("_view").choose()
 
