@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
+    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View, methods;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -27,7 +27,7 @@
       ENTER: 13
     };
     DEFAULT_CALLBACKS = {
-      data_refactor: function(data) {
+      loading_data: function(data) {
         if (!$.isArray(data)) {
           return data;
         }
@@ -42,7 +42,7 @@
       },
       matcher: function(flag, subtext) {
         var match, matched, regexp;
-        flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+        flag = " " + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
         regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
         match = regexp.exec(subtext);
         matched = null;
@@ -123,6 +123,7 @@
       function Model(context) {
         this.context = context;
         this._data_sets = {};
+        this._loaded_keys = [];
       }
 
       Model.prototype.query = function(query, callback) {
@@ -133,7 +134,7 @@
         if (data && data.length > 0) {
           callback(data);
         } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
-          remote_filter.call(this.context, query.text, callback);
+          remote_filter.call(this.context, query && query.text, callback);
         } else {
           return false;
         }
@@ -145,23 +146,30 @@
       };
 
       Model.prototype.reset = function(data, key) {
-        return this._data_sets[key || (key = this.context.current_flag)] = this.context.callbacks("data_refactor").call(this.context, data);
-      };
-
-      Model.prototype.load = function(data) {
-        if (typeof data === "string") {
-          return this._load_remote_data(data);
-        } else {
-          return this.reset(data);
+        key || (key = this.context.current_flag);
+        data = this._data_sets[key] = this.context.callbacks("loading_data").call(this.context, data);
+        if (data && data.length > 0) {
+          return this._loaded_keys[key] = true;
         }
       };
 
-      Model.prototype._load_remote_data = function(url) {
+      Model.prototype.load = function(key, data) {
+        if (this._loaded_keys[key]) {
+          return;
+        }
+        if (typeof data === "string") {
+          return this._load_remote_data(data, key);
+        } else {
+          return this.reset(data, key);
+        }
+      };
+
+      Model.prototype._load_remote_data = function(url, key) {
         var _this = this;
         return $.ajax(url, {
           dataType: "json"
         }).done(function(data) {
-          return _this.reset(data);
+          return _this.reset(key, data);
         });
       };
 
@@ -176,6 +184,7 @@
         this.flags = null;
         this.current_flag = null;
         this.query = null;
+        this.loaded_flags = [];
         this.$inputor = $(inputor);
         this.view = new View(this, this.$el);
         this.model = new Model(this);
@@ -196,10 +205,10 @@
       };
 
       Controller.prototype.reg = function(flag, settings) {
-        var current_settings;
+        var current_setting;
         this.current_flag = flag;
-        current_settings = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
-        this.model.load(current_settings.data);
+        current_setting = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
+        this.model.load(flag, current_setting.data);
         return this;
       };
 
@@ -505,18 +514,42 @@
 
     })();
     DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
-    $.fn.atwho = function(flag, options) {
-      return this.filter('textarea, input').each(function() {
+    methods = {
+      init: function(options) {
         var $this, data;
         $this = $(this);
         data = $this.data("atwho");
         if (!data) {
           $this.data('atwho', (data = new Controller(this)));
         }
-        return data.reg(flag, options);
+        return data.reg(options.at, options);
+      },
+      load: function(flag, data) {
+        var _loader;
+        _loader = function(flag, data) {
+          return this.model.load(flag, data);
+        };
+        _loader = $.proxy(_loader, this);
+        if ($.isFunction(data)) {
+          return data(_loader);
+        } else {
+          return _loader(flag, data);
+        }
+      }
+    };
+    $.fn.atwho = function(method) {
+      var _args;
+      _args = arguments;
+      return this.filter('textarea, input').each(function() {
+        if (typeof method === 'object' || !method) {
+          return methods.init.apply(this, _args);
+        } else if (methods[method]) {
+          return methods[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
+        } else {
+          return $.error("Method " + method + " does not exist on jQuery.caret");
+        }
       });
     };
-    $.fn.atwho.Controller = Controller;
     return $.fn.atwho["default"] = {
       data: null,
       search_key: "name",

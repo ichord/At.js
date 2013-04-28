@@ -1,3 +1,9 @@
+### 2013-04-28
+
+* release new api `load`
+* matching key with a space before it
+* register key in settings `{at: "@", data: []}` instead of being a argument
+
 ### 2013-04-23
 
 * group all data handlers as `Model` class. 

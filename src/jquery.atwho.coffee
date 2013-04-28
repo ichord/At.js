@@ -35,7 +35,7 @@
   #
   # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
   #
-  # [data_refactor, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
+  # [loading_data, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
   #
   DEFAULT_CALLBACKS =
 
@@ -46,7 +46,7 @@
     # @param data [Array] data to refacotor.
     #
     # @return [Array] Data after refactor.
-    data_refactor: (data) ->
+    loading_data: (data) ->
       return data if not $.isArray(data)
       $.map data, (item, k) ->
         if not $.isPlainObject item
@@ -61,7 +61,7 @@
     # @return [String] Matched string.
     matcher: (flag, subtext) ->
       # escape RegExp
-      flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      flag = " " + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
       regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
       match = regexp.exec subtext
       matched = null
@@ -154,6 +154,7 @@
     constructor: (@context) ->
       # all data either from `settings` or from anywhere be saved by `reset` function.
       @_data_sets = {}
+      @_loaded_keys = []
 
     query: (query, callback) ->
       data = this.all() || []
@@ -163,7 +164,7 @@
       if data and data.length > 0
         callback(data)
       else if (remote_filter = @context.callbacks('remote_filter'))
-        remote_filter.call(@context, query.text, callback)
+        remote_filter.call(@context, query && query.text, callback)
       else
         return no
       yes
@@ -176,19 +177,23 @@
       @_data_sets[key ||= @context.current_flag]
 
     reset: (data, key) ->
-      @_data_sets[key ||= @context.current_flag] = @context.callbacks("data_refactor").call(@context, data)
+      key ||= @context.current_flag
+      data = @_data_sets[key] = @context.callbacks("loading_data").call(@context, data)
+      @_loaded_keys[key] = true if data and data.length > 0
 
-    load: (data) ->
+    load: (key, data) ->
+      return if @_loaded_keys[key]
+
       if typeof data is "string"
-        this._load_remote_data(data)
+        this._load_remote_data data, key
       else
-        this.reset data
+        this.reset data, key
 
-    _load_remote_data: (url) ->
+    _load_remote_data: (url, key) ->
       $.ajax(url,
         dataType: "json"
       ).done (data) =>
-        this.reset(data)
+        this.reset(key, data)
 
 
   # At.js central contoller(searching, matching, evaluating and rendering.)
@@ -201,6 +206,7 @@
       @flags        = null
       @current_flag = null
       @query        = null
+      @loaded_flags = []
 
       @$inputor = $(inputor)
       @view = new View(this, @$el)
@@ -228,12 +234,12 @@
     # @param settings [Hash] the settings
     reg: (flag, settings) ->
       @current_flag = flag
-      current_settings = if @settings[flag]
+      current_setting = if @settings[flag]
         @settings[flag] = $.extend {}, @settings[flag], settings
       else
         @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
-      @model.load(current_settings.data)
+      @model.load flag, current_setting.data
 
       this
 
@@ -499,20 +505,37 @@
 
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
-  $.fn.atwho = (flag, options) ->
-    @.filter('textarea, input').each () ->
+  methods =
+    init: (options) ->
       $this = $(this)
       data = $this.data "atwho"
-
       $this.data 'atwho', (data = new Controller(this)) if not data
-      data.reg flag, options
+      data.reg options.at, options
 
-  $.fn.atwho.Controller = Controller
+    load: (flag, data) ->
+      _loader = (flag, data) ->
+        this.model.load flag, data
+      _loader = $.proxy(_loader, this)
+      if $.isFunction data
+        data(_loader)
+      else
+        _loader(flag, data)
+
+  $.fn.atwho = (method) ->
+    _args = arguments
+    @.filter('textarea, input').each () ->
+      if typeof method is 'object' || !method
+        methods.init.apply this, _args
+      else if methods[method]
+        methods[method].apply $(this).data('atwho'), Array::slice.call(_args, 1)
+      else
+        $.error "Method #{method} does not exist on jQuery.caret"
+
   $.fn.atwho.default =
-      data: null
-      search_key: "name"
-      callbacks: DEFAULT_CALLBACKS
-      limit: 5
-      display_flag: yes
-      display_timeout: 300
-      tpl: DEFAULT_TPL
+    data: null
+    search_key: "name"
+    callbacks: DEFAULT_CALLBACKS
+    limit: 5
+    display_flag: yes
+    display_timeout: 300
+    tpl: DEFAULT_TPL

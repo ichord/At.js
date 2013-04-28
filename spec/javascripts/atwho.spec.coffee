@@ -134,24 +134,32 @@ describe "jquery.atwho", ->
       expect(filter).toHaveBeenCalled()
       expect(callbacks.filter).not.toHaveBeenCalled()
 
-    it "setting data as url and load remote data", ->
-      jasmine.Ajax.useMock()
-      spyOn(controller.model, "_load_remote_data").andCallThrough()
+    describe "setting data as url and load remote data", ->
+      beforeEach ->
+        jasmine.Ajax.useMock()
+        spyOn(controller.model, "_load_remote_data").andCallThrough()
 
-      controller.model.reset null
-      $inputor.atwho "@",
-        data: "/atwho.json"
+        controller.model.reset null
+        $inputor.atwho "@",
+          data: "/atwho.json"
 
-      expect(controller.model.all()).toBe null
+      it "data should be null at first", ->
+        expect(controller.model.all()).toBe null
 
-      expect(controller.model._load_remote_data).toHaveBeenCalled()
-      request = mostRecentAjaxRequest()
-      response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
-      request.response
-        status: 200
-        responseText: JSON.stringify(response_data)
+      it "not start load data before focus inputor", ->
+        expect(controller.model._load_remote_data).not.toHaveBeenCalled()
 
-      expect(controller.model.all().length).toBe 3
+      it "should load data after focus inputor", ->
+        simulate_input()
+        expect(controller.model._load_remote_data).toHaveBeenCalled()
+
+        request = mostRecentAjaxRequest()
+        response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
+        request.response
+          status: 200
+          responseText: JSON.stringify(response_data)
+
+        expect(controller.model.all().length).toBe 3
 
     it "setting timeout", ->
       jasmine.Clock.useMock()
@@ -232,12 +240,13 @@ describe "jquery.atwho", ->
     callbacks = null
     beforeEach ->
       controller = $inputor.data("atwho")
-      simulate_input()
 
     it "can get current data", ->
+      simulate_input()
       expect(controller.model.all().length).toBe 23
 
     it "can save current data", ->
+      simulate_input()
       data = [{id: 1, name: "one"}, {id: 2, name: "two"}]
       controller.model.reset(data)
       expect(controller.model.all().length).toBe 2
@@ -247,6 +256,8 @@ describe "jquery.atwho", ->
       $inputor.atwho "@",
         data: "/atwho.json"
 
+      simulate_input()
+
       request = mostRecentAjaxRequest()
       response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
       request.response
@@ -255,4 +266,3 @@ describe "jquery.atwho", ->
 
       expect(controller.get_opt("data")).toBe "/atwho.json"
       expect(controller.model.all().length).toBe 3
-
