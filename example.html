@@ -31,6 +31,7 @@
 
             $('textarea#inputor').atwho({
                 at: "@",
+                alias: "at-mentions",
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
                 'data':data,
                 'callbacks': {
@@ -48,13 +49,20 @@
                 }
             }).atwho({
                 at: ":",
+                // alias: "emojis",
                 tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
                 // ,'data':emojis
                 ,display_flag: false
             }).one('focus', function(e) {
                 console.log(this);
                 $(this).atwho('load', ":", emojis);
-            })
+            }).one('matched-at-mentions.atwho', function(e) {
+                console.log("matched.at-mentions", e.namespace)
+            }).one('matched-emojis.atwho', function(e) {
+                console.log("matched emojis", e.namespace)
+            }).one('matched.atwho', function(e) {
+                console.log(e.type, e.namespace)
+            });
 
 
             $("textarea#inputor2").atwho({

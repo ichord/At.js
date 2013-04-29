@@ -207,10 +207,10 @@
       @current_flag = null
       @query        = null
       @loaded_flags = []
-
-      @$inputor = $(inputor)
-      @view = new View(this, @$el)
+      @view = new View(this)
       @model = new Model(this)
+      @$inputor = $(inputor)
+
 
       this.listen()
 
@@ -240,6 +240,7 @@
         @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
       @model.load flag, current_setting.data
+      @view.init()
 
       this
 
@@ -258,7 +259,9 @@
     trigger: (name, data) ->
       data ||= []
       data.push this
-      @$inputor.trigger "#{name}.atwho", data
+      alias = this.get_opt('alias')
+      event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
+      @$inputor.trigger event_name, data
 
     super_call: (func_name, args...) ->
       try
@@ -319,6 +322,7 @@
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+        alias = this.get_opt('alias')
         this.trigger "matched", [@current_flag, query.text]
       else
         @view.hide()
@@ -406,15 +410,19 @@
 
     # @param controller [Object] The Controller.
     constructor: (@context) ->
-      @id = @context.get_opt("view_id") || "at-view"
+
+    init: ->
+      return if this.exist()
+
+      _id = Math.floor Math.random() * 100
+      @id = @context.get_opt("alias") || "at-view-#{_id}"
       @timeout_id = null
       @$el = $("##{@id}")
       this.create_view()
 
     # create HTML DOM of list view if it does not exists
     create_view: ->
-      return if this.exist()
-      tpl = "<div id='#{@id}' class='at-view'><ul id='#{@id}-ul'></ul></div>"
+      tpl = "<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>"
       $("body").append(tpl)
       @$el = $("##{@id}")
 
@@ -532,10 +540,12 @@
         $.error "Method #{method} does not exist on jQuery.caret"
 
   $.fn.atwho.default =
+    at: undefined
+    alias: undefined
     data: null
-    search_key: "name"
+    tpl: DEFAULT_TPL
     callbacks: DEFAULT_CALLBACKS
+    search_key: "name"
     limit: 5
     display_flag: yes
     display_timeout: 300
-    tpl: DEFAULT_TPL

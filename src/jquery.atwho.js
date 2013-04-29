@@ -185,9 +185,9 @@
         this.current_flag = null;
         this.query = null;
         this.loaded_flags = [];
-        this.$inputor = $(inputor);
-        this.view = new View(this, this.$el);
+        this.view = new View(this);
         this.model = new Model(this);
+        this.$inputor = $(inputor);
         this.listen();
       }
 
@@ -209,13 +209,17 @@
         this.current_flag = flag;
         current_setting = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
         this.model.load(flag, current_setting.data);
+        this.view.init();
         return this;
       };
 
       Controller.prototype.trigger = function(name, data) {
+        var alias, event_name;
         data || (data = []);
         data.push(this);
-        return this.$inputor.trigger("" + name + ".atwho", data);
+        alias = this.get_opt('alias');
+        event_name = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
+        return this.$inputor.trigger(event_name, data);
       };
 
       Controller.prototype.super_call = function() {
@@ -262,7 +266,7 @@
       };
 
       Controller.prototype.catch_query = function() {
-        var caret_pos, content, end, query, start, subtext,
+        var alias, caret_pos, content, end, query, start, subtext,
           _this = this;
         content = this.$inputor.val();
         caret_pos = this.$inputor.caret('pos');
@@ -284,6 +288,7 @@
             'head_pos': start,
             'end_pos': end
           };
+          alias = this.get_opt('alias');
           this.trigger("matched", [this.current_flag, query.text]);
         } else {
           this.view.hide();
@@ -383,19 +388,24 @@
 
       function View(context) {
         this.context = context;
-        this.id = this.context.get_opt("view_id") || "at-view";
+      }
+
+      View.prototype.init = function() {
+        var _id;
+        if (this.exist()) {
+          return;
+        }
+        _id = Math.floor(Math.random() * 100);
+        this.id = this.context.get_opt("alias") || ("at-view-" + _id);
         this.timeout_id = null;
         this.$el = $("#" + this.id);
-        this.create_view();
-      }
+        return this.create_view();
+      };
 
       View.prototype.create_view = function() {
         var $menu, tpl,
           _this = this;
-        if (this.exist()) {
-          return;
-        }
-        tpl = "<div id='" + this.id + "' class='at-view'><ul id='" + this.id + "-ul'></ul></div>";
+        tpl = "<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>";
         $("body").append(tpl);
         this.$el = $("#" + this.id);
         $menu = this.$el.find('ul');
@@ -551,13 +561,15 @@
       });
     };
     return $.fn.atwho["default"] = {
+      at: void 0,
+      alias: void 0,
       data: null,
-      search_key: "name",
+      tpl: DEFAULT_TPL,
       callbacks: DEFAULT_CALLBACKS,
+      search_key: "name",
       limit: 5,
       display_flag: true,
-      display_timeout: 300,
-      tpl: DEFAULT_TPL
+      display_timeout: 300
     };
   });
 

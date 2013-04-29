@@ -1,4 +1,4 @@
-#at-view {
+.atwho-view {
     position:absolute;
     top: 0;
     left: 0;
@@ -12,34 +12,34 @@
     z-index: 10;
 }
 
-#at-view .cur {
+.atwho-view .cur {
     background: #3366FF;
     color: white;
 }
-#at-view .cur small {
+.atwho-view .cur small {
     color: white;
 }
-#at-view strong {
+.atwho-view strong {
     color: #3366FF;
 }
-#at-view .cur strong {
+.atwho-view .cur strong {
     color: white;
     font:bold;
 }
-#at-view ul {
+.atwho-view ul {
     /* width: 100px; */
     list-style:none;
     padding:0;
     margin:auto;
 }
-#at-view ul li {
+.atwho-view ul li {
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
     cursor: pointer;
     /* border-top: 1px solid #C8C8C8; */
 }
-#at-view small {
+.atwho-view small {
     font-size: smaller;
     color: #777;
     font-weight: normal;
