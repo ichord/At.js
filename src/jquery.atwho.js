@@ -142,11 +142,11 @@
       };
 
       Model.prototype.all = function(key) {
-        return this._data_sets[key || (key = this.context.current_flag)];
+        return this._data_sets[this.context.the_flag[key] || this.context.current_flag];
       };
 
       Model.prototype.reset = function(data, key) {
-        key || (key = this.context.current_flag);
+        key = this.context.the_flag[key] || this.context.current_flag;
         data = this._data_sets[key] = this.context.callbacks("loading_data").call(this.context, data);
         if (data && data.length > 0) {
           return this._loaded_keys[key] = true;
@@ -154,7 +154,7 @@
       };
 
       Model.prototype.load = function(key, data) {
-        if (this._loaded_keys[key]) {
+        if (this._loaded_keys[this.context.the_flag[key]]) {
           return;
         }
         if (typeof data === "string") {
@@ -184,7 +184,7 @@
         this.flags = null;
         this.current_flag = null;
         this.query = null;
-        this.loaded_flags = [];
+        this.the_flag = {};
         this.view = new View(this);
         this.model = new Model(this);
         this.$inputor = $(inputor);
@@ -208,6 +208,10 @@
         var current_setting;
         this.current_flag = flag;
         current_setting = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
+        this.the_flag[flag] = flag;
+        if (current_setting.alias) {
+          this.the_flag[current_setting.alias] = flag;
+        }
         this.model.load(flag, current_setting.data);
         this.view.init();
         return this;
@@ -413,8 +417,8 @@
           $menu.find('.cur').removeClass('cur');
           return $(e.currentTarget).addClass('cur');
         }).on('click', function(e) {
-          e.preventDefault();
-          return _this.$el.data("_view").choose();
+          _this.choose();
+          return e.preventDefault();
         });
       };
 
@@ -506,7 +510,6 @@
           return true;
         }
         this.clear();
-        this.$el.data("_view", this);
         $ul = this.$el.find('ul');
         tpl = this.context.get_opt('tpl', DEFAULT_TPL);
         $.each(list, function(i, item) {

@@ -33,7 +33,7 @@
                 at: "@",
                 alias: "at-mentions",
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
-                'data':data,
+                // 'data':data,
                 'callbacks': {
                     filter: function (query, data, search_key) {
                         console.log("custom filter",query, data);
@@ -51,11 +51,12 @@
                 at: ":",
                 // alias: "emojis",
                 tpl:"<li data-value='${key}'>${name} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${name}.png'  height='20' width='20' /></li>"
-                // ,'data':emojis
+                ,'data':emojis
                 ,display_flag: false
             }).one('focus', function(e) {
-                console.log(this);
-                $(this).atwho('load', ":", emojis);
+                console.log(this, data);
+                // $(this).atwho('load', "@", data);
+                $(this).atwho('load', "at-mentions", data);
             }).one('matched-at-mentions.atwho', function(e) {
                 console.log("matched.at-mentions", e.namespace)
             }).one('matched-emojis.atwho', function(e) {

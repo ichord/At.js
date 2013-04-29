@@ -174,15 +174,15 @@
     # @param data [Array] set data
     # @return [Array|undefined] current data that showing on the list view.
     all: (key) ->
-      @_data_sets[key ||= @context.current_flag]
+      @_data_sets[@context.the_flag[key] || @context.current_flag]
 
     reset: (data, key) ->
-      key ||= @context.current_flag
+      key = @context.the_flag[key] || @context.current_flag
       data = @_data_sets[key] = @context.callbacks("loading_data").call(@context, data)
       @_loaded_keys[key] = true if data and data.length > 0
 
     load: (key, data) ->
-      return if @_loaded_keys[key]
+      return if @_loaded_keys[@context.the_flag[key]]
 
       if typeof data is "string"
         this._load_remote_data data, key
@@ -206,7 +206,7 @@
       @flags        = null
       @current_flag = null
       @query        = null
-      @loaded_flags = []
+      @the_flag = {}
       @view = new View(this)
       @model = new Model(this)
       @$inputor = $(inputor)
@@ -239,6 +239,8 @@
       else
         @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
+      @the_flag[flag] = flag
+      @the_flag[current_setting.alias] = flag if current_setting.alias
       @model.load flag, current_setting.data
       @view.init()
 
@@ -431,8 +433,8 @@
         $menu.find('.cur').removeClass 'cur'
         $(e.currentTarget).addClass 'cur'
       .on 'click', (e) =>
+        this.choose()
         e.preventDefault()
-        @$el.data("_view").choose()
 
 
     # Check if the view is exists
@@ -496,7 +498,6 @@
         return yes
 
       this.clear()
-      @$el.data("_view",this)
 
       $ul = @$el.find('ul')
       tpl = @context.get_opt('tpl', DEFAULT_TPL)
