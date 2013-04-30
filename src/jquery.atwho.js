@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View, methods;
+    var $CONTAINER, Api, Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -119,16 +119,22 @@
       }
     };
     Model = (function() {
+      var _storage;
 
-      function Model(context) {
+      _storage = {};
+
+      function Model(context, key) {
         this.context = context;
-        this._data_sets = {};
-        this._loaded_keys = [];
+        this.key = key;
       }
+
+      Model.prototype.saved = function() {
+        return this.fetch() > 0;
+      };
 
       Model.prototype.query = function(query, callback) {
         var data, remote_filter, search_key;
-        data = this.all() || [];
+        data = this.fetch();
         search_key = this.context.get_opt("search_key");
         data = this.context.callbacks('filter').call(this.context, query, data, search_key);
         if (data && data.length > 0) {
@@ -141,55 +147,60 @@
         return true;
       };
 
-      Model.prototype.all = function(key) {
-        return this._data_sets[this.context.the_flag[key] || this.context.current_flag];
+      Model.prototype.fetch = function() {
+        return _storage[this.key] || [];
       };
 
-      Model.prototype.reset = function(data, key) {
-        key = this.context.the_flag[key] || this.context.current_flag;
-        data = this._data_sets[key] = this.context.callbacks("loading_data").call(this.context, data);
-        if (data && data.length > 0) {
-          return this._loaded_keys[key] = true;
-        }
+      Model.prototype.save = function(data) {
+        return _storage[this.key] = this.context.callbacks("loading_data").call(this.context, data);
       };
 
-      Model.prototype.load = function(key, data) {
-        if (this._loaded_keys[this.context.the_flag[key]]) {
+      Model.prototype.load = function(data) {
+        var _this = this;
+        if (this.saved()) {
           return;
         }
         if (typeof data === "string") {
-          return this._load_remote_data(data, key);
+          return $.ajax(url, {
+            dataType: "json"
+          }).done(function(data) {
+            return _this.save(data);
+          });
         } else {
-          return this.reset(data, key);
+          return this.save(data);
         }
-      };
-
-      Model.prototype._load_remote_data = function(url, key) {
-        var _this = this;
-        return $.ajax(url, {
-          dataType: "json"
-        }).done(function(data) {
-          return _this.reset(key, data);
-        });
       };
 
       return Model;
 
     })();
     Controller = (function() {
+      var uuid, _uuid;
+
+      _uuid = 0;
+
+      uuid = function() {
+        return _uuid += 1;
+      };
 
       function Controller(inputor) {
+        this.id = inputor.id || uuid();
         this.settings = {};
         this.pos = 0;
-        this.flags = null;
         this.current_flag = null;
         this.query = null;
         this.the_flag = {};
-        this.view = new View(this);
-        this.model = new Model(this);
+        this._views = {};
+        this._models = {};
         this.$inputor = $(inputor);
+        this.create_ground();
         this.listen();
       }
+
+      Controller.prototype.create_ground = function() {
+        this.$el = $("<div id='atwho-ground-" + this.id + "'></div>");
+        return $CONTAINER.append(this.$el);
+      };
 
       Controller.prototype.listen = function() {
         var _this = this;
@@ -204,16 +215,24 @@
         });
       };
 
+      Controller.prototype.set_context_for = function(flag) {
+        flag = this.current_flag = this.the_flag[flag];
+        this.view = this._views[flag];
+        this.model = this._models[flag];
+        return this;
+      };
+
       Controller.prototype.reg = function(flag, settings) {
-        var current_setting;
-        this.current_flag = flag;
-        current_setting = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
-        this.the_flag[flag] = flag;
-        if (current_setting.alias) {
-          this.the_flag[current_setting.alias] = flag;
+        var setting;
+        if (this.settings[flag]) {
+          setting = this.settings[flag] = $.extend({}, this.settings[flag], settings);
+        } else {
+          setting = this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
         }
-        this.model.load(flag, current_setting.data);
-        this.view.init();
+        flag = (setting.alias ? this.the_flag[setting.alias] = flag : void 0, this.the_flag[flag] = flag);
+        this.set_context_for(flag);
+        (this._models[flag] = new Model(this, flag)).load(setting.data);
+        this._views[flag] = new View(this, flag);
         return this;
       };
 
@@ -279,7 +298,7 @@
         $.each(this.settings, function(flag, settings) {
           query = _this.callbacks("matcher").call(_this, flag, subtext);
           if (query != null) {
-            _this.current_flag = flag;
+            _this.set_context_for(flag);
             return false;
           }
         });
@@ -390,28 +409,23 @@
     })();
     View = (function() {
 
-      function View(context) {
+      function View(context, key) {
         this.context = context;
+        this.key = key;
+        this.id = this.context.get_opt("alias") || ("at-view-" + (this.key.charCodeAt(0)));
+        this.$el = $("<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>");
+        this.timeout_id = null;
+        this.create_view();
+        this.bind_event();
       }
 
-      View.prototype.init = function() {
-        var _id;
-        if (this.exist()) {
-          return;
-        }
-        _id = Math.floor(Math.random() * 100);
-        this.id = this.context.get_opt("alias") || ("at-view-" + _id);
-        this.timeout_id = null;
-        this.$el = $("#" + this.id);
-        return this.create_view();
+      View.prototype.create_view = function() {
+        return this.context.$el.append(this.$el);
       };
 
-      View.prototype.create_view = function() {
-        var $menu, tpl,
+      View.prototype.bind_event = function() {
+        var $menu,
           _this = this;
-        tpl = "<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>";
-        $("body").append(tpl);
-        this.$el = $("#" + this.id);
         $menu = this.$el.find('ul');
         return $menu.on('mouseenter.view', 'li', function(e) {
           $menu.find('.cur').removeClass('cur');
@@ -420,10 +434,6 @@
           _this.choose();
           return e.preventDefault();
         });
-      };
-
-      View.prototype.exist = function() {
-        return $("#" + this.id).length > 0;
       };
 
       View.prototype.visible = function() {
@@ -527,7 +537,7 @@
 
     })();
     DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
-    methods = {
+    Api = {
       init: function(options) {
         var $this, data;
         $this = $(this);
@@ -538,26 +548,20 @@
         return data.reg(options.at, options);
       },
       load: function(flag, data) {
-        var _loader;
-        _loader = function(flag, data) {
-          return this.model.load(flag, data);
-        };
-        _loader = $.proxy(_loader, this);
-        if ($.isFunction(data)) {
-          return data(_loader);
-        } else {
-          return _loader(flag, data);
-        }
+        this.set_context_for(flag);
+        return this.model.load(data);
       }
     };
+    $CONTAINER = $("<div id='atwho-container'></div>");
     $.fn.atwho = function(method) {
       var _args;
       _args = arguments;
+      $('body').append($CONTAINER);
       return this.filter('textarea, input').each(function() {
         if (typeof method === 'object' || !method) {
-          return methods.init.apply(this, _args);
-        } else if (methods[method]) {
-          return methods[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
+          return Api.init.apply(this, _args);
+        } else if (Api[method]) {
+          return Api[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
         } else {
           return $.error("Method " + method + " does not exist on jQuery.caret");
         }

@@ -151,13 +151,15 @@
       this.replace_str($li.data("value") || "") if $li.length > 0
 
   class Model
-    constructor: (@context) ->
-      # all data either from `settings` or from anywhere be saved by `reset` function.
-      @_data_sets = {}
-      @_loaded_keys = []
+    _storage = {}
+
+    constructor: (@context, @key) ->
+
+    saved: ->
+      this.fetch() > 0
 
     query: (query, callback) ->
-      data = this.all() || []
+      data = this.fetch()
       search_key = @context.get_opt("search_key")
 
       data = @context.callbacks('filter').call(@context, query, data, search_key)
@@ -173,46 +175,44 @@
     #
     # @param data [Array] set data
     # @return [Array|undefined] current data that showing on the list view.
-    all: (key) ->
-      @_data_sets[@context.the_flag[key] || @context.current_flag]
+    fetch: ->
+      _storage[@key] || []
 
-    reset: (data, key) ->
-      key = @context.the_flag[key] || @context.current_flag
-      data = @_data_sets[key] = @context.callbacks("loading_data").call(@context, data)
-      @_loaded_keys[key] = true if data and data.length > 0
+    save: (data) ->
+      _storage[@key] = @context.callbacks("loading_data").call(@context, data)
 
-    load: (key, data) ->
-      return if @_loaded_keys[@context.the_flag[key]]
-
+    load: (data) ->
+      return if this.saved()
       if typeof data is "string"
-        this._load_remote_data data, key
+        $.ajax(url, dataType: "json").done (data) =>
+          this.save(data)
       else
-        this.reset data, key
-
-    _load_remote_data: (url, key) ->
-      $.ajax(url,
-        dataType: "json"
-      ).done (data) =>
-        this.reset(key, data)
+        this.save data
 
 
   # At.js central contoller(searching, matching, evaluating and rendering.)
   class Controller
-
+    _uuid = 0
+    uuid = ->
+      _uuid += 1
     # @param inputor [HTML DOM Object] `input` or `textarea`
     constructor: (inputor) ->
+      @id = inputor.id || uuid()
       @settings     = {}
       @pos          = 0
-      @flags        = null
       @current_flag = null
       @query        = null
       @the_flag = {}
-      @view = new View(this)
-      @model = new Model(this)
+      @_views = {}
+      @_models = {}
+
       @$inputor = $(inputor)
-
-
+      this.create_ground()
       this.listen()
+
+    create_ground: ->
+      @$el = $("<div id='atwho-ground-#{@id}'></div>")
+      $CONTAINER.append(@$el)
 
     # binding jQuery events of `inputor`'s
     listen: ->
@@ -226,6 +226,12 @@
         .on 'blur.atwho', (e) =>
           @view.hide this.get_opt("display_timeout")
 
+    set_context_for: (flag) ->
+      flag = @current_flag = @the_flag[flag]
+      @view = @_views[flag]
+      @model = @_models[flag]
+      this
+
     # At.js can register multipule key char (flag) to every inputor such as "@" and ":"
     # And their has it's own `settings` so that it work differently.
     # After register, we still can update their `settings` such as updating `data`
@@ -233,16 +239,19 @@
     # @param flag [String] key char (flag)
     # @param settings [Hash] the settings
     reg: (flag, settings) ->
-      @current_flag = flag
-      current_setting = if @settings[flag]
-        @settings[flag] = $.extend {}, @settings[flag], settings
+      if @settings[flag]
+        setting = @settings[flag] = $.extend {}, @settings[flag], settings
       else
-        @settings[flag] = $.extend {}, $.fn.atwho.default, settings
+        setting = @settings[flag] = $.extend {}, $.fn.atwho.default, settings
 
-      @the_flag[flag] = flag
-      @the_flag[current_setting.alias] = flag if current_setting.alias
-      @model.load flag, current_setting.data
-      @view.init()
+      flag = (
+        @the_flag[setting.alias] = flag if setting.alias
+        @the_flag[flag] = flag
+      )
+      this.set_context_for flag
+
+      (@_models[flag] = new Model(this, flag)).load setting.data
+      @_views[flag] = new View(this, flag)
 
       this
 
@@ -316,7 +325,7 @@
       $.each @settings, (flag, settings) =>
         query = this.callbacks("matcher").call(this, flag, subtext)
         if query?
-          @current_flag = flag
+          this.set_context_for(flag)
           return false
 
       if typeof query is "string" and query.length <= 20
@@ -411,23 +420,19 @@
   class View
 
     # @param controller [Object] The Controller.
-    constructor: (@context) ->
-
-    init: ->
-      return if this.exist()
-
-      _id = Math.floor Math.random() * 100
-      @id = @context.get_opt("alias") || "at-view-#{_id}"
+    constructor: (@context, @key) ->
+      @id = @context.get_opt("alias") || "at-view-#{@key.charCodeAt(0)}"
+      @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
       @timeout_id = null
-      @$el = $("##{@id}")
+
       this.create_view()
+      this.bind_event()
 
     # create HTML DOM of list view if it does not exists
     create_view: ->
-      tpl = "<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>"
-      $("body").append(tpl)
-      @$el = $("##{@id}")
+      @context.$el.append(@$el)
 
+    bind_event: ->
       $menu = @$el.find('ul')
       $menu.on 'mouseenter.view','li', (e) ->
         $menu.find('.cur').removeClass 'cur'
@@ -435,13 +440,6 @@
       .on 'click', (e) =>
         this.choose()
         e.preventDefault()
-
-
-    # Check if the view is exists
-    #
-    # @return [Boolean]
-    exist: ->
-      $("##{@id}").length > 0
 
     # Check if view is visible
     #
@@ -514,7 +512,7 @@
 
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
-  methods =
+  Api =
     init: (options) ->
       $this = $(this)
       data = $this.data "atwho"
@@ -522,21 +520,19 @@
       data.reg options.at, options
 
     load: (flag, data) ->
-      _loader = (flag, data) ->
-        this.model.load flag, data
-      _loader = $.proxy(_loader, this)
-      if $.isFunction data
-        data(_loader)
-      else
-        _loader(flag, data)
+      this.set_context_for flag
+      this.model.load data
+
+  $CONTAINER = $("<div id='atwho-container'></div>")
 
   $.fn.atwho = (method) ->
     _args = arguments
+    $('body').append($CONTAINER)
     @.filter('textarea, input').each () ->
       if typeof method is 'object' || !method
-        methods.init.apply this, _args
-      else if methods[method]
-        methods[method].apply $(this).data('atwho'), Array::slice.call(_args, 1)
+        Api.init.apply this, _args
+      else if Api[method]
+        Api[method].apply $(this).data('atwho'), Array::slice.call(_args, 1)
       else
         $.error "Method #{method} does not exist on jQuery.caret"
 
