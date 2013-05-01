@@ -163,7 +163,7 @@
       if data and data.length > 0
         callback(data)
       else if (remote_filter = @context.callbacks('remote_filter'))
-        remote_filter.call(@context, query.text, callback)
+        remote_filter.call(@context, query, callback)
       else
         return no
       yes
