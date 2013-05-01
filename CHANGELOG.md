@@ -1,8 +1,9 @@
 ### 2013-04-28
 
-* release new api `load`
+* release new api `load`, `run`
 * matching key with a space before it
 * register key in settings `{at: "@", data: []}` instead of being a argument
+* `max_len` setting for max length to search
 
 ### 2013-04-23
 

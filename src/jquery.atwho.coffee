@@ -35,7 +35,7 @@
   #
   # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
   #
-  # [loading_data, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, selector]
+  # [before_save, matcher, filter, remote_filter, sorter, tpl_evl, highlighter, before_insert]
   #
   DEFAULT_CALLBACKS =
 
@@ -46,12 +46,10 @@
     # @param data [Array] data to refacotor.
     #
     # @return [Array] Data after refactor.
-    loading_data: (data) ->
+    before_save: (data) ->
       return data if not $.isArray(data)
-      $.map data, (item, k) ->
-        if not $.isPlainObject item
-          item = {name:item}
-        return item
+      for item in data
+        if $.isPlainObject item then item else name:item
 
     # It would be called to match the `flag`
     #
@@ -64,10 +62,7 @@
       flag = " " + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
       regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
       match = regexp.exec subtext
-      matched = null
-      if match
-        matched = if match[2] then match[2] else match[1]
-      matched
+      if match then match[2] || match[1] else null
 
     # ---------------------
 
@@ -79,9 +74,11 @@
     #
     # @return [Array] result data.
     filter: (query, data, search_key) ->
-      $.map data, (item,i) =>
-        name = if $.isPlainObject(item) then item[search_key] else item
-        item if name.toLowerCase().indexOf(query) >= 0
+      # !!null #=> false; !!undefined #=> false; !!'' #=> false;
+      _results = []
+      for item in data
+        _results.push item if ~item[search_key].toLowerCase().indexOf query
+      _results
 
     # It function is given, At.js will invoke it if local filter can not find any data
     #
@@ -94,7 +91,6 @@
     #     success: (data) ->
     #       render_view(data)
 
-
     # Sorter data of course.
     #
     # @param query [String] matched string
@@ -104,23 +100,10 @@
     # @return [Array] sorted data
     sorter: (query, items, search_key) ->
       if !query
-        return items.sort (a, b) ->
-          if a[search_key].toLowerCase() > b[search_key].toLowerCase() then 1 else -1
-
-      results = []
-
+        return items.sort (a, b) -> if a[search_key].toLowerCase() > b[search_key].toLowerCase() then 1 else -1
       for item in items
-        text = item[search_key]
-        item.atwho_order = text.toLowerCase().indexOf query
-        results.push(item)
-
-      results.sort (a,b) ->
-        a.atwho_order - b.atwho_order
-
-      results = for item in results
-        delete item["atwho_order"]
-        item
-
+        item.atwho_order = item[search_key].toLowerCase().indexOf query
+      items.sort (a,b) -> a.atwho_order - b.atwho_order
 
     # Eval template for every single item in display list.
     #
@@ -128,8 +111,7 @@
     # @param map [Hash] Data map to eval.
     tpl_eval: (tpl, map) ->
       try
-        el = tpl.replace /\$\{([^\}]*)\}/g, (tag,key,pos) ->
-          map[key]
+        tpl.replace /\$\{([^\}]*)\}/g, (tag, key, pos) -> map[key]
       catch error
         ""
 
@@ -141,14 +123,14 @@
     # @return [String] hightlighted string.
     highlighter: (li, query) ->
       return li if not query
-      li.replace new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig'), (str,$1, $2, $3) ->
-          '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
+      regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
+      li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
     # What to do after use choose a item.
     #
     # @param $li [jQuery Object] Chosen item
-    selector: ($li) ->
-      this.replace_str($li.data("value") || "") if $li.length > 0
+    before_insert: (value, $li) ->
+      value
 
   class Model
     _storage = {}
@@ -166,7 +148,7 @@
       if data and data.length > 0
         callback(data)
       else if (remote_filter = @context.callbacks('remote_filter'))
-        remote_filter.call(@context, query && query.text, callback)
+        remote_filter.call(@context, query, callback)
       else
         return no
       yes
@@ -179,13 +161,12 @@
       _storage[@key] || []
 
     save: (data) ->
-      _storage[@key] = @context.callbacks("loading_data").call(@context, data)
+      _storage[@key] = @context.callbacks("before_save").call(@context, data) if data
 
     load: (data) ->
       return if this.saved()
       if typeof data is "string"
-        $.ajax(url, dataType: "json").done (data) =>
-          this.save(data)
+        $.ajax(data, dataType: "json").done (data) => this.save(data)
       else
         this.save data
 
@@ -207,12 +188,8 @@
       @_models = {}
 
       @$inputor = $(inputor)
-      this.create_ground()
+      $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
       this.listen()
-
-    create_ground: ->
-      @$el = $("<div id='atwho-ground-#{@id}'></div>")
-      $CONTAINER.append(@$el)
 
     # binding jQuery events of `inputor`'s
     listen: ->
@@ -239,16 +216,12 @@
     # @param flag [String] key char (flag)
     # @param settings [Hash] the settings
     reg: (flag, settings) ->
-      if @settings[flag]
-        setting = @settings[flag] = $.extend {}, @settings[flag], settings
-      else
-        setting = @settings[flag] = $.extend {}, $.fn.atwho.default, settings
+      setting = @settings[flag] = $.extend {}, @settings[flag] || $.fn.atwho.default, settings
 
-      flag = (
+      this.set_context_for flag = (
         @the_flag[setting.alias] = flag if setting.alias
         @the_flag[flag] = flag
       )
-      this.set_context_for flag
 
       (@_models[flag] = new Model(this, flag)).load setting.data
       @_views[flag] = new View(this, flag)
@@ -268,7 +241,6 @@
     # @param name [String] Event name
     # @param data [Array] data to callback
     trigger: (name, data) ->
-      data ||= []
       data.push this
       alias = this.get_opt('alias')
       event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
@@ -285,9 +257,7 @@
     # @param func_name [String] callback's name
     # @return [Function] The callback.
     callbacks: (func_name)->
-      func = this.get_opt("callbacks")[func_name]
-      func = DEFAULT_CALLBACKS[func_name] unless func
-      func
+      this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
 
     # Because different reigstered key char has different settings.
     # so we should give their own for them.
@@ -306,12 +276,8 @@
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
-      if document.selection # IE
-        scale_bottom = scale = 0
-      else
-        scale = 0
-        scale_bottom = 2
-      {left:c.left + scale, top:c.top + scale, bottom: c.top+c.height + scale_bottom}
+      scale_bottom = if document.selection then 0 else 2
+      {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
     # Catch query string behind the key char
     #
@@ -322,28 +288,27 @@
       subtext = content.slice(0,caret_pos)
 
       query = null
-      $.each @settings, (flag, settings) =>
-        query = this.callbacks("matcher").call(this, flag, subtext)
-        if query?
-          this.set_context_for(flag)
-          return false
+      $.map @settings, (setting) =>
+        _result = this.callbacks("matcher").call(this, setting.at, subtext)
+        if _result?
+          query = _result
+          this.set_context_for(setting.at)
 
-      if typeof query is "string" and query.length <= 20
+      if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
         start = caret_pos - query.length
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
-        alias = this.get_opt('alias')
         this.trigger "matched", [@current_flag, query.text]
       else
-        @view.hide()
+        @view?.hide()
 
       @query = query
 
     # Insert value of `data-value` attribute of choosed item into inputor
     #
     # @param str [String] string to insert
-    replace_str: (str) ->
+    insert: (str) ->
       $inputor = @$inputor
       # ensure str is str.
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
@@ -370,7 +335,7 @@
       return
 
     on_keydown: (e) ->
-      return if not @view.visible()
+      return if not @view?.visible()
       switch e.keyCode
         when KEY_CODE.ESC
           e.preventDefault()
@@ -394,25 +359,14 @@
     # @param data [Array] The data
     render_view: (data) ->
       search_key = this.get_opt("search_key")
-      data = this.callbacks("sorter").call(this, @query.text, data, search_key)
-      data = data.slice(0, this.get_opt('limit'))
-
-      @view.render data
+      data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , search_key)
+      @view.render data[0...this.get_opt('limit')]
 
     # Searching!
-    #
     look_up: ->
-      query = this.catch_query()
-      return if not query
-
-      _callback = (data) ->
-        if data
-          this.render_view data
-        else
-          @view.hide()
-      _callback = $.proxy _callback, this
-
-      @view.hide() unless @model.query(query.text, _callback)
+      return if not (query = this.catch_query())
+      _callback = (data) -> if data then this.render_view data else @view.hide()
+      @model.query query.text, $.proxy(_callback, this)
 
 
   # View class to controll how At.js's view showing.
@@ -425,12 +379,9 @@
       @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
       @timeout_id = null
 
-      this.create_view()
-      this.bind_event()
-
-    # create HTML DOM of list view if it does not exists
-    create_view: ->
+      # create HTML DOM of list view if it does not exists
       @context.$el.append(@$el)
+      this.bind_event()
 
     bind_event: ->
       $menu = @$el.find('ul')
@@ -449,8 +400,8 @@
 
     choose: ->
       $li = @$el.find ".cur"
-      @context.callbacks("selector").call(@context, $li)
-      @context.trigger "choose", [$li]
+      @context.insert @context.callbacks("before_insert").call(@context, $li.data("value"), $li)
+      @context.trigger "inserted", [$li]
       this.hide()
 
     reposition: ->
@@ -464,64 +415,61 @@
     next: ->
       cur = @$el.find('.cur').removeClass('cur')
       next = cur.next()
-      next = $(@$el.find('li')[0]) if not next.length
+      next = @$el.find('li:first') if not next.length
       next.addClass 'cur'
 
     prev: ->
       cur = @$el.find('.cur').removeClass('cur')
       prev = cur.prev()
-      prev = @$el.find('li').last() if not prev.length
-      prev.addClass('cur')
+      prev = @$el.find('li:last') if not prev.length
+      prev.addClass 'cur'
 
     show: ->
       @$el.show() if not this.visible()
       this.reposition()
 
     hide: (time) ->
-      if isNaN time
-        @$el.hide() if this.visible()
+      if isNaN time and this.visible()
+        @$el.hide()
       else
-        callback = =>
-          this.hide()
+        callback = => this.hide()
         clearTimeout @timeout_id
         @timeout_id = setTimeout callback, time
 
-    clear: ->
-      @$el.find('ul').empty()
-
+    # render list view
     render: (list) ->
-      return no if not $.isArray(list)
-      if list.length <= 0
+      if not $.isArray list or list.length <= 0
         this.hide()
-        return yes
+        return
 
-      this.clear()
-
+      @$el.find('ul').empty()
       $ul = @$el.find('ul')
       tpl = @context.get_opt('tpl', DEFAULT_TPL)
 
-      $.each list, (i, item) =>
+      for item in list
         li = @context.callbacks("tpl_eval").call(@context, tpl, item)
         $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
-        $li.data("info", item)
+        $li.data("atwho-info", item)
         $ul.append $li
 
       this.show()
-      $ul.find("li:eq(0)").addClass "cur"
+      $ul.find("li:first").addClass "cur"
 
 
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
   Api =
     init: (options) ->
-      $this = $(this)
-      data = $this.data "atwho"
-      $this.data 'atwho', (data = new Controller(this)) if not data
-      data.reg options.at, options
+      app = ($this = $(this)).data "atwho"
+      $this.data 'atwho', (app = new Controller(this)) if not app
+      app.reg options.at, options
 
     load: (flag, data) ->
       this.set_context_for flag
       this.model.load data
+
+    run: ->
+      this.look_up()
 
   $CONTAINER = $("<div id='atwho-container'></div>")
 
@@ -544,5 +492,6 @@
     callbacks: DEFAULT_CALLBACKS
     search_key: "name"
     limit: 5
+    max_len: 20
     display_flag: yes
     display_timeout: 300
