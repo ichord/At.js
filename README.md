@@ -8,17 +8,15 @@ Hope you like it, Thanks.! :)
 
 ### Notice
 
-**The Stable version is living in branch `stable` and tag `v0.1.7`**  
-This branch have updated to `v0.2.0`. Please read **CHANGELOG.md** for more details.  
+This branch have updated to `v0.3.0`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **You can do me a favor?!**
-
 
 ### Demo
 
 http://ichord.github.com/At.js
 
 
-### Features
+### Features Preview
 
 * Can listen to any character
     not just '@', and set up multiple listeners for different characters with different behavior and data.
@@ -29,6 +27,11 @@ http://ichord.github.com/At.js
     `Right` and `left` will research the keyword.  
 * Customer data handlers and template renders by a group of configurable callbacks.
 * Support **AMD**
+
+### History Version
+
+* branch `stable-v0.2` with tag `v0.2.x`
+* branch `stable-v0.1.x` and tag `v0.1.7`
 
 
 ### Rails support
