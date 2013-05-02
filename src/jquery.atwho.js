@@ -69,7 +69,7 @@
       },
       remote_filter: null,
       sorter: function(query, items, search_key) {
-        var item, _i, _len;
+        var item, _i, _len, _results;
         if (!query) {
           return items.sort(function(a, b) {
             if (a[search_key].toLowerCase() > b[search_key].toLowerCase()) {
@@ -79,11 +79,15 @@
             }
           });
         }
+        _results = [];
         for (_i = 0, _len = items.length; _i < _len; _i++) {
           item = items[_i];
           item.atwho_order = item[search_key].toLowerCase().indexOf(query);
+          if (item.atwho_order > -1) {
+            _results.push(item);
+          }
         }
-        return items.sort(function(a, b) {
+        return _results.sort(function(a, b) {
           return a.atwho_order - b.atwho_order;
         });
       },
@@ -130,13 +134,10 @@
         search_key = this.context.get_opt("search_key");
         data = this.context.callbacks('filter').call(this.context, query, data, search_key);
         if (data && data.length > 0) {
-          callback(data);
+          return callback(data);
         } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
-          remote_filter.call(this.context, query, callback);
-        } else {
-          return false;
+          return remote_filter.call(this.context, query, callback);
         }
-        return true;
       };
 
       Model.prototype.fetch = function() {
@@ -144,16 +145,21 @@
       };
 
       Model.prototype.save = function(data) {
-        if (data) {
-          return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data);
-        }
+        return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data);
       };
 
       Model.prototype.load = function(data) {
-        var _this = this;
-        if (this.saved()) {
-          return;
+        if (!(this.saved() || !data)) {
+          return this._load(data);
         }
+      };
+
+      Model.prototype.reload = function(data) {
+        return this._load(data);
+      };
+
+      Model.prototype._load = function(data) {
+        var _this = this;
         if (typeof data === "string") {
           return $.ajax(data, {
             dataType: "json"
@@ -215,7 +221,7 @@
         var setting;
         setting = this.settings[flag] = $.extend({}, this.settings[flag] || $.fn.atwho["default"], settings);
         this.set_context_for(flag = (setting.alias ? this.the_flag[setting.alias] = flag : void 0, this.the_flag[flag] = flag));
-        (this._models[flag] = new Model(this, flag)).load(setting.data);
+        (this._models[flag] = new Model(this, flag)).reload(setting.data);
         this._views[flag] = new View(this, flag);
         return this;
       };

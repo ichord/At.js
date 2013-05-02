@@ -47,7 +47,7 @@
     #
     # @return [Array] Data after refactor.
     before_save: (data) ->
-      return data if not $.isArray(data)
+      return data if not $.isArray data
       for item in data
         if $.isPlainObject item then item else name:item
 
@@ -101,9 +101,11 @@
     sorter: (query, items, search_key) ->
       if !query
         return items.sort (a, b) -> if a[search_key].toLowerCase() > b[search_key].toLowerCase() then 1 else -1
+      _results = []
       for item in items
         item.atwho_order = item[search_key].toLowerCase().indexOf query
-      items.sort (a,b) -> a.atwho_order - b.atwho_order
+        _results.push item if item.atwho_order > -1
+      _results.sort (a,b) -> a.atwho_order - b.atwho_order
 
     # Eval template for every single item in display list.
     #
@@ -149,9 +151,6 @@
         callback(data)
       else if (remote_filter = @context.callbacks('remote_filter'))
         remote_filter.call(@context, query, callback)
-      else
-        return no
-      yes
 
     # get or set current data which would be shown on the list view.
     #
@@ -161,15 +160,19 @@
       _storage[@key] || []
 
     save: (data) ->
-      _storage[@key] = @context.callbacks("before_save").call(@context, data) if data
+      _storage[@key] = @context.callbacks("before_save").call(@context, data)
 
     load: (data) ->
-      return if this.saved()
+      this._load(data) unless this.saved() or not data
+
+    reload: (data) ->
+      this._load(data)
+
+    _load: (data) ->
       if typeof data is "string"
         $.ajax(data, dataType: "json").done (data) => this.save(data)
       else
         this.save data
-
 
   # At.js central contoller(searching, matching, evaluating and rendering.)
   class Controller
@@ -223,7 +226,7 @@
         @the_flag[flag] = flag
       )
 
-      (@_models[flag] = new Model(this, flag)).load setting.data
+      (@_models[flag] = new Model(this, flag)).reload setting.data
       @_views[flag] = new View(this, flag)
 
       this

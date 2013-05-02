@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View, methods;
+    var $CONTAINER, Api, Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
     KEY_CODE = {
       DOWN: 40,
       UP: 38,
@@ -27,43 +27,49 @@
       ENTER: 13
     };
     DEFAULT_CALLBACKS = {
-      loading_data: function(data) {
+      before_save: function(data) {
+        var item, _i, _len, _results;
         if (!$.isArray(data)) {
           return data;
         }
-        return $.map(data, function(item, k) {
-          if (!$.isPlainObject(item)) {
-            item = {
+        _results = [];
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          item = data[_i];
+          if ($.isPlainObject(item)) {
+            _results.push(item);
+          } else {
+            _results.push({
               name: item
-            };
+            });
           }
-          return item;
-        });
+        }
+        return _results;
       },
       matcher: function(flag, subtext) {
-        var match, matched, regexp;
+        var match, regexp;
         flag = " " + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
         regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
         match = regexp.exec(subtext);
-        matched = null;
         if (match) {
-          matched = match[2] ? match[2] : match[1];
+          return match[2] || match[1];
+        } else {
+          return null;
         }
-        return matched;
       },
       filter: function(query, data, search_key) {
-        var _this = this;
-        return $.map(data, function(item, i) {
-          var name;
-          name = $.isPlainObject(item) ? item[search_key] : item;
-          if (name.toLowerCase().indexOf(query) >= 0) {
-            return item;
+        var item, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          item = data[_i];
+          if (~item[search_key].toLowerCase().indexOf(query)) {
+            _results.push(item);
           }
-        });
+        }
+        return _results;
       },
       remote_filter: null,
       sorter: function(query, items, search_key) {
-        var item, results, text, _i, _len;
+        var item, _i, _len, _results;
         if (!query) {
           return items.sort(function(a, b) {
             if (a[search_key].toLowerCase() > b[search_key].toLowerCase()) {
@@ -73,31 +79,21 @@
             }
           });
         }
-        results = [];
+        _results = [];
         for (_i = 0, _len = items.length; _i < _len; _i++) {
           item = items[_i];
-          text = item[search_key];
-          item.atwho_order = text.toLowerCase().indexOf(query);
-          results.push(item);
-        }
-        results.sort(function(a, b) {
-          return a.atwho_order - b.atwho_order;
-        });
-        return results = (function() {
-          var _j, _len1, _results;
-          _results = [];
-          for (_j = 0, _len1 = results.length; _j < _len1; _j++) {
-            item = results[_j];
-            delete item["atwho_order"];
+          item.atwho_order = item[search_key].toLowerCase().indexOf(query);
+          if (item.atwho_order > -1) {
             _results.push(item);
           }
-          return _results;
-        })();
+        }
+        return _results.sort(function(a, b) {
+          return a.atwho_order - b.atwho_order;
+        });
       },
       tpl_eval: function(tpl, map) {
-        var el;
         try {
-          return el = tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+          return tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
             return map[key];
           });
         } catch (error) {
@@ -105,89 +101,99 @@
         }
       },
       highlighter: function(li, query) {
+        var regexp;
         if (!query) {
           return li;
         }
-        return li.replace(new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig'), function(str, $1, $2, $3) {
+        regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+        return li.replace(regexp, function(str, $1, $2, $3) {
           return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
         });
       },
-      selector: function($li) {
-        if ($li.length > 0) {
-          return this.replace_str($li.data("value") || "");
-        }
+      before_insert: function(value, $li) {
+        return value;
       }
     };
     Model = (function() {
+      var _storage;
 
-      function Model(context) {
+      _storage = {};
+
+      function Model(context, key) {
         this.context = context;
-        this._data_sets = {};
-        this._loaded_keys = [];
+        this.key = key;
       }
+
+      Model.prototype.saved = function() {
+        return this.fetch() > 0;
+      };
 
       Model.prototype.query = function(query, callback) {
         var data, remote_filter, search_key;
-        data = this.all() || [];
+        data = this.fetch();
         search_key = this.context.get_opt("search_key");
         data = this.context.callbacks('filter').call(this.context, query, data, search_key);
         if (data && data.length > 0) {
-          callback(data);
+          return callback(data);
         } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
-          remote_filter.call(this.context, query && query.text, callback);
-        } else {
-          return false;
-        }
-        return true;
-      };
-
-      Model.prototype.all = function(key) {
-        return this._data_sets[this.context.the_flag[key] || this.context.current_flag];
-      };
-
-      Model.prototype.reset = function(data, key) {
-        key = this.context.the_flag[key] || this.context.current_flag;
-        data = this._data_sets[key] = this.context.callbacks("loading_data").call(this.context, data);
-        if (data && data.length > 0) {
-          return this._loaded_keys[key] = true;
+          return remote_filter.call(this.context, query, callback);
         }
       };
 
-      Model.prototype.load = function(key, data) {
-        if (this._loaded_keys[this.context.the_flag[key]]) {
-          return;
-        }
-        if (typeof data === "string") {
-          return this._load_remote_data(data, key);
-        } else {
-          return this.reset(data, key);
+      Model.prototype.fetch = function() {
+        return _storage[this.key] || [];
+      };
+
+      Model.prototype.save = function(data) {
+        return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data);
+      };
+
+      Model.prototype.load = function(data) {
+        if (!(this.saved() || !data)) {
+          return this._load(data);
         }
       };
 
-      Model.prototype._load_remote_data = function(url, key) {
+      Model.prototype.reload = function(data) {
+        return this._load(data);
+      };
+
+      Model.prototype._load = function(data) {
         var _this = this;
-        return $.ajax(url, {
-          dataType: "json"
-        }).done(function(data) {
-          return _this.reset(key, data);
-        });
+        if (typeof data === "string") {
+          return $.ajax(data, {
+            dataType: "json"
+          }).done(function(data) {
+            return _this.save(data);
+          });
+        } else {
+          return this.save(data);
+        }
       };
 
       return Model;
 
     })();
     Controller = (function() {
+      var uuid, _uuid;
+
+      _uuid = 0;
+
+      uuid = function() {
+        return _uuid += 1;
+      };
 
       function Controller(inputor) {
+        this.id = inputor.id || uuid();
         this.settings = {};
         this.pos = 0;
-        this.flags = null;
         this.current_flag = null;
         this.query = null;
         this.the_flag = {};
-        this.view = new View(this);
-        this.model = new Model(this);
+        this._views = {};
+        this._models = {};
         this.$inputor = $(inputor);
+        $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
         this.listen();
       }
 
@@ -204,22 +210,24 @@
         });
       };
 
+      Controller.prototype.set_context_for = function(flag) {
+        flag = this.current_flag = this.the_flag[flag];
+        this.view = this._views[flag];
+        this.model = this._models[flag];
+        return this;
+      };
+
       Controller.prototype.reg = function(flag, settings) {
-        var current_setting;
-        this.current_flag = flag;
-        current_setting = this.settings[flag] ? this.settings[flag] = $.extend({}, this.settings[flag], settings) : this.settings[flag] = $.extend({}, $.fn.atwho["default"], settings);
-        this.the_flag[flag] = flag;
-        if (current_setting.alias) {
-          this.the_flag[current_setting.alias] = flag;
-        }
-        this.model.load(flag, current_setting.data);
-        this.view.init();
+        var setting;
+        setting = this.settings[flag] = $.extend({}, this.settings[flag] || $.fn.atwho["default"], settings);
+        this.set_context_for(flag = (setting.alias ? this.the_flag[setting.alias] = flag : void 0, this.the_flag[flag] = flag));
+        (this._models[flag] = new Model(this, flag)).reload(setting.data);
+        this._views[flag] = new View(this, flag);
         return this;
       };
 
       Controller.prototype.trigger = function(name, data) {
         var alias, event_name;
-        data || (data = []);
         data.push(this);
         alias = this.get_opt('alias');
         event_name = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
@@ -237,12 +245,7 @@
       };
 
       Controller.prototype.callbacks = function(func_name) {
-        var func;
-        func = this.get_opt("callbacks")[func_name];
-        if (!func) {
-          func = DEFAULT_CALLBACKS[func_name];
-        }
-        return func;
+        return this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name];
       };
 
       Controller.prototype.get_opt = function(key, default_value) {
@@ -254,36 +257,32 @@
       };
 
       Controller.prototype.rect = function() {
-        var c, scale, scale_bottom;
+        var c, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
-        if (document.selection) {
-          scale_bottom = scale = 0;
-        } else {
-          scale = 0;
-          scale_bottom = 2;
-        }
+        scale_bottom = document.selection ? 0 : 2;
         return {
-          left: c.left + scale,
-          top: c.top + scale,
+          left: c.left,
+          top: c.top,
           bottom: c.top + c.height + scale_bottom
         };
       };
 
       Controller.prototype.catch_query = function() {
-        var alias, caret_pos, content, end, query, start, subtext,
+        var caret_pos, content, end, query, start, subtext, _ref,
           _this = this;
         content = this.$inputor.val();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = null;
-        $.each(this.settings, function(flag, settings) {
-          query = _this.callbacks("matcher").call(_this, flag, subtext);
-          if (query != null) {
-            _this.current_flag = flag;
-            return false;
+        $.map(this.settings, function(setting) {
+          var _result;
+          _result = _this.callbacks("matcher").call(_this, setting.at, subtext);
+          if (_result != null) {
+            query = _result;
+            return _this.set_context_for(setting.at);
           }
         });
-        if (typeof query === "string" && query.length <= 20) {
+        if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
           start = caret_pos - query.length;
           end = start + query.length;
           this.pos = start;
@@ -292,15 +291,16 @@
             'head_pos': start,
             'end_pos': end
           };
-          alias = this.get_opt('alias');
           this.trigger("matched", [this.current_flag, query.text]);
         } else {
-          this.view.hide();
+          if ((_ref = this.view) != null) {
+            _ref.hide();
+          }
         }
         return this.query = query;
       };
 
-      Controller.prototype.replace_str = function(str) {
+      Controller.prototype.insert = function(str) {
         var $inputor, flag_len, source, start_str, text;
         $inputor = this.$inputor;
         str = '' + str;
@@ -329,7 +329,8 @@
       };
 
       Controller.prototype.on_keydown = function(e) {
-        if (!this.view.visible()) {
+        var _ref;
+        if (!((_ref = this.view) != null ? _ref.visible() : void 0)) {
           return;
         }
         switch (e.keyCode) {
@@ -361,15 +362,13 @@
       Controller.prototype.render_view = function(data) {
         var search_key;
         search_key = this.get_opt("search_key");
-        data = this.callbacks("sorter").call(this, this.query.text, data, search_key);
-        data = data.slice(0, this.get_opt('limit'));
-        return this.view.render(data);
+        data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
+        return this.view.render(data.slice(0, this.get_opt('limit')));
       };
 
       Controller.prototype.look_up = function() {
         var query, _callback;
-        query = this.catch_query();
-        if (!query) {
+        if (!(query = this.catch_query())) {
           return;
         }
         _callback = function(data) {
@@ -379,10 +378,7 @@
             return this.view.hide();
           }
         };
-        _callback = $.proxy(_callback, this);
-        if (!this.model.query(query.text, _callback)) {
-          return this.view.hide();
-        }
+        return this.model.query(query.text, $.proxy(_callback, this));
       };
 
       return Controller;
@@ -390,28 +386,19 @@
     })();
     View = (function() {
 
-      function View(context) {
+      function View(context, key) {
         this.context = context;
+        this.key = key;
+        this.id = this.context.get_opt("alias") || ("at-view-" + (this.key.charCodeAt(0)));
+        this.$el = $("<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>");
+        this.timeout_id = null;
+        this.context.$el.append(this.$el);
+        this.bind_event();
       }
 
-      View.prototype.init = function() {
-        var _id;
-        if (this.exist()) {
-          return;
-        }
-        _id = Math.floor(Math.random() * 100);
-        this.id = this.context.get_opt("alias") || ("at-view-" + _id);
-        this.timeout_id = null;
-        this.$el = $("#" + this.id);
-        return this.create_view();
-      };
-
-      View.prototype.create_view = function() {
-        var $menu, tpl,
+      View.prototype.bind_event = function() {
+        var $menu,
           _this = this;
-        tpl = "<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>";
-        $("body").append(tpl);
-        this.$el = $("#" + this.id);
         $menu = this.$el.find('ul');
         return $menu.on('mouseenter.view', 'li', function(e) {
           $menu.find('.cur').removeClass('cur');
@@ -422,10 +409,6 @@
         });
       };
 
-      View.prototype.exist = function() {
-        return $("#" + this.id).length > 0;
-      };
-
       View.prototype.visible = function() {
         return this.$el.is(":visible");
       };
@@ -433,8 +416,8 @@
       View.prototype.choose = function() {
         var $li;
         $li = this.$el.find(".cur");
-        this.context.callbacks("selector").call(this.context, $li);
-        this.context.trigger("choose", [$li]);
+        this.context.insert(this.context.callbacks("before_insert").call(this.context, $li.data("value"), $li));
+        this.context.trigger("inserted", [$li]);
         return this.hide();
       };
 
@@ -457,7 +440,7 @@
         cur = this.$el.find('.cur').removeClass('cur');
         next = cur.next();
         if (!next.length) {
-          next = $(this.$el.find('li')[0]);
+          next = this.$el.find('li:first');
         }
         return next.addClass('cur');
       };
@@ -467,7 +450,7 @@
         cur = this.$el.find('.cur').removeClass('cur');
         prev = cur.prev();
         if (!prev.length) {
-          prev = this.$el.find('li').last();
+          prev = this.$el.find('li:last');
         }
         return prev.addClass('cur');
       };
@@ -482,10 +465,8 @@
       View.prototype.hide = function(time) {
         var callback,
           _this = this;
-        if (isNaN(time)) {
-          if (this.visible()) {
-            return this.$el.hide();
-          }
+        if (isNaN(time && this.visible())) {
+          return this.$el.hide();
         } else {
           callback = function() {
             return _this.hide();
@@ -495,69 +476,57 @@
         }
       };
 
-      View.prototype.clear = function() {
-        return this.$el.find('ul').empty();
-      };
-
       View.prototype.render = function(list) {
-        var $ul, tpl,
-          _this = this;
-        if (!$.isArray(list)) {
-          return false;
-        }
-        if (list.length <= 0) {
+        var $li, $ul, item, li, tpl, _i, _len;
+        if (!$.isArray(list || list.length <= 0)) {
           this.hide();
-          return true;
+          return;
         }
-        this.clear();
+        this.$el.find('ul').empty();
         $ul = this.$el.find('ul');
         tpl = this.context.get_opt('tpl', DEFAULT_TPL);
-        $.each(list, function(i, item) {
-          var $li, li;
-          li = _this.context.callbacks("tpl_eval").call(_this.context, tpl, item);
-          $li = $(_this.context.callbacks("highlighter").call(_this.context, li, _this.context.query.text));
-          $li.data("info", item);
-          return $ul.append($li);
-        });
+        for (_i = 0, _len = list.length; _i < _len; _i++) {
+          item = list[_i];
+          li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
+          $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
+          $li.data("atwho-info", item);
+          $ul.append($li);
+        }
         this.show();
-        return $ul.find("li:eq(0)").addClass("cur");
+        return $ul.find("li:first").addClass("cur");
       };
 
       return View;
 
     })();
     DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
-    methods = {
+    Api = {
       init: function(options) {
-        var $this, data;
-        $this = $(this);
-        data = $this.data("atwho");
-        if (!data) {
-          $this.data('atwho', (data = new Controller(this)));
+        var $this, app;
+        app = ($this = $(this)).data("atwho");
+        if (!app) {
+          $this.data('atwho', (app = new Controller(this)));
         }
-        return data.reg(options.at, options);
+        return app.reg(options.at, options);
       },
       load: function(flag, data) {
-        var _loader;
-        _loader = function(flag, data) {
-          return this.model.load(flag, data);
-        };
-        _loader = $.proxy(_loader, this);
-        if ($.isFunction(data)) {
-          return data(_loader);
-        } else {
-          return _loader(flag, data);
-        }
+        this.set_context_for(flag);
+        return this.model.load(data);
+      },
+      run: function() {
+        return this.look_up();
       }
     };
+    $CONTAINER = $("<div id='atwho-container'></div>");
     $.fn.atwho = function(method) {
       var _args;
       _args = arguments;
+      $('body').append($CONTAINER);
       return this.filter('textarea, input').each(function() {
         if (typeof method === 'object' || !method) {
-          return methods.init.apply(this, _args);
-        } else if (methods[method]) {
-          return methods[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
+          return Api.init.apply(this, _args);
+        } else if (Api[method]) {
+          return Api[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
         } else {
           return $.error("Method " + method + " does not exist on jQuery.caret");
         }
@@ -571,6 +540,7 @@
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
       limit: 5,
+      max_len: 20,
       display_flag: true,
       display_timeout: 300
     };

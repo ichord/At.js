@@ -14,8 +14,8 @@ describe "jquery.atwho", ->
     simulate_input()
     simulate_choose()
 
-  simulate_input = ->
-    $inputor.data("atwho").current_flag ||= "@"
+  simulate_input = (flag) ->
+    $inputor.data("atwho").set_context_for flag || "@"
     $inputor.caret('pos', 31)
     $inputor.trigger("keyup")
 
@@ -23,14 +23,14 @@ describe "jquery.atwho", ->
     e = $.Event("keydown", keyCode: KEY_CODE.ENTER)
     $inputor.trigger(e)
 
-
   it "should be defined", ->
     expect($.fn.atwho).toBeDefined()
 
   beforeEach ->
     loadFixtures("inputors.html")
     fixtures = loadJSONFixtures("data.json")["data.json"]
-    $inputor = $("#inputor").atwho "@",
+    $inputor = $("#inputor").atwho
+      at: "@"
       data: fixtures["names"]
 
   describe "default callbacks", ->
@@ -43,8 +43,8 @@ describe "jquery.atwho", ->
       callbacks = $.fn.atwho.default.callbacks
       controller = $inputor.data("atwho")
 
-    it "refactor the data", ->
-      items = callbacks.data_refactor.call(controller, fixtures["names"])
+    it "refactor the data before save", ->
+      items = callbacks.before_save.call(controller, fixtures["names"])
       expect(items).toContain({"name":"Jacob"})
       expect(items).toContain({"name":"Isabella"})
 
@@ -52,18 +52,15 @@ describe "jquery.atwho", ->
       query = callbacks.matcher.call(controller, "@", text)
       expect(query).toBe("Jobs")
 
-    it "filter the data without data_refactor", ->
-      items = callbacks.filter.call(controller, "jo", fixtures["names"])
-      expect(items).toContain("Joshua")
-
-    it "filter data after data_refactor", ->
-      names = callbacks.data_refactor.call(controller, fixtures["names"])
-      names = callbacks.filter.call(controller, "jo", fixtures["names"])
-      expect(names).toContain("Joshua")
+    it "can filter data", ->
+      names = callbacks.before_save.call(controller, fixtures["names"])
+      names = callbacks.filter.call(controller, "jo", names, "name")
+      expect(names).toContain name: "Joshua"
 
     it "request data from remote by ajax if set remote_filter", ->
       remote_call = jasmine.createSpy("remote_call")
-      $inputor.atwho "@",
+      $inputor.atwho
+        at: "@"
         data: null,
         callbacks:
           remote_filter: remote_call
@@ -71,12 +68,12 @@ describe "jquery.atwho", ->
       expect(remote_call).toHaveBeenCalled()
 
     it "can sort the data", ->
-      names = callbacks.data_refactor.call(controller, fixtures["names"])
+      names = callbacks.before_save.call(controller, fixtures["names"])
       names = callbacks.sorter.call(controller, "e", names, "name")
-      expect(names).toContain({ name : 'Ethan'})
+      expect(names[0].name).toBe 'Ethan'
 
     it "can sort the data without a query", ->
-      names = callbacks.data_refactor.call(controller, fixtures["names"])
+      names = callbacks.before_save.call(controller, fixtures["names"])
       names = callbacks.sorter.call(controller, "", names, "name")
       expect(names[0]).toEqual({ name : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })
 
@@ -95,11 +92,10 @@ describe "jquery.atwho", ->
       expect(highlighted).toBe(result)
 
     it "can insert the text which be choosed", ->
-      spyOn(callbacks, "selector").andCallThrough()
+      spyOn(callbacks, "before_insert").andCallThrough()
 
       trigger_atwho()
-      expect(callbacks.selector).toHaveBeenCalled()
-      # expect(controller.$inputor).toHaveText("Jacob")
+      expect(callbacks.before_insert).toHaveBeenCalled()
 
   describe "settings", ->
     controller = null
@@ -114,19 +110,20 @@ describe "jquery.atwho", ->
       old = $.extend {}, $.fn.atwho.default.callbacks
       $.fn.atwho.default.callbacks.filter = func
       $.fn.atwho.default.limit = 8
-      $inputor = $("<input/>").atwho "@"
+      $inputor = $("<input/>").atwho at: "@"
       expect($inputor.data("atwho").callbacks("filter")).toBe func
       expect($inputor.data("atwho").get_opt("limit")).toBe 8
       $.extend $.fn.atwho.default.callbacks, old
 
     it "update specific settings", ->
-      $inputor.atwho "@", limit: 3
+      $inputor.atwho at: "@", limit: 3
       expect(controller.settings["@"].limit).toBe(3)
 
     it "update callbacks", ->
       filter = jasmine.createSpy("custom filter")
       spyOn(callbacks, "filter")
-      $inputor.atwho "@",
+      $inputor.atwho
+        at: "@"
         callbacks:
           filter: filter
 
@@ -137,21 +134,16 @@ describe "jquery.atwho", ->
     describe "setting data as url and load remote data", ->
       beforeEach ->
         jasmine.Ajax.useMock()
-        spyOn(controller.model, "_load_remote_data").andCallThrough()
-
-        controller.model.reset null
-        $inputor.atwho "@",
+        controller.set_context_for("@").model.save null
+        $inputor.atwho
+          at: "@"
           data: "/atwho.json"
 
-      it "data should be null at first", ->
-        expect(controller.model.all()).toBe null
-
-      it "not start load data before focus inputor", ->
-        expect(controller.model._load_remote_data).not.toHaveBeenCalled()
+      it "data should be empty at first", ->
+        expect(controller.model.fetch().length).toBe 0
 
       it "should load data after focus inputor", ->
         simulate_input()
-        expect(controller.model._load_remote_data).toHaveBeenCalled()
 
         request = mostRecentAjaxRequest()
         response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
@@ -159,24 +151,29 @@ describe "jquery.atwho", ->
           status: 200
           responseText: JSON.stringify(response_data)
 
-        expect(controller.model.all().length).toBe 3
+        expect(controller.model.fetch().length).toBe 3
 
     it "setting timeout", ->
       jasmine.Clock.useMock()
-      $inputor.atwho display_timeout: 500
+      $inputor.atwho
+        at: "@"
+        display_timeout: 500
 
       simulate_input()
       $inputor.trigger "blur"
-      jasmine.Clock.tick 503
       view = controller.view.$el
+
+      expect(view).not.toBeHidden()
+      jasmine.Clock.tick 503
       expect(view).toBeHidden()
 
     it "escape RegExp flag", ->
-      $inputor = $('#inputor2').atwho "$",
+      $inputor = $('#inputor2').atwho
+        at: "$"
         data: fixtures["names"]
+
       controller = $inputor.data('atwho')
-      controller.current_flag = "$"
-      simulate_input()
+      simulate_input("$")
       expect(controller.view.visible()).toBe true
 
 
@@ -194,17 +191,17 @@ describe "jquery.atwho", ->
       expect(controller.view.visible()).toBe(false)
 
     it "trigger tab", ->
-      spyOn(callbacks, "selector").andCallThrough()
+      spyOn(callbacks, "before_insert").andCallThrough()
       tab_event = $.Event("keydown.atwho", keyCode: KEY_CODE.TAB)
       $inputor.trigger(tab_event)
       expect(controller.view.visible()).toBe(false)
-      expect(callbacks.selector).toHaveBeenCalled()
+      expect(callbacks.before_insert).toHaveBeenCalled()
 
     it "trigger enter", ->
-      spyOn(callbacks, "selector").andCallThrough()
+      spyOn(callbacks, "before_insert").andCallThrough()
       enter_event = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
       $inputor.trigger(enter_event)
-      expect(callbacks.selector).toHaveBeenCalled()
+      expect(callbacks.before_insert).toHaveBeenCalled()
 
     it "trigger up", ->
       spyOn(controller.view, "prev").andCallThrough()
@@ -225,8 +222,8 @@ describe "jquery.atwho", ->
       trigger_atwho()
       expect(matched_event).toHaveBeenTriggered()
 
-    it "trigger choose", ->
-      choose_event = spyOnEvent($inputor, "choose.atwho")
+    it "trigger inserted", ->
+      choose_event = spyOnEvent($inputor, "inserted.atwho")
       trigger_atwho()
       expect(choose_event).toHaveBeenTriggered()
 
@@ -235,7 +232,7 @@ describe "jquery.atwho", ->
       trigger_atwho()
       expect(reposition_event).toHaveBeenTriggered()
 
-  describe "api", ->
+  describe "inner api", ->
     controller = null
     callbacks = null
     beforeEach ->
@@ -243,17 +240,18 @@ describe "jquery.atwho", ->
 
     it "can get current data", ->
       simulate_input()
-      expect(controller.model.all().length).toBe 23
+      expect(controller.model.fetch().length).toBe 23
 
     it "can save current data", ->
       simulate_input()
       data = [{id: 1, name: "one"}, {id: 2, name: "two"}]
-      controller.model.reset(data)
-      expect(controller.model.all().length).toBe 2
+      controller.model.save(data)
+      expect(controller.model.fetch().length).toBe 2
 
-    it "cant get current while using remote filter", ->
+    it "don't change data setting while using remote filter", ->
       jasmine.Ajax.useMock()
-      $inputor.atwho "@",
+      $inputor.atwho
+        at: "@"
         data: "/atwho.json"
 
       simulate_input()
@@ -265,4 +263,5 @@ describe "jquery.atwho", ->
         responseText: JSON.stringify(response_data)
 
       expect(controller.get_opt("data")).toBe "/atwho.json"
-      expect(controller.model.all().length).toBe 3
+      expect(controller.model.fetch().length).toBe 3
+
