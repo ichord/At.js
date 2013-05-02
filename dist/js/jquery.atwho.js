@@ -204,9 +204,11 @@
         }).on('keydown.atwho', function(e) {
           return _this.on_keydown(e);
         }).on('scroll.atwho', function(e) {
-          return _this.view.hide();
+          var _ref;
+          return (_ref = _this.view) != null ? _ref.hide() : void 0;
         }).on('blur.atwho', function(e) {
-          return _this.view.hide(_this.get_opt("display_timeout"));
+          var _ref;
+          return (_ref = _this.view) != null ? _ref.hide(_this.get_opt("display_timeout")) : void 0;
         });
       };
 

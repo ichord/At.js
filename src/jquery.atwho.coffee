@@ -39,24 +39,23 @@
   #
   DEFAULT_CALLBACKS =
 
-    # It would be called to restrcture the data when At.js invoke `reset` to save data
-    # Often invoke it when reg a `flag`("@", etc).
+    # It would be called to restrcture the data before At.js invoke `Model#save` to save data
     # In default, At.js will convert it to a Hash Array.
     #
     # @param data [Array] data to refacotor.
-    #
     # @return [Array] Data after refactor.
     before_save: (data) ->
       return data if not $.isArray data
       for item in data
         if $.isPlainObject item then item else name:item
 
-    # It would be called to match the `flag`
+    # It would be called to match the `flag`.
+    # It will match at start of line or after whitespace
     #
     # @param flag [String] current `flag` ("@", etc)
     # @param subtext [String] Text from start to current caret position.
     #
-    # @return [String] Matched string.
+    # @return [String | null] Matched result.
     matcher: (flag, subtext) ->
       # escape RegExp
       flag = '(?:^|\\s)' + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
@@ -128,12 +127,14 @@
       regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
       li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
-    # What to do after use choose a item.
+    # What to do before insert item's value into inputor.
     #
-    # @param $li [jQuery Object] Chosen item
+    # @param value [String] content to insert
+    # @param $li [jQuery Object] the chosen item
     before_insert: (value, $li) ->
       value
 
+  # Class to process data
   class Model
     _storage = {}
 
@@ -142,6 +143,12 @@
     saved: ->
       this.fetch() > 0
 
+
+    # fetch data from storage by query.
+    # will invoke `callback` to return data
+    #
+    # @param query [String] catched string for searching
+    # @param callback [Function] for receiving data
     query: (query, callback) ->
       data = this.fetch()
       search_key = @context.get_opt("search_key")
@@ -159,15 +166,24 @@
     fetch: ->
       _storage[@key] || []
 
+    # save special flag's data to storage
+    #
+    # @param data [Array] data to save
     save: (data) ->
       _storage[@key] = @context.callbacks("before_save").call(@context, data)
 
+    # load data. It wouldn't load second times if it have been loaded.
+    #
+    # @param data [Array] data to load
     load: (data) ->
       this._load(data) unless this.saved() or not data
 
     reload: (data) ->
       this._load(data)
 
+    # load data from local or remote with callback
+    #
+    # @param data [Array|String] data to load.
     _load: (data) ->
       if typeof data is "string"
         $.ajax(data, dataType: "json").done (data) => this.save(data)
@@ -202,9 +218,9 @@
         .on 'keydown.atwho', (e) =>
           this.on_keydown(e)
         .on 'scroll.atwho', (e) =>
-          @view.hide()
+          @view?.hide()
         .on 'blur.atwho', (e) =>
-          @view.hide this.get_opt("display_timeout")
+          @view?.hide this.get_opt("display_timeout")
 
     set_context_for: (flag) ->
       flag = @current_flag = @the_flag[flag]
@@ -462,11 +478,18 @@
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
   Api =
+    # init or update a inputor with a special flag
+    #
+    # @params options [Object] settings of At.js
     init: (options) ->
       app = ($this = $(this)).data "atwho"
       $this.data 'atwho', (app = new Controller(this)) if not app
       app.reg options.at, options
 
+    # load a flag's data
+    #
+    # @params flag [String] the flag
+    # @params data [Array] data to storage.
     load: (flag, data) ->
       this.set_context_for flag
       this.model.load data

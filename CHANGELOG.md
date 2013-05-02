@@ -1,6 +1,7 @@
 ### 2013-04-28
 
 * release new api `load`, `run`
+* add `alias` setting for `load` data or as the view's id
 * matching key with a space before it
 * register key in settings `{at: "@", data: []}` instead of being a argument
 * `max_len` setting for max length to search
