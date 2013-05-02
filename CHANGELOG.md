@@ -4,6 +4,7 @@
 * matching key with a space before it
 * register key in settings `{at: "@", data: []}` instead of being a argument
 * `max_len` setting for max length to search
+* change the default matcher regrex rule: occur at start of line or after whitespace
 
 ### 2013-04-23
 
