@@ -232,6 +232,16 @@ describe "jquery.atwho", ->
       trigger_atwho()
       expect(reposition_event).toHaveBeenTriggered()
 
+    it "trigger a special matched for @ with alias", ->
+      $inputor.atwho
+        at: "@"
+        alias: "at-memtions"
+
+      event = spyOnEvent($inputor, "matched-at-memtions.atwho")
+      trigger_atwho()
+      expect(event).toHaveBeenTriggered()
+
+
   describe "inner api", ->
     controller = null
     callbacks = null
@@ -264,4 +274,32 @@ describe "jquery.atwho", ->
 
       expect(controller.get_opt("data")).toBe "/atwho.json"
       expect(controller.model.fetch().length).toBe 3
+
+  describe "public api", ->
+    controller = null
+    data = []
+
+    beforeEach ->
+      controller = $inputor.data("atwho")
+      data = [
+        {one: 1}
+        {two: 2}
+        {three: 3}
+      ]
+
+    it "can load data for special flag", ->
+      $inputor.atwho "load", "@", data
+      expect(controller.model.fetch().length).toBe data.length
+
+    it "can load data with alias", ->
+      $inputor.atwho at: "@", alias: "at"
+      $inputor.atwho "load", "at", data
+      expect(controller.model.fetch().length).toBe data.length
+
+    it "can run it handly", ->
+      controller.set_context_for "@"
+      $inputor.caret('pos', 31)
+      $inputor.atwho "run"
+
+      expect(controller.view.$el).not.toBeHidden()
 
