@@ -72,10 +72,10 @@ describe "jquery.atwho", ->
       names = callbacks.sorter.call(controller, "e", names, "name")
       expect(names[0].name).toBe 'Ethan'
 
-    it "can sort the data without a query", ->
+    it "don't sort the data without a query", ->
       names = callbacks.before_save.call(controller, fixtures["names"])
       names = callbacks.sorter.call(controller, "", names, "name")
-      expect(names[0]).toEqual({ name : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })
+      expect(names[0]).toEqual({ name : 'Jacob' })
 
     it "can eval temple", ->
       map = {name: "username", nick: "nick_name"}

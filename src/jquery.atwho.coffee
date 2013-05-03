@@ -98,12 +98,13 @@
     #
     # @return [Array] sorted data
     sorter: (query, items, search_key) ->
-      if !query
-        return items.sort (a, b) -> if a[search_key].toLowerCase() > b[search_key].toLowerCase() then 1 else -1
+      return items unless query
+
       _results = []
       for item in items
         item.atwho_order = item[search_key].toLowerCase().indexOf query
         _results.push item if item.atwho_order > -1
+
       _results.sort (a,b) -> a.atwho_order - b.atwho_order
 
     # Eval template for every single item in display list.

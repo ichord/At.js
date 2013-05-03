@@ -71,13 +71,7 @@
       sorter: function(query, items, search_key) {
         var item, _i, _len, _results;
         if (!query) {
-          return items.sort(function(a, b) {
-            if (a[search_key].toLowerCase() > b[search_key].toLowerCase()) {
-              return 1;
-            } else {
-              return -1;
-            }
-          });
+          return items;
         }
         _results = [];
         for (_i = 0, _len = items.length; _i < _len; _i++) {
