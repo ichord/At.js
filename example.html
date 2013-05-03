@@ -29,7 +29,7 @@
                 return {'name':value,'email':value+"@email.com"};
             });
 
-            $('textarea').atwho({
+            $('textarea').atwho('run').atwho({
                 at: "@",
                 alias: "at-mentions",
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",

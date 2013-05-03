@@ -143,7 +143,6 @@
     saved: ->
       this.fetch() > 0
 
-
     # fetch data from storage by query.
     # will invoke `callback` to return data
     #
@@ -152,12 +151,8 @@
     query: (query, callback) ->
       data = this.fetch()
       search_key = @context.get_opt("search_key")
-
-      data = @context.callbacks('filter').call(@context, query, data, search_key)
-      if data and data.length > 0
-        callback(data)
-      else if (remote_filter = @context.callbacks('remote_filter'))
-        remote_filter.call(@context, query, callback)
+      callback data = @context.callbacks('filter').call(@context, query, data, search_key)
+      @context.callbacks('remote_filter')?.call(@context, query, callback) unless data and data.length > 0
 
     # get or set current data which would be shown on the list view.
     #
@@ -170,7 +165,7 @@
     #
     # @param data [Array] data to save
     save: (data) ->
-      _storage[@key] = @context.callbacks("before_save").call(@context, data)
+      _storage[@key] = @context.callbacks("before_save").call(@context, data || [])
 
     # load data. It wouldn't load second times if it have been loaded.
     #
@@ -384,7 +379,7 @@
     # Searching!
     look_up: ->
       return if not (query = this.catch_query())
-      _callback = (data) -> if data then this.render_view data else @view.hide()
+      _callback = (data) -> if data and data.length > 0 then this.render_view data else @view.hide()
       @model.query query.text, $.proxy(_callback, this)
 
 
@@ -506,7 +501,7 @@
       if typeof method is 'object' || !method
         Api.init.apply this, _args
       else if Api[method]
-        Api[method].apply $(this).data('atwho'), Array::slice.call(_args, 1)
+        Api[method].apply app, Array::slice.call(_args, 1) if app = $(this).data('atwho')
       else
         $.error "Method #{method} does not exist on jQuery.caret"
 

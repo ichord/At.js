@@ -129,14 +129,12 @@
       };
 
       Model.prototype.query = function(query, callback) {
-        var data, remote_filter, search_key;
+        var data, search_key, _ref;
         data = this.fetch();
         search_key = this.context.get_opt("search_key");
-        data = this.context.callbacks('filter').call(this.context, query, data, search_key);
-        if (data && data.length > 0) {
-          return callback(data);
-        } else if ((remote_filter = this.context.callbacks('remote_filter'))) {
-          return remote_filter.call(this.context, query, callback);
+        callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
+        if (!(data && data.length > 0)) {
+          return (_ref = this.context.callbacks('remote_filter')) != null ? _ref.call(this.context, query, callback) : void 0;
         }
       };
 
@@ -145,7 +143,7 @@
       };
 
       Model.prototype.save = function(data) {
-        return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data);
+        return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data || []);
       };
 
       Model.prototype.load = function(data) {
@@ -374,7 +372,7 @@
           return;
         }
         _callback = function(data) {
-          if (data) {
+          if (data && data.length > 0) {
             return this.render_view(data);
           } else {
             return this.view.hide();
@@ -525,10 +523,13 @@
       _args = arguments;
       $('body').append($CONTAINER);
       return this.filter('textarea, input').each(function() {
+        var app;
         if (typeof method === 'object' || !method) {
           return Api.init.apply(this, _args);
         } else if (Api[method]) {
-          return Api[method].apply($(this).data('atwho'), Array.prototype.slice.call(_args, 1));
+          if (app = $(this).data('atwho')) {
+            return Api[method].apply(app, Array.prototype.slice.call(_args, 1));
+          }
         } else {
           return $.error("Method " + method + " does not exist on jQuery.caret");
         }
