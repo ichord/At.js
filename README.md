@@ -43,7 +43,7 @@ If you are working with `Rails`. This gem: [jquery-atwho-rails](https://github.c
 
 ### Documentation
 
-http://ichord.github.com/At.js/documentation.html
+https://github.com/ichord/At.js/wiki
 
 
 ### Core Team Members
