@@ -156,7 +156,11 @@
           return $.ajax(data, {
             dataType: "json"
           }).done(function(data) {
-            return _this.save(data);
+            var old_key;
+            old_key = _this.context.current_flag;
+            _this.context.set_context_for(_this.key);
+            _this.save(data);
+            return _this.context.set_context_for(old_key);
           });
         } else {
           return this.save(data);

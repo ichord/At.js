@@ -182,7 +182,11 @@
     # @param data [Array|String] data to load.
     _load: (data) ->
       if typeof data is "string"
-        $.ajax(data, dataType: "json").done (data) => this.save(data)
+        $.ajax(data, dataType: "json").done (data) =>
+          old_key = @context.current_flag
+          @context.set_context_for @key
+          this.save(data)
+          @context.set_context_for old_key
       else
         this.save data
 
