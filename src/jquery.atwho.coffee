@@ -20,6 +20,349 @@
     factory window.jQuery
 ) ($) ->
 
+  # At.js central contoller(searching, matching, evaluating and rendering.)
+  class App
+
+    # @param inputor [HTML DOM Object] `input` or `textarea`
+    constructor: (inputor) ->
+      @current_flag = null
+      @controllers = {}
+      @$inputor = $(inputor)
+      this.listen()
+
+    controller: (key) ->
+      @controllers[key || @current_flag]
+
+    set_context_for: (key) ->
+      @current_flag = key
+      this
+
+    # At.js can register multipule key char (flag) to every inputor such as "@" and ":"
+    # And their has it's own `settings` so that it work differently.
+    # After register, we still can update their `settings` such as updating `data`
+    #
+    # @param flag [String] key char (flag)
+    # @param settings [Hash] the settings
+    reg: (flag, setting) ->
+      controller = @controllers[flag] ||= new Controller(this, flag)
+      @controllers[setting.alias] = controller if setting.alias
+      controller.init setting
+      this
+
+    # binding jQuery events of `inputor`'s
+    listen: ->
+      @$inputor
+        .on 'keyup.atwho', (e) =>
+          this.on_keyup(e)
+        .on 'keydown.atwho', (e) =>
+          this.on_keydown(e)
+        .on 'scroll.atwho', (e) =>
+          this.controller()?.view.hide()
+        .on 'blur.atwho', (e) =>
+          c.view.hide(c.get_opt("display_timeout")) if c = this.controller()
+
+    dispatch: ->
+      $.map @controllers, (c) =>
+        this.set_context_for c.key if c.look_up()
+
+    on_keyup: (e) ->
+      switch e.keyCode
+        when KEY_CODE.ESC
+          e.preventDefault()
+          this.controller()?.view.hide()
+        when KEY_CODE.DOWN, KEY_CODE.UP
+          $.noop()
+        else
+          this.dispatch()
+      # coffeescript will return everywhere!!
+      return
+
+    on_keydown: (e) ->
+      # return if not (view = this.controller().view).visible()
+      view = this.controller()?.view
+      return if not (view and view.visible())
+      switch e.keyCode
+        when KEY_CODE.ESC
+          e.preventDefault()
+          view.hide()
+        when KEY_CODE.UP
+          e.preventDefault()
+          view.prev()
+        when KEY_CODE.DOWN
+          e.preventDefault()
+          view.next()
+        when KEY_CODE.TAB, KEY_CODE.ENTER
+          return if not view.visible()
+          e.preventDefault()
+          view.choose()
+        else
+          $.noop()
+      return
+
+  class Controller
+    _uuid = 0
+    uuid = ->
+      _uuid += 1
+
+    constructor: (@app, @key) ->
+      @$inputor = @app.$inputor
+      @id = @$inputor[0].id || uuid()
+      @setting  = null
+      @query    = null
+      @pos      = 0
+      $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
+
+      @model    = new Model(this)
+      @view     = new View(this)
+
+
+    init: (setting) ->
+      @setting = $.extend {}, @setting || $.fn.atwho.default, setting
+      @model.reload @setting.data
+
+    super_call: (func_name, args...) ->
+      try
+        DEFAULT_CALLBACKS[func_name].apply this, args
+      catch error
+        $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
+
+    # Delegate custom `jQueryEvent` to the inputor
+    # This function will add `atwho` as namespace to every jQuery event
+    # and pass current context as the last param to it.
+    #
+    # @example
+    #   this.trigger "roll_n_rock", [1,2,3,4]
+    #
+    #   $inputor.on "rool_n_rock", (e, one, two, three, four) ->
+    #     console.log one, two, three, four
+    #
+    # @param name [String] Event name
+    # @param data [Array] data to callback
+    trigger: (name, data) ->
+      data.push this
+      alias = this.get_opt('alias')
+      event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
+      @$inputor.trigger event_name, data
+
+    # Get callback either in settings which was set by plugin user or in default callbacks list.
+    #
+    # @param func_name [String] callback's name
+    # @return [Function] The callback.
+    callbacks: (func_name)->
+      this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
+
+    # Because different reigstered key char has different settings.
+    # so we should give their own for them.
+    #
+    # @param key [String] setting's key name
+    # @param default_value [?] return this if get nothing from current settings.
+    # @return [?] setting's value
+    get_opt: (key, default_value) ->
+      try
+        @setting[key]
+      catch e
+        null
+
+    # Catch query string behind the key char
+    #
+    # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
+    catch_query: ->
+      content = @$inputor.val()
+      caret_pos = @$inputor.caret('pos')
+      subtext = content.slice(0,caret_pos)
+
+      query = this.callbacks("matcher").call(this, @key, subtext)
+
+      if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
+        start = caret_pos - query.length
+        end = start + query.length
+        @pos = start
+        query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+        this.trigger "matched", [@key, query.text]
+      else
+        @view.hide()
+
+      @query = query
+
+    # Get offset of current key char(`flag`)
+    #
+    # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
+    rect: ->
+      c = @$inputor.caret('offset', @pos - 1)
+      scale_bottom = if document.selection then 0 else 2
+      {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
+
+    # Insert value of `data-value` attribute of choosed item into inputor
+    #
+    # @param str [String] string to insert
+    insert: (str) ->
+      $inputor = @$inputor
+      # ensure str is str.
+      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
+      str = '' + str
+      source = $inputor.val()
+      flag_len = if this.get_opt("display_flag") then 0 else @key.length
+      start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
+      text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
+
+      $inputor.val text
+      $inputor.caret 'pos',start_str.length + str.length + 1
+      $inputor.change()
+
+    # Render list view
+    #
+    # @param data [Array] The data
+    render_view: (data) ->
+      search_key = this.get_opt("search_key")
+      data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , search_key)
+      @view.render data[0...this.get_opt('limit')]
+
+    # Searching!
+    look_up: ->
+      return if not (query = this.catch_query())
+      _callback = (data) -> if data and data.length > 0 then this.render_view data else @view.hide()
+      @model.query query.text, $.proxy(_callback, this)
+      query
+
+  # Class to process data
+  class Model
+    _storage = {}
+
+    constructor: (@context) ->
+      @key = @context.key
+
+    saved: ->
+      this.fetch() > 0
+
+    # fetch data from storage by query.
+    # will invoke `callback` to return data
+    #
+    # @param query [String] catched string for searching
+    # @param callback [Function] for receiving data
+    query: (query, callback) ->
+      data = this.fetch()
+      search_key = @context.get_opt("search_key")
+      callback data = @context.callbacks('filter').call(@context, query, data, search_key)
+      @context.callbacks('remote_filter')?.call(@context, query, callback) unless data and data.length > 0
+
+    # get or set current data which would be shown on the list view.
+    #
+    # @param data [Array] set data
+    # @return [Array|undefined] current data that showing on the list view.
+    fetch: ->
+      _storage[@key] || []
+
+    # save special flag's data to storage
+    #
+    # @param data [Array] data to save
+    save: (data) ->
+      _storage[@key] = @context.callbacks("before_save").call(@context, data || [])
+
+    # load data. It wouldn't load second times if it have been loaded.
+    #
+    # @param data [Array] data to load
+    load: (data) ->
+      this._load(data) unless this.saved() or not data
+
+    reload: (data) ->
+      this._load(data)
+
+    # load data from local or remote with callback
+    #
+    # @param data [Array|String] data to load.
+    _load: (data) ->
+      if typeof data is "string"
+        $.ajax(data, dataType: "json").done (data) => this.save(data)
+      else
+        this.save data
+
+  # View class to controll how At.js's view showing.
+  # All classes share the some DOM view.
+  class View
+
+    # @param controller [Object] The Controller.
+    constructor: (@context) ->
+      @key = @context.key
+      @id = @context.get_opt("alias") || "at-view-#{@key.charCodeAt(0)}"
+      @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
+      @timeout_id = null
+
+      # create HTML DOM of list view if it does not exists
+      @context.$el.append(@$el)
+      this.bind_event()
+
+    bind_event: ->
+      $menu = @$el.find('ul')
+      $menu.on 'mouseenter.view','li', (e) ->
+        $menu.find('.cur').removeClass 'cur'
+        $(e.currentTarget).addClass 'cur'
+      .on 'click', (e) =>
+        this.choose()
+        e.preventDefault()
+
+    # Check if view is visible
+    #
+    # @return [Boolean]
+    visible: ->
+      @$el.is(":visible")
+
+    choose: ->
+      $li = @$el.find ".cur"
+      @context.insert @context.callbacks("before_insert").call(@context, $li.data("value"), $li)
+      @context.trigger "inserted", [$li]
+      this.hide()
+
+    reposition: ->
+      rect = @context.rect()
+      if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
+          rect.bottom = rect.top - @$el.height()
+      offset = {left:rect.left, top:rect.bottom}
+      @$el.offset offset
+      @context.trigger "reposition", [offset]
+
+    next: ->
+      cur = @$el.find('.cur').removeClass('cur')
+      next = cur.next()
+      next = @$el.find('li:first') if not next.length
+      next.addClass 'cur'
+
+    prev: ->
+      cur = @$el.find('.cur').removeClass('cur')
+      prev = cur.prev()
+      prev = @$el.find('li:last') if not prev.length
+      prev.addClass 'cur'
+
+    show: ->
+      @$el.show() if not this.visible()
+      this.reposition()
+
+    hide: (time) ->
+      if isNaN time and this.visible()
+        @$el.hide()
+      else
+        callback = => this.hide()
+        clearTimeout @timeout_id
+        @timeout_id = setTimeout callback, time
+
+    # render list view
+    render: (list) ->
+      if not $.isArray list or list.length <= 0
+        this.hide()
+        return
+
+      @$el.find('ul').empty()
+      $ul = @$el.find('ul')
+      tpl = @context.get_opt('tpl', DEFAULT_TPL)
+
+      for item in list
+        li = @context.callbacks("tpl_eval").call(@context, tpl, item)
+        $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
+        $li.data("atwho-info", item)
+        $ul.append $li
+
+      this.show()
+      $ul.find("li:first").addClass "cur"
+
   KEY_CODE =
     DOWN: 40
     UP: 38
@@ -135,345 +478,6 @@
     before_insert: (value, $li) ->
       value
 
-  # Class to process data
-  class Model
-    _storage = {}
-
-    constructor: (@context, @key) ->
-
-    saved: ->
-      this.fetch() > 0
-
-    # fetch data from storage by query.
-    # will invoke `callback` to return data
-    #
-    # @param query [String] catched string for searching
-    # @param callback [Function] for receiving data
-    query: (query, callback) ->
-      data = this.fetch()
-      search_key = @context.get_opt("search_key")
-      callback data = @context.callbacks('filter').call(@context, query, data, search_key)
-      @context.callbacks('remote_filter')?.call(@context, query, callback) unless data and data.length > 0
-
-    # get or set current data which would be shown on the list view.
-    #
-    # @param data [Array] set data
-    # @return [Array|undefined] current data that showing on the list view.
-    fetch: ->
-      _storage[@key] || []
-
-    # save special flag's data to storage
-    #
-    # @param data [Array] data to save
-    save: (data) ->
-      _storage[@key] = @context.callbacks("before_save").call(@context, data || [])
-
-    # load data. It wouldn't load second times if it have been loaded.
-    #
-    # @param data [Array] data to load
-    load: (data) ->
-      this._load(data) unless this.saved() or not data
-
-    reload: (data) ->
-      this._load(data)
-
-    # load data from local or remote with callback
-    #
-    # @param data [Array|String] data to load.
-    _load: (data) ->
-      if typeof data is "string"
-        $.ajax(data, dataType: "json").done (data) =>
-          old_key = @context.current_flag
-          @context.set_context_for @key
-          this.save(data)
-          @context.set_context_for old_key
-      else
-        this.save data
-
-  # At.js central contoller(searching, matching, evaluating and rendering.)
-  class Controller
-    _uuid = 0
-    uuid = ->
-      _uuid += 1
-    # @param inputor [HTML DOM Object] `input` or `textarea`
-    constructor: (inputor) ->
-      @id = inputor.id || uuid()
-      @settings     = {}
-      @pos          = 0
-      @current_flag = null
-      @query        = null
-      @the_flag = {}
-      @_views = {}
-      @_models = {}
-
-      @$inputor = $(inputor)
-      $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
-      this.listen()
-
-    # binding jQuery events of `inputor`'s
-    listen: ->
-      @$inputor
-        .on 'keyup.atwho', (e) =>
-          this.on_keyup(e)
-        .on 'keydown.atwho', (e) =>
-          this.on_keydown(e)
-        .on 'scroll.atwho', (e) =>
-          @view?.hide()
-        .on 'blur.atwho', (e) =>
-          @view?.hide this.get_opt("display_timeout")
-
-    set_context_for: (flag) ->
-      flag = @current_flag = @the_flag[flag]
-      @view = @_views[flag]
-      @model = @_models[flag]
-      this
-
-    # At.js can register multipule key char (flag) to every inputor such as "@" and ":"
-    # And their has it's own `settings` so that it work differently.
-    # After register, we still can update their `settings` such as updating `data`
-    #
-    # @param flag [String] key char (flag)
-    # @param settings [Hash] the settings
-    reg: (flag, settings) ->
-      setting = @settings[flag] = $.extend {}, @settings[flag] || $.fn.atwho.default, settings
-
-      this.set_context_for flag = (
-        @the_flag[setting.alias] = flag if setting.alias
-        @the_flag[flag] = flag
-      )
-
-      (@_models[flag] = new Model(this, flag)).reload setting.data
-      @_views[flag] = new View(this, flag)
-
-      this
-
-    # Delegate custom `jQueryEvent` to the inputor
-    # This function will add `atwho` as namespace to every jQuery event
-    # and pass current context as the last param to it.
-    #
-    # @example
-    #   this.trigger "roll_n_rock", [1,2,3,4]
-    #
-    #   $inputor.on "rool_n_rock", (e, one, two, three, four) ->
-    #     console.log one, two, three, four
-    #
-    # @param name [String] Event name
-    # @param data [Array] data to callback
-    trigger: (name, data) ->
-      data.push this
-      alias = this.get_opt('alias')
-      event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
-      @$inputor.trigger event_name, data
-
-    super_call: (func_name, args...) ->
-      try
-        DEFAULT_CALLBACKS[func_name].apply this, args
-      catch error
-        $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
-
-    # Get callback either in settings which was set by plugin user or in default callbacks list.
-    #
-    # @param func_name [String] callback's name
-    # @return [Function] The callback.
-    callbacks: (func_name)->
-      this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
-
-    # Because different reigstered key char has different settings.
-    # so we should give their own for them.
-    #
-    # @param key [String] setting's key name
-    # @param default_value [?] return this if get nothing from current settings.
-    # @return [?] setting's value
-    get_opt: (key, default_value) ->
-      try
-        @settings[@current_flag][key]
-      catch e
-        null
-
-    # Get offset of current key char(`flag`)
-    #
-    # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
-    rect: ->
-      c = @$inputor.caret('offset', @pos - 1)
-      scale_bottom = if document.selection then 0 else 2
-      {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
-
-    # Catch query string behind the key char
-    #
-    # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
-    catch_query: ->
-      content = @$inputor.val()
-      caret_pos = @$inputor.caret('pos')
-      subtext = content.slice(0,caret_pos)
-
-      query = null
-      $.map @settings, (setting) =>
-        _result = this.callbacks("matcher").call(this, setting.at, subtext)
-        if _result?
-          query = _result
-          this.set_context_for(setting.at)
-
-      if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
-        start = caret_pos - query.length
-        end = start + query.length
-        @pos = start
-        query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
-        this.trigger "matched", [@current_flag, query.text]
-      else
-        @view?.hide()
-
-      @query = query
-
-    # Insert value of `data-value` attribute of choosed item into inputor
-    #
-    # @param str [String] string to insert
-    insert: (str) ->
-      $inputor = @$inputor
-      # ensure str is str.
-      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      str = '' + str
-      source = $inputor.val()
-      flag_len = if this.get_opt("display_flag") then 0 else @current_flag.length
-      start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
-      text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
-
-      $inputor.val text
-      $inputor.caret 'pos',start_str.length + str.length + 1
-      $inputor.change()
-
-    on_keyup: (e) ->
-      switch e.keyCode
-        when KEY_CODE.ESC
-          e.preventDefault()
-          @view.hide()
-        when KEY_CODE.DOWN, KEY_CODE.UP
-          $.noop()
-        else
-          this.look_up()
-      # coffeescript will return everywhere!!
-      return
-
-    on_keydown: (e) ->
-      return if not @view?.visible()
-      switch e.keyCode
-        when KEY_CODE.ESC
-          e.preventDefault()
-          @view.hide()
-        when KEY_CODE.UP
-          e.preventDefault()
-          @view.prev()
-        when KEY_CODE.DOWN
-          e.preventDefault()
-          @view.next()
-        when KEY_CODE.TAB, KEY_CODE.ENTER
-          return if not @view.visible()
-          e.preventDefault()
-          @view.choose()
-        else
-          $.noop()
-      return
-
-    # Render list view
-    #
-    # @param data [Array] The data
-    render_view: (data) ->
-      search_key = this.get_opt("search_key")
-      data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , search_key)
-      @view.render data[0...this.get_opt('limit')]
-
-    # Searching!
-    look_up: ->
-      return if not (query = this.catch_query())
-      _callback = (data) -> if data and data.length > 0 then this.render_view data else @view.hide()
-      @model.query query.text, $.proxy(_callback, this)
-
-
-  # View class to controll how At.js's view showing.
-  # All classes share the some DOM view.
-  class View
-
-    # @param controller [Object] The Controller.
-    constructor: (@context, @key) ->
-      @id = @context.get_opt("alias") || "at-view-#{@key.charCodeAt(0)}"
-      @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
-      @timeout_id = null
-
-      # create HTML DOM of list view if it does not exists
-      @context.$el.append(@$el)
-      this.bind_event()
-
-    bind_event: ->
-      $menu = @$el.find('ul')
-      $menu.on 'mouseenter.view','li', (e) ->
-        $menu.find('.cur').removeClass 'cur'
-        $(e.currentTarget).addClass 'cur'
-      .on 'click', (e) =>
-        this.choose()
-        e.preventDefault()
-
-    # Check if view is visible
-    #
-    # @return [Boolean]
-    visible: ->
-      @$el.is(":visible")
-
-    choose: ->
-      $li = @$el.find ".cur"
-      @context.insert @context.callbacks("before_insert").call(@context, $li.data("value"), $li)
-      @context.trigger "inserted", [$li]
-      this.hide()
-
-    reposition: ->
-      rect = @context.rect()
-      if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
-          rect.bottom = rect.top - @$el.height()
-      offset = {left:rect.left, top:rect.bottom}
-      @$el.offset offset
-      @context.trigger "reposition", [offset]
-
-    next: ->
-      cur = @$el.find('.cur').removeClass('cur')
-      next = cur.next()
-      next = @$el.find('li:first') if not next.length
-      next.addClass 'cur'
-
-    prev: ->
-      cur = @$el.find('.cur').removeClass('cur')
-      prev = cur.prev()
-      prev = @$el.find('li:last') if not prev.length
-      prev.addClass 'cur'
-
-    show: ->
-      @$el.show() if not this.visible()
-      this.reposition()
-
-    hide: (time) ->
-      if isNaN time and this.visible()
-        @$el.hide()
-      else
-        callback = => this.hide()
-        clearTimeout @timeout_id
-        @timeout_id = setTimeout callback, time
-
-    # render list view
-    render: (list) ->
-      if not $.isArray list or list.length <= 0
-        this.hide()
-        return
-
-      @$el.find('ul').empty()
-      $ul = @$el.find('ul')
-      tpl = @context.get_opt('tpl', DEFAULT_TPL)
-
-      for item in list
-        li = @context.callbacks("tpl_eval").call(@context, tpl, item)
-        $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
-        $li.data("atwho-info", item)
-        $ul.append $li
-
-      this.show()
-      $ul.find("li:first").addClass "cur"
-
 
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
@@ -483,19 +487,18 @@
     # @params options [Object] settings of At.js
     init: (options) ->
       app = ($this = $(this)).data "atwho"
-      $this.data 'atwho', (app = new Controller(this)) if not app
+      $this.data 'atwho', (app = new App(this)) if not app
       app.reg options.at, options
 
     # load a flag's data
     #
-    # @params flag [String] the flag
+    # @params key[String] the flag
     # @params data [Array] data to storage.
-    load: (flag, data) ->
-      this.set_context_for flag
-      this.model.load data
+    load: (key, data) ->
+      c.model.load data if c = this.controller(key)
 
     run: ->
-      this.look_up()
+      this.dispatch()
 
   $CONTAINER = $("<div id='atwho-container'></div>")
 

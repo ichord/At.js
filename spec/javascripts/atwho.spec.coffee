@@ -2,6 +2,7 @@ describe "jquery.atwho", ->
 
   $inputor = null
   fixtures = null
+  app = null
 
   KEY_CODE =
     DOWN: 40
@@ -32,29 +33,30 @@ describe "jquery.atwho", ->
     $inputor = $("#inputor").atwho
       at: "@"
       data: fixtures["names"]
+    app = $inputor.data('atwho').set_context_for("@")
 
   describe "default callbacks", ->
     callbacks = null
-    controller = null
+    app = null
     text = null
 
     beforeEach ->
       text = $.trim $inputor.text()
       callbacks = $.fn.atwho.default.callbacks
-      controller = $inputor.data("atwho")
+      app = $inputor.data("atwho")
 
     it "refactor the data before save", ->
-      items = callbacks.before_save.call(controller, fixtures["names"])
+      items = callbacks.before_save.call(app, fixtures["names"])
       expect(items).toContain({"name":"Jacob"})
       expect(items).toContain({"name":"Isabella"})
 
     it "should match the key word following @", ->
-      query = callbacks.matcher.call(controller, "@", text)
+      query = callbacks.matcher.call(app, "@", text)
       expect(query).toBe("Jobs")
 
     it "can filter data", ->
-      names = callbacks.before_save.call(controller, fixtures["names"])
-      names = callbacks.filter.call(controller, "jo", names, "name")
+      names = callbacks.before_save.call(app, fixtures["names"])
+      names = callbacks.filter.call(app, "jo", names, "name")
       expect(names).toContain name: "Joshua"
 
     it "request data from remote by ajax if set remote_filter", ->
@@ -68,13 +70,13 @@ describe "jquery.atwho", ->
       expect(remote_call).toHaveBeenCalled()
 
     it "can sort the data", ->
-      names = callbacks.before_save.call(controller, fixtures["names"])
-      names = callbacks.sorter.call(controller, "e", names, "name")
+      names = callbacks.before_save.call(app, fixtures["names"])
+      names = callbacks.sorter.call(app, "e", names, "name")
       expect(names[0].name).toBe 'Ethan'
 
     it "don't sort the data without a query", ->
-      names = callbacks.before_save.call(controller, fixtures["names"])
-      names = callbacks.sorter.call(controller, "", names, "name")
+      names = callbacks.before_save.call(app, fixtures["names"])
+      names = callbacks.sorter.call(app, "", names, "name")
       expect(names[0]).toEqual({ name : 'Jacob' })
 
     it "can eval temple", ->
@@ -82,12 +84,12 @@ describe "jquery.atwho", ->
       tpl = '<li data-value="${name}">${nick}</li>'
       html = '<li data-value="username">nick_name</li>'
 
-      result = callbacks.tpl_eval.call(controller, tpl, map)
+      result = callbacks.tpl_eval.call(app, tpl, map)
       expect(result).toBe(html)
 
     it "can highlight the query", ->
       html = '<li data-value="username">Ethan</li>'
-      highlighted = callbacks.highlighter.call(controller, html, "e")
+      highlighted = callbacks.highlighter.call(app, html, "e")
       result = '<li data-value="username"> <strong>E</strong>than </li>'
       expect(highlighted).toBe(result)
 
@@ -98,10 +100,12 @@ describe "jquery.atwho", ->
       expect(callbacks.before_insert).toHaveBeenCalled()
 
   describe "settings", ->
+    app = null
     controller = null
     callbacks = null
     beforeEach ->
-      controller = $inputor.data("atwho")
+      app = $inputor.data("atwho").set_context_for("@")
+      controller = app.controller()
       callbacks = $.fn.atwho.default.callbacks
 
     it "update common settings", ->
@@ -111,13 +115,14 @@ describe "jquery.atwho", ->
       $.fn.atwho.default.callbacks.filter = func
       $.fn.atwho.default.limit = 8
       $inputor = $("<input/>").atwho at: "@"
-      expect($inputor.data("atwho").callbacks("filter")).toBe func
-      expect($inputor.data("atwho").get_opt("limit")).toBe 8
+      controller = $inputor.data('atwho').set_context_for("@").controller()
+      expect(controller.callbacks("filter")).toBe func
+      expect(controller.get_opt("limit")).toBe 8
       $.extend $.fn.atwho.default.callbacks, old
 
     it "update specific settings", ->
       $inputor.atwho at: "@", limit: 3
-      expect(controller.settings["@"].limit).toBe(3)
+      expect(controller.setting.limit).toBe(3)
 
     it "update callbacks", ->
       filter = jasmine.createSpy("custom filter")
@@ -132,9 +137,12 @@ describe "jquery.atwho", ->
       expect(callbacks.filter).not.toHaveBeenCalled()
 
     describe "setting data as url and load remote data", ->
+      controller = null
+
       beforeEach ->
         jasmine.Ajax.useMock()
-        controller.set_context_for("@").model.save null
+        controller = app.controller()
+        controller.model.save null
         $inputor.atwho
           at: "@"
           data: "/atwho.json"
@@ -172,7 +180,7 @@ describe "jquery.atwho", ->
         at: "$"
         data: fixtures["names"]
 
-      controller = $inputor.data('atwho')
+      controller = $inputor.data('atwho').set_context_for("$").controller()
       simulate_input("$")
       expect(controller.view.visible()).toBe true
 
@@ -180,8 +188,9 @@ describe "jquery.atwho", ->
   describe "jquery events", ->
     controller = null
     callbacks = null
+
     beforeEach ->
-      controller = $inputor.data("atwho")
+      controller = app.controller()
       callbacks = $.fn.atwho.default.callbacks
       simulate_input()
 
@@ -246,7 +255,7 @@ describe "jquery.atwho", ->
     controller = null
     callbacks = null
     beforeEach ->
-      controller = $inputor.data("atwho")
+      controller = app.controller()
 
     it "can get current data", ->
       simulate_input()
@@ -280,7 +289,7 @@ describe "jquery.atwho", ->
     data = []
 
     beforeEach ->
-      controller = $inputor.data("atwho")
+      controller = app.controller()
       data = [
         {one: 1}
         {two: 2}
@@ -297,9 +306,9 @@ describe "jquery.atwho", ->
       expect(controller.model.fetch().length).toBe data.length
 
     it "can run it handly", ->
-      controller.set_context_for "@"
+      app.set_context_for null
       $inputor.caret('pos', 31)
       $inputor.atwho "run"
 
-      expect(controller.view.$el).not.toBeHidden()
+      expect(app.controller().view.$el).not.toBeHidden()
 
