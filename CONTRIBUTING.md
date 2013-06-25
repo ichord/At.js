@@ -9,8 +9,8 @@ Please don't edit files in the `dist` subdirectory as they are generated via gru
 
 ### Code style
 
-**Two** speac indent
-naming rules: using underscope to separate name.
+**Two** space indent
+naming rules: use underscores to separate name.
 
 缩进为**两个**空格.
 命名规则: 使用下划线分隔单词.

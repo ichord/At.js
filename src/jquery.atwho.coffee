@@ -37,8 +37,8 @@
       @current_flag = key
       this
 
-    # At.js can register multipule key char (flag) to every inputor such as "@" and ":"
-    # And their has it's own `settings` so that it work differently.
+    # At.js can register multiple key char (flag) to every inputor such as "@" and ":"
+    # Along with their own `settings` so that it works differently.
     # After register, we still can update their `settings` such as updating `data`
     #
     # @param flag [String] key char (flag)
@@ -151,11 +151,11 @@
     callbacks: (func_name)->
       this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
 
-    # Because different reigstered key char has different settings.
+    # Because different registered key chars have different settings.
     # so we should give their own for them.
     #
     # @param key [String] setting's key name
-    # @param default_value [?] return this if get nothing from current settings.
+    # @param default_value [?] return this if nothing is returned from current settings.
     # @return [?] setting's value
     get_opt: (key, default_value) ->
       try
@@ -192,7 +192,7 @@
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
-    # Insert value of `data-value` attribute of choosed item into inputor
+    # Insert value of `data-value` attribute of chosen item into inputor
     #
     # @param str [String] string to insert
     insert: (str) ->
@@ -248,7 +248,7 @@
     # get or set current data which would be shown on the list view.
     #
     # @param data [Array] set data
-    # @return [Array|undefined] current data that showing on the list view.
+    # @return [Array|undefined] current data that are showing on the list view.
     fetch: ->
       _storage[@key] || []
 
@@ -258,7 +258,7 @@
     save: (data) ->
       _storage[@key] = @context.callbacks("before_save").call(@context, data || [])
 
-    # load data. It wouldn't load second times if it have been loaded.
+    # load data. It wouldn't load for a second time if it has been loaded.
     #
     # @param data [Array] data to load
     load: (data) ->
@@ -276,8 +276,8 @@
       else
         this.save data
 
-  # View class to controll how At.js's view showing.
-  # All classes share the some DOM view.
+  # View class to control how At.js's view showing.
+  # All classes share the same DOM view.
   class View
 
     # @param controller [Object] The Controller.
@@ -287,7 +287,7 @@
       @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
       @timeout_id = null
 
-      # create HTML DOM of list view if it does not exists
+      # create HTML DOM of list view if it does not exist
       @context.$el.append(@$el)
       this.bind_event()
 
@@ -382,7 +382,7 @@
   #
   DEFAULT_CALLBACKS =
 
-    # It would be called to restrcture the data before At.js invoke `Model#save` to save data
+    # It would be called to restructure the data before At.js invokes `Model#save` to save data
     # In default, At.js will convert it to a Hash Array.
     #
     # @param data [Array] data to refacotor.
@@ -412,7 +412,7 @@
     #
     # @param query [String] Matched string.
     # @param data [Array] data list
-    # @param search_key [String] key char for seaching.
+    # @param search_key [String] key char for searching.
     #
     # @return [Array] result data.
     filter: (query, data, search_key) ->
@@ -422,7 +422,7 @@
         _results.push item if ~item[search_key].toLowerCase().indexOf query
       _results
 
-    # It function is given, At.js will invoke it if local filter can not find any data
+    # If a function is given, At.js will invoke it if local filter can not find any data
     #
     # @param params [String] matched query
     # @param callback [Function] callback to render page.
@@ -460,18 +460,18 @@
       catch error
         ""
 
-    # Hightlight the `matched query` string.
+    # Highlight the `matched query` string.
     #
     # @param li [String] HTML String after eval.
     # @param query [String] matched query.
     #
-    # @return [String] hightlighted string.
+    # @return [String] highlighted string.
     highlighter: (li, query) ->
       return li if not query
       regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
       li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
-    # What to do before insert item's value into inputor.
+    # What to do before inserting item's value into inputor.
     #
     # @param value [String] content to insert
     # @param $li [jQuery Object] the chosen item
@@ -482,7 +482,7 @@
   DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
 
   Api =
-    # init or update a inputor with a special flag
+    # init or update an inputor with a special flag
     #
     # @params options [Object] settings of At.js
     init: (options) ->
