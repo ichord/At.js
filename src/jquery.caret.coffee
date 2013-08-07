@@ -126,7 +126,7 @@
         .replace(/"/g,'&quot')
         .replace(/\r\n|\r|\n/g,"<br />")
 
-      pos = pos || this.getPos()
+      pos = this.getPos() if pos is undefined
       start_range = $inputor.val().slice(0, pos)
       html = "<span>"+format(start_range)+"</span>"
       html += "<span id='caret'>|</span>"
