@@ -2,10 +2,13 @@
 
 ## Important notes
 
-Please don't edit files in the `dist` subdirectory as they are generated via grunt. You'll find source code in the `src` subdirectory!  
+Please don't edit files in the `dist` subdirectory as they are generated via grunt. You'll find source code in the `src` subdirectory!
+issuse `bower install` to install dependencies first.
 
-请不要编辑 `dist` 目录下的文件, 这些文件是由 grunt 生成的. 你可以在 `src` 目录下找到源文件.  
+请不要编辑 `dist` 目录下的文件, 这些文件是由 grunt 生成的. 你可以在 `src` 目录下找到源文件.
 `src` 下有以 *.coffe, 和 *.js 两种文件, 其中的 *.js 文件是由 `Coffeescript` 生成的. 所以请使用 Coffescript 编写功能, 然后生成 js 文件.
+
+执行 `bower install` 安装依赖.
 
 ### Code style
 

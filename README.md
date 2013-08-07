@@ -8,7 +8,10 @@ Hope you like it, Thanks.! :)
 
 ### Notice
 
-This branch have updated to `v0.3.1`. Please read **CHANGELOG.md** for more details.
+At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and At.js will concat `Caret.js` into dist file.
+And [here](http://ichord.github.io/Caret.js) is a Demo.
+
+This branch have updated to `v0.3.2`. Please read **CHANGELOG.md** for more details.
 English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 ### Demo
@@ -46,15 +49,11 @@ Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 
 https://github.com/ichord/At.js/wiki
 
-### Caret.js - The Core Magic
-
-Core function, that get the correct offset of caret, of At.js had been separated as a jQuery plugin [Caret.js](https://github.com/ichord/Caret.js)
-If you want to build your own 'At.js', welcome to use it. And [here](http://ichord.github.io/Caret.js) is a Demo.
-
 ### Core Team Members
 
 * [@ichord](https://github.com/ichord)
 
 
 ---
+
 Project is a member of the [OSS Manifesto](http://ossmanifesto.org/).

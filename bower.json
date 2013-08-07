@@ -8,5 +8,8 @@
     "components",
     "libs",
     "spec"
-  ]
+  ],
+  "dependencies": {
+    "Caret.js": "ichord/Caret.js"
+  }
 }

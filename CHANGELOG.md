@@ -1,3 +1,11 @@
+### 2013-08-07 - v0.3.2
+
+* bower
+* remove `Caret.js` codes and add it as bower dependencies
+* remove `display_flag` settings.
+* add `start_with_space` settings, default `true`
+* change `super_call` function to `call_default`
+
 ### 2013-04-28
 
 * release new api `load`, `run`
@@ -10,7 +18,7 @@
 
 ### 2013-04-23
 
-* group all data handlers as `Model` class. 
+* group all data handlers as `Model` class.
 * All callbacks's context would be current `Controller`
 
 ### 2013-04-05
@@ -53,7 +61,7 @@ The name `atWho` was changed to `atwho`.
 `+` mean new added option
 The one that start without `-` or `+` mean not change.
 
-* `-` data: [],  
+* `-` data: [],
 * `+` data: null,
 
 * `-` choose: "data-value",
@@ -77,8 +85,8 @@ Not change settings
 
 ### v0.1.7
 
-同步 `jquery-atwho-rails` gem 的版本号  
-这会是 `v0.1` 的固定版本. 不再有新功能更新.  
+同步 `jquery-atwho-rails` gem 的版本号
+这会是 `v0.1` 的固定版本. 不再有新功能更新.
 
 ###v0.1.2 2012-3-23
 * box showing above instead of bottom when it get close to the bottom of window

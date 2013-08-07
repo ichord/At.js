@@ -13,14 +13,13 @@ module.exports = function(grunt) {
     },
     concat: {
       dist: {
-        // src: ['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>.js>'],
-        src: ['src/*.js'],
+        src: ['bower_components/Caret.js/src/jquery.caret.js', 'src/*.js'],
         dest: 'dist/js/<%= pkg.name %>.js'
       }
     },
     min: {
       dist: {
-        src: ['<banner:meta.banner>', '<config:concat.dist.dest>'],
+        src: ['<config:concat.dist.dest>'],
         dest: 'dist/js/<%= pkg.name %>.min.js'
       }
     },
@@ -45,7 +44,7 @@ module.exports = function(grunt) {
       }
     },
     'jasmine' : {
-      src : 'src/**/*.js',
+      src : '<config:concat.dist.src>',
       helpers : 'spec/helpers/*.js',
       specs : 'spec/**/*.spec.js',
       template : 'spec/SpecRunner.tmpl'
