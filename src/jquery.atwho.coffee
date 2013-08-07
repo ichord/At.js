@@ -201,8 +201,7 @@
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
       str = '' + str
       source = $inputor.val()
-      flag_len = if this.get_opt("display_flag") then 0 else @key.length
-      start_str = source.slice 0, (@query['head_pos'] || 0) - flag_len
+      start_str = source.slice 0, (@query['head_pos'] || 0) - @key.length
       text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
 
       $inputor.val text
@@ -522,5 +521,4 @@
     search_key: "name"
     limit: 5
     max_len: 20
-    display_flag: yes
     display_timeout: 300

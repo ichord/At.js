@@ -217,12 +217,11 @@
       };
 
       Controller.prototype.insert = function(str) {
-        var $inputor, flag_len, source, start_str, text;
+        var $inputor, source, start_str, text;
         $inputor = this.$inputor;
         str = '' + str;
         source = $inputor.val();
-        flag_len = this.get_opt("display_flag") ? 0 : this.key.length;
-        start_str = source.slice(0, (this.query['head_pos'] || 0) - flag_len);
+        start_str = source.slice(0, (this.query['head_pos'] || 0) - this.key.length);
         text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
         $inputor.val(text);
         $inputor.caret('pos', start_str.length + str.length + 1);
@@ -564,7 +563,6 @@
       search_key: "name",
       limit: 5,
       max_len: 20,
-      display_flag: true,
       display_timeout: 300
     };
   });
