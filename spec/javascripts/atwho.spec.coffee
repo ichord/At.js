@@ -184,6 +184,15 @@ describe "jquery.atwho", ->
       simulate_input("$")
       expect(controller.view.visible()).toBe true
 
+    it "can be trigger with no space", ->
+      $inputor = $('#inputor3').atwho
+        at: "@"
+        data: fixtures["names"]
+        start_with_space: no
+
+      controller = $inputor.data('atwho').set_context_for("@").controller()
+      simulate_input()
+      expect(controller.view.visible()).toBe true
 
   describe "jquery events", ->
     controller = null

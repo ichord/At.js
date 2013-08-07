@@ -120,7 +120,7 @@
       @setting = $.extend {}, @setting || $.fn.atwho.default, setting
       @model.reload @setting.data
 
-    super_call: (func_name, args...) ->
+    call_default: (func_name, args...) ->
       try
         DEFAULT_CALLBACKS[func_name].apply this, args
       catch error
@@ -171,7 +171,7 @@
       caret_pos = @$inputor.caret('pos')
       subtext = content.slice(0,caret_pos)
 
-      query = this.callbacks("matcher").call(this, @key, subtext)
+      query = this.callbacks("matcher").call(this, @key, subtext, this.get_opt('start_with_space'))
 
       if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
         start = caret_pos - query.length
@@ -201,7 +201,7 @@
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
       str = '' + str
       source = $inputor.val()
-      start_str = source.slice 0, (@query['head_pos'] || 0) - @key.length
+      start_str = source.slice 0, (@query['head_pos'] || 0)
       text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
 
       $inputor.val text
@@ -398,9 +398,10 @@
     # @param subtext [String] Text from start to current caret position.
     #
     # @return [String | null] Matched result.
-    matcher: (flag, subtext) ->
+    matcher: (flag, subtext, should_start_with_space) ->
       # escape RegExp
-      flag = '(?:^|\\s)' + flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      flag = '(?:^|\\s)' + flag if should_start_with_space
       regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
       match = regexp.exec subtext
       if match then match[2] || match[1] else null
@@ -521,4 +522,5 @@
     search_key: "name"
     limit: 5
     max_len: 20
+    start_with_space: yes
     display_timeout: 300
