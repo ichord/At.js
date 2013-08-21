@@ -29,7 +29,7 @@
                 return {'name':value,'email':value+"@email.com"};
             });
 
-            $('textarea').atwho('run').atwho({
+            $('#inputor3').atwho('run').atwho({
                 at: "@",
                 alias: "at-mentions",
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
@@ -59,14 +59,23 @@
                 console.log(this, data);
                 // $(this).atwho('load', "@", data);
                 $(this).atwho('load', "at-mentions", data);
-            }).one('matched-at-mentions.atwho', function(e) {
-                console.log("matched.at-mentions", e.namespace)
+            }).one('matched-at-mentions.atwho', function(e, key, query) {
+                console.log("matched.at-mentions", e.namespace, key, query)
             }).one('matched-emojis.atwho', function(e) {
                 console.log("matched emojis", e.namespace)
                 inputor.atwho('load', ":", data).atwho('run')
             }).one('matched.atwho', function(e) {
                 console.log(e.type, e.namespace)
             });
+
+            // $('#inputor3').atwho({
+            //   at: "@",
+            //   data: data
+            // }).one('focus',function(e){
+            //   console.log("contenteditable", this);
+            // }).on('keyup',function(e){
+            //   console.log("contenteditable", e);
+            // });
 
 
             // $("textarea#inputor2").atwho({
@@ -103,6 +112,14 @@ textarea {
     width:480px;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
+
+.inputor {
+  width: 480px;
+  height: 300px;
+  color: rgb(131,148,150);
+  background: rgb(13,43,54);
+  margin: 50px;
+}
 </style>
 </head>
 <body>
@@ -117,10 +134,13 @@ textarea {
     <textarea id="inputor2" name="Name" rows="8" cols="40">
         this register "/:" with static data
     </textarea>
+    <div id="inputor3" class="inputor" contenteditable="true">
+      <strong>hello</strong><p>what do you want?!?!!?</p>
+    </div>
     <textarea></textarea>
     <textarea></textarea>
     <textarea></textarea>
     <br/>
-    <input></input>
+    <input value="hello"></input>
 </body>
 </html>

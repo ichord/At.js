@@ -33,84 +33,60 @@
         this.domInputor = this.$inputor[0];
       }
 
+      Caret.prototype.contentEditable = function() {
+        return !!(this.domInputor.contentEditable && this.domInputor.contentEditable === 'true');
+      };
+
+      Caret.prototype.range = function() {
+        var sel;
+
+        sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+          return sel.getRangeAt(0);
+        } else {
+          return null;
+        }
+      };
+
+      Caret.prototype.getIEPos = function() {
+        var endRange, inputor, len, normalizedValue, pos, range, textInputRange;
+
+        inputor = this.domInputor;
+        range = document.selection.createRange();
+        pos = 0;
+        if (range && range.parentElement() === inputor) {
+          normalizedValue = inputor.value.replace(/\r\n/g, "\n");
+          len = normalizedValue.length;
+          textInputRange = inputor.createTextRange();
+          textInputRange.moveToBookmark(range.getBookmark());
+          endRange = inputor.createTextRange();
+          endRange.collapse(false);
+          if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+            pos = len;
+          } else {
+            pos = -textInputRange.moveStart("character", -len);
+          }
+        }
+        return pos;
+      };
+
       Caret.prototype.getPos = function() {
-        var end, endRange, inputor, len, normalizedValue, pos, range, start, textInputRange;
+        var clonedRange, inputor, pos, range;
 
         inputor = this.domInputor;
         inputor.focus();
+        pos = 0;
         if (document.selection) {
-          /*
-          #assume we select "HATE" in the inputor such as textarea -> { }.
-           *               start end-point.
-           *              /
-           * <  I really [HATE] IE   > between the brackets is the selection range.
-           *                   \
-           *                    end end-point.
-          */
-
-          range = document.selection.createRange();
-          pos = 0;
-          if (range && range.parentElement() === inputor) {
-            normalizedValue = inputor.value.replace(/\r\n/g, "\n");
-            /* SOMETIME !!!
-             "/r/n" is counted as two char.
-              one line is two, two will be four. balalala.
-              so we have to using the normalized one's length.;
-            */
-
-            len = normalizedValue.length;
-            /*
-               <[  I really HATE IE   ]>:
-                the whole content in the inputor will be the textInputRange.
-            */
-
-            textInputRange = inputor.createTextRange();
-            /*                 _here must be the position of bookmark.
-                             /
-               <[  I really [HATE] IE   ]>
-                [---------->[           ] : this is what moveToBookmark do.
-               <   I really [[HATE] IE   ]> : here is result.
-                              \ two brackets in should be in line.
-            */
-
-            textInputRange.moveToBookmark(range.getBookmark());
-            endRange = inputor.createTextRange();
-            /*  [--------------------->[] : if set false all end-point goto end.
-              <  I really [[HATE] IE  []]>
-            */
-
-            endRange.collapse(false);
-            /*
-                            ___VS____
-                           /         \
-             <   I really [[HATE] IE []]>
-                                      \_endRange end-point.
-            
-            " > -1" mean the start end-point will be the same or right to the end end-point
-                     * simplelly, all in the end.
-            */
-
-            if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
-              start = end = len;
-            } else {
-              /*
-                      I really |HATE] IE   ]>
-                             <-|
-                    I really[ [HATE] IE   ]>
-                          <-[
-                  I reall[y  [HATE] IE   ]>
-              
-                will return how many unit have moved.
-              */
-
-              start = -textInputRange.moveStart("character", -len);
-              end = -textInputRange.moveEnd("character", -len);
-            }
-          }
+          pos = this.getIEPos();
+        } else if (this.contentEditable() && (range = this.range())) {
+          clonedRange = range.cloneRange();
+          clonedRange.selectNodeContents(inputor);
+          clonedRange.setEnd(range.endContainer, range.endOffset);
+          pos = clonedRange.toString().length;
         } else {
-          start = inputor.selectionStart;
+          pos = inputor.selectionStart;
         }
-        return start;
+        return pos;
       };
 
       Caret.prototype.setPos = function(pos) {
@@ -120,10 +96,11 @@
         if (document.selection) {
           range = inputor.createTextRange();
           range.move("character", pos);
-          return range.select();
-        } else {
-          return inputor.setSelectionRange(pos, pos);
+          range.select();
+        } else if (inputor.setSelectionRange) {
+          inputor.setSelectionRange(pos, pos);
         }
+        return inputor;
       };
 
       Caret.prototype.getPosition = function(pos) {
@@ -152,19 +129,29 @@
       };
 
       Caret.prototype.getOffset = function(pos) {
-        var $inputor, h, offset, position, x, y;
+        var $inputor, clonedRange, offset, position, range, rect;
 
         $inputor = this.$inputor;
-        offset = $inputor.offset();
-        position = this.getPosition(pos);
-        x = offset.left + position.left;
-        y = offset.top + position.top;
-        h = position.height;
-        return {
-          left: x,
-          top: y,
-          height: h
-        };
+        if ($inputor.is('textarea, input')) {
+          offset = $inputor.offset();
+          position = this.getPosition(pos);
+          offset = {
+            left: offset.left + position.left,
+            top: offset.top + position.top,
+            height: position.height
+          };
+        } else if (this.contentEditable() && (range = this.range())) {
+          clonedRange = range.cloneRange();
+          clonedRange.selectNodeContents(this.domInputor);
+          clonedRange.setStart(range.endContainer, range.endOffset - 1);
+          rect = clonedRange.getBoundingClientRect();
+          offset = {
+            height: rect.height,
+            left: rect.left + rect.width + $inputor.scrollLeft(),
+            top: rect.top + $(window).scrollTop() + $inputor.scrollTop()
+          };
+        }
+        return offset;
       };
 
       Caret.prototype.getIEPosition = function(pos) {
@@ -478,7 +465,7 @@
 
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
-        content = this.$inputor.val();
+        content = this.$inputor.is('textarea, input') ? this.$inputor.val() : $(window.getSelection().anchorNode).text();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
@@ -510,14 +497,24 @@
       };
 
       Controller.prototype.insert = function(str) {
-        var $inputor, source, start_str, text;
+        var $inputor, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
-        str = '' + str;
-        source = $inputor.val();
-        start_str = source.slice(0, this.query['head_pos'] || 0);
-        text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
-        $inputor.val(text);
-        $inputor.caret('pos', start_str.length + str.length + 1);
+        if ($inputor.is('textarea, input')) {
+          str = '' + str;
+          source = $inputor.val();
+          start_str = source.slice(0, this.query['head_pos'] || 0);
+          text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
+          $inputor.val(text);
+          $inputor.caret('pos', start_str.length + str.length + 1);
+        } else if (window.getSelection) {
+          sel = window.getSelection();
+          range = sel.getRangeAt(0);
+          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos);
+          range.setStart(range.endContainer, pos);
+          range.setEnd(range.endContainer, range.endOffset);
+          range.deleteContents();
+          document.execCommand('insertHTML', false, "<span>" + str + "</span>&nbsp;");
+        }
         return $inputor.change();
       };
 
@@ -837,7 +834,7 @@
       var _args;
       _args = arguments;
       $('body').append($CONTAINER);
-      return this.filter('textarea, input').each(function() {
+      return this.filter('textarea, input, [contenteditable=true]').each(function() {
         var app;
         if (typeof method === 'object' || !method) {
           return Api.init.apply(this, _args);

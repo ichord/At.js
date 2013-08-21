@@ -167,7 +167,11 @@
     #
     # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
     catch_query: ->
-      content = @$inputor.val()
+      content = if @$inputor.is('textarea, input')
+        @$inputor.val()
+      else
+        $(window.getSelection().anchorNode).text()
+      # content = @$inputor.text() || @$inputor.val()
       caret_pos = @$inputor.caret('pos')
       subtext = content.slice(0,caret_pos)
 
@@ -199,13 +203,22 @@
       $inputor = @$inputor
       # ensure str is str.
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      str = '' + str
-      source = $inputor.val()
-      start_str = source.slice 0, (@query['head_pos'] || 0)
-      text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
+      if $inputor.is('textarea, input')
+        str = '' + str
+        source = $inputor.val()
+        start_str = source.slice 0, (@query['head_pos'] || 0)
+        text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
 
-      $inputor.val text
-      $inputor.caret 'pos',start_str.length + str.length + 1
+        $inputor.val text
+        $inputor.caret 'pos',start_str.length + str.length + 1
+      else if window.getSelection
+        sel = window.getSelection()
+        range = sel.getRangeAt(0)
+        pos = sel.anchorOffset - (@query.end_pos - @query.head_pos)
+        range.setStart(range.endContainer, pos)
+        range.setEnd(range.endContainer, range.endOffset)
+        range.deleteContents()
+        document.execCommand 'insertHTML', false, "<span>#{str}</span>&nbsp;"
       $inputor.change()
 
     # Render list view
@@ -505,7 +518,7 @@
   $.fn.atwho = (method) ->
     _args = arguments
     $('body').append($CONTAINER)
-    @.filter('textarea, input').each () ->
+    @.filter('textarea, input, [contenteditable=true]').each () ->
       if typeof method is 'object' || !method
         Api.init.apply this, _args
       else if Api[method]

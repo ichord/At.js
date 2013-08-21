@@ -185,7 +185,7 @@
 
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
-        content = this.$inputor.val();
+        content = this.$inputor.is('textarea, input') ? this.$inputor.val() : $(window.getSelection().anchorNode).text();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
@@ -217,14 +217,24 @@
       };
 
       Controller.prototype.insert = function(str) {
-        var $inputor, source, start_str, text;
+        var $inputor, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
-        str = '' + str;
-        source = $inputor.val();
-        start_str = source.slice(0, this.query['head_pos'] || 0);
-        text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
-        $inputor.val(text);
-        $inputor.caret('pos', start_str.length + str.length + 1);
+        if ($inputor.is('textarea, input')) {
+          str = '' + str;
+          source = $inputor.val();
+          start_str = source.slice(0, this.query['head_pos'] || 0);
+          text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
+          $inputor.val(text);
+          $inputor.caret('pos', start_str.length + str.length + 1);
+        } else if (window.getSelection) {
+          sel = window.getSelection();
+          range = sel.getRangeAt(0);
+          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos);
+          range.setStart(range.endContainer, pos);
+          range.setEnd(range.endContainer, range.endOffset);
+          range.deleteContents();
+          document.execCommand('insertHTML', false, "<span>" + str + "</span>&nbsp;");
+        }
         return $inputor.change();
       };
 
@@ -544,7 +554,7 @@
       var _args;
       _args = arguments;
       $('body').append($CONTAINER);
-      return this.filter('textarea, input').each(function() {
+      return this.filter('textarea, input, [contenteditable=true]').each(function() {
         var app;
         if (typeof method === 'object' || !method) {
           return Api.init.apply(this, _args);
