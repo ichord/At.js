@@ -183,15 +183,18 @@
       };
 
       Caret.prototype.getIEOffset = function(pos) {
-        var h, range, x, y;
+        var h, range, textRange, x, y;
 
-        range = this.domInputor.createTextRange();
+        textRange = this.domInputor.createTextRange();
         if (pos) {
-          range.move('character', pos);
+          textRange.move('character', pos);
+        } else {
+          range = document.selection.createRange();
+          textRange.moveToBookmark(range.getBookmark());
         }
-        x = range.boundingLeft + $inputor.scrollLeft();
-        y = range.boundingTop + $(window).scrollTop() + $inputor.scrollTop();
-        h = range.boundingHeight;
+        x = textRange.boundingLeft + this.$inputor.scrollLeft();
+        y = textRange.boundingTop + $(window).scrollTop() + this.$inputor.scrollTop();
+        h = textRange.boundingHeight;
         return {
           left: x,
           top: y,
