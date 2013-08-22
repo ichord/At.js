@@ -185,7 +185,7 @@
 
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
-        content = this.$inputor.is('textarea, input') ? this.$inputor.val() : $(window.getSelection().anchorNode).text();
+        content = this.$inputor.is('textarea, input') ? this.$inputor.val() : this.$inputor.text();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
@@ -233,7 +233,18 @@
           range.setStart(range.endContainer, pos);
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
-          document.execCommand('insertHTML', false, "<span>" + str + "</span>&nbsp;");
+          range.insertNode($("<span>" + str + "</span>")[0]);
+          range.collapse(false);
+          range.insertNode($('<span>&nbsp;</span>')[0]);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else if (document.selection) {
+          range = document.selection.createRange();
+          range.moveStart('character', this.query.end_pos - this.query.head_pos);
+          range.pasteHTML("<span>" + str + "</span> ");
+          range.collapse(false);
+          range.select();
         }
         return $inputor.change();
       };

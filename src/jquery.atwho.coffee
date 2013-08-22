@@ -170,8 +170,8 @@
       content = if @$inputor.is('textarea, input')
         @$inputor.val()
       else
-        $(window.getSelection().anchorNode).text()
-      # content = @$inputor.text() || @$inputor.val()
+        # $(window.getSelection().anchorNode).text()
+        @$inputor.text()
       caret_pos = @$inputor.caret('pos')
       subtext = content.slice(0,caret_pos)
 
@@ -218,7 +218,18 @@
         range.setStart(range.endContainer, pos)
         range.setEnd(range.endContainer, range.endOffset)
         range.deleteContents()
-        document.execCommand 'insertHTML', false, "<span>#{str}</span>&nbsp;"
+        range.insertNode($("<span>#{str}</span>")[0])
+        range.collapse(false)
+        range.insertNode($('<span>&nbsp;</span>')[0])
+        range.collapse(false)
+        sel.removeAllRanges()
+        sel.addRange(range)
+      else if document.selection # IE < 9
+        range = document.selection.createRange();
+        range.moveStart('character', @query.end_pos - @query.head_pos)
+        range.pasteHTML("<span>#{str}</span> ")
+        range.collapse(false)
+        range.select()
       $inputor.change()
 
     # Render list view

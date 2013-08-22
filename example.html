@@ -1,7 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<!DOCTYPE HTML>
+
+<html lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+  <!-- <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" /> -->
+  <!-- <meta http-equiv="x-ua-compatible" content="IE=Edge"/> -->
 	<title></title>
         <link rel="stylesheet" type="text/css" href="dist/css/jquery.atwho.css"/>
         <script type="text/javascript" src="libs/jquery/jquery.js"></script>
@@ -29,11 +31,11 @@
                 return {'name':value,'email':value+"@email.com"};
             });
 
-            $('#inputor3').atwho('run').atwho({
+            $('.inputor').atwho('run').atwho({
                 at: "@",
                 alias: "at-mentions",
                 tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
-                max_len: 3,
+                // max_len: 3,
                 // 'data':data,
                 'callbacks': {
                     // filter: function (query, data, search_key) {
@@ -114,8 +116,8 @@ textarea {
 }
 
 .inputor {
-  width: 480px;
-  height: 300px;
+  width: 380px;
+  height: 200px;
   color: rgb(131,148,150);
   background: rgb(13,43,54);
   margin: 50px;
@@ -126,12 +128,12 @@ textarea {
     <div class="box"></div>
     <div class="box"></div>
     <button id="reflash">reflash</button>
-    <textarea id="inputor" name="at" rows="8" cols="40">
+    <textarea id="inputor" class="inputor" name="at" rows="8" cols="40">
         this textarea register "@" with static data
         and ":" with ajax.
         type "@" to try
     </textarea>
-    <textarea id="inputor2" name="Name" rows="8" cols="40">
+    <textarea id="inputor2" class="inputor" name="Name" rows="8" cols="40">
         this register "/:" with static data
     </textarea>
     <div id="inputor3" class="inputor" contenteditable="true">
@@ -141,6 +143,6 @@ textarea {
     <textarea></textarea>
     <textarea></textarea>
     <br/>
-    <input value="hello"></input>
+    <input value="hello"/>
 </body>
 </html>
