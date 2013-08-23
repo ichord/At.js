@@ -26,10 +26,10 @@
             "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
             "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
             emojis = $.map(emojis,function(value,i){
-                return {'key': value+":",'nickname':value}
+                return {id: i, 'key': value+":",'nickname':value}
             })
             data = $.map(data,function(value,i) {
-                return {'name':value,'email':value+"@email.com"};
+                return {id: i, 'name':value,'email':value+"@email.com"};
             });
 
             $('.inputor').atwho('run').atwho({

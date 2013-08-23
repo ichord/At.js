@@ -105,11 +105,13 @@
       _uuid += 1
 
     constructor: (@app, @key) ->
+      @at = @key
       @$inputor = @app.$inputor
       @id = @$inputor[0].id || uuid()
       @setting  = null
       @query    = null
       @pos      = 0
+      @cur_rect = null
       $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
       @model    = new Model(this)
@@ -125,6 +127,16 @@
         DEFAULT_CALLBACKS[func_name].apply this, args
       catch error
         $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
+
+    data: (key)->
+      key = "-#{this.get_opt('alias') || @at}" if key
+      ids = {}
+      $.map @$inputor.find("span.atwho-view-flag#{key || ""}"), (item) ->
+        data = $(item).data('atwho-data-itemInfo')
+        return if ids[data.id]
+        ids[data.id] = true if data.id
+        data
+
 
     # Delegate custom `jQueryEvent` to the inputor
     # This function will add `atwho` as namespace to every jQuery event
@@ -190,12 +202,12 @@
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
-      c = (@_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
+      c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
     reset_rect: ->
-      @_rect = null if @$inputor.attr('contentEditable') == 'true'
+      @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
 
     insert_content_for: ($li) ->
       data_value = $li.data('value')
@@ -210,30 +222,37 @@
     # Insert value of `data-value` attribute of chosen item into inputor
     #
     # @param content [String] string to insert
-    insert: (content) ->
+    insert: (content, $li) ->
       $inputor = @$inputor
-      at_len = if this.get_opt('show_the_at') then 0 else this.get_opt('at').length
+      should_show_the_at = this.get_opt('show_the_at')
+
+      if $inputor.attr('contentEditable') == 'true'
+        the_at_text = if should_show_the_at then @at else ""
+        # $insert_node.attr('data-atwho-cid', _id) if _id = $li.data('atwho-data-itemInfo').id
+        $insert_node = $("<span contenteditable='false' " \
+          + "class='atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}'>" \
+          + "#{the_at_text}#{content}&nbsp;</span>")
+        $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'))
+        $insert_node = $("<span contentEditable='true'></span>").html($insert_node)
 
       if $inputor.is('textarea, input')
         # ensure str is str.
         # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
         content = '' + content
         source = $inputor.val()
+        at_len = if should_show_the_at then 0 else @at.length
         start_str = source.slice 0, Math.max(@query.head_pos - at_len, 0)
         text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
-
         $inputor.val text
         $inputor.caret 'pos',start_str.length + content.length + 1
       else if window.getSelection
         sel = window.getSelection()
         range = sel.getRangeAt(0)
-        pos = sel.anchorOffset - (@query.end_pos - @query.head_pos) - at_len
+        pos = sel.anchorOffset - (@query.end_pos - @query.head_pos) - @at.length
         range.setStart(range.endContainer, Math.max(pos,0))
         range.setEnd(range.endContainer, range.endOffset)
         range.deleteContents()
-        range.insertNode($("<span class='atwho-view-flag'>#{content}</span>")[0])
-        range.collapse(false)
-        range.insertNode($('<span>&nbsp;</span>')[0])
+        range.insertNode($insert_node[0])
         range.collapse(false)
         sel.removeAllRanges()
         sel.addRange(range)
@@ -242,8 +261,8 @@
         #       to make it work batter.
         # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
         range = document.selection.createRange();
-        range.moveStart('character', @query.end_pos - @query.head_pos - at_len)
-        range.pasteHTML("<span>#{content}</span> ")
+        range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
+        range.pasteHTML($insert_node[0])
         range.collapse(false)
         range.select()
       $inputor.change()
@@ -348,7 +367,7 @@
     choose: ->
       $li = @$el.find ".cur"
       content = @context.insert_content_for $li
-      @context.insert @context.callbacks("before_insert").call(@context, content, $li)
+      @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li]
       this.hide()
 
@@ -535,6 +554,9 @@
     # @params data [Array] data to storage.
     load: (key, data) ->
       c.model.load data if c = this.controller(key)
+
+    getInsertedItems: (key, callback) ->
+      callback.apply(null, [c.data()]) if c = this.controller(key)
 
     run: ->
       this.dispatch()

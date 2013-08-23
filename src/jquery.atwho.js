@@ -138,11 +138,13 @@
       function Controller(app, key) {
         this.app = app;
         this.key = key;
+        this.at = this.key;
         this.$inputor = this.app.$inputor;
         this.id = this.$inputor[0].id || uuid();
         this.setting = null;
         this.query = null;
         this.pos = 0;
+        this.cur_rect = null;
         $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
         this.model = new Model(this);
         this.view = new View(this);
@@ -161,6 +163,25 @@
         } catch (error) {
           return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
         }
+      };
+
+      Controller.prototype.data = function(key) {
+        var ids;
+        if (key) {
+          key = "-" + (this.get_opt('alias') || this.at);
+        }
+        ids = {};
+        return $.map(this.$inputor.find("span.atwho-view-flag" + (key || "")), function(item) {
+          var data;
+          data = $(item).data('atwho-data-itemInfo');
+          if (ids[data.id]) {
+            return;
+          }
+          if (data.id) {
+            ids[data.id] = true;
+          }
+          return data;
+        });
       };
 
       Controller.prototype.trigger = function(name, data) {
@@ -217,7 +238,7 @@
         var c, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
         if (this.$inputor.attr('contentEditable') === 'true') {
-          c = (this._rect || (this._rect = c)) || c;
+          c = (this.cur_rect || (this.cur_rect = c)) || c;
         }
         scale_bottom = document.selection ? 0 : 2;
         return {
@@ -229,7 +250,7 @@
 
       Controller.prototype.reset_rect = function() {
         if (this.$inputor.attr('contentEditable') === 'true') {
-          return this._rect = null;
+          return this.cur_rect = null;
         }
       };
 
@@ -248,13 +269,20 @@
         return this.callbacks("tpl_eval").call(this, tpl, data);
       };
 
-      Controller.prototype.insert = function(content) {
-        var $inputor, at_len, pos, range, sel, source, start_str, text;
+      Controller.prototype.insert = function(content, $li) {
+        var $inputor, $insert_node, at_len, pos, range, sel, should_show_the_at, source, start_str, text, the_at_text;
         $inputor = this.$inputor;
-        at_len = this.get_opt('show_the_at') ? 0 : this.get_opt('at').length;
+        should_show_the_at = this.get_opt('show_the_at');
+        if ($inputor.attr('contentEditable') === 'true') {
+          the_at_text = should_show_the_at ? this.at : "";
+          $insert_node = $("<span contenteditable='false' " + ("class='atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at) + "'>") + ("" + the_at_text + content + "&nbsp;</span>"));
+          $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'));
+          $insert_node = $("<span contentEditable='true'></span>").html($insert_node);
+        }
         if ($inputor.is('textarea, input')) {
           content = '' + content;
           source = $inputor.val();
+          at_len = should_show_the_at ? 0 : this.at.length;
           start_str = source.slice(0, Math.max(this.query.head_pos - at_len, 0));
           text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
@@ -262,20 +290,18 @@
         } else if (window.getSelection) {
           sel = window.getSelection();
           range = sel.getRangeAt(0);
-          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos) - at_len;
+          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
           range.setStart(range.endContainer, Math.max(pos, 0));
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
-          range.insertNode($("<span class='atwho-view-flag'>" + content + "</span>")[0]);
-          range.collapse(false);
-          range.insertNode($('<span>&nbsp;</span>')[0]);
+          range.insertNode($insert_node[0]);
           range.collapse(false);
           sel.removeAllRanges();
           sel.addRange(range);
         } else if (document.selection) {
           range = document.selection.createRange();
-          range.moveStart('character', this.query.end_pos - this.query.head_pos - at_len);
-          range.pasteHTML("<span>" + content + "</span> ");
+          range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
+          range.pasteHTML($insert_node[0]);
           range.collapse(false);
           range.select();
         }
@@ -399,7 +425,7 @@
         var $li, content;
         $li = this.$el.find(".cur");
         content = this.context.insert_content_for($li);
-        this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li));
+        this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
         this.context.trigger("inserted", [$li]);
         return this.hide();
       };
@@ -588,6 +614,12 @@
         var c;
         if (c = this.controller(key)) {
           return c.model.load(data);
+        }
+      },
+      getInsertedItems: function(key, callback) {
+        var c;
+        if (c = this.controller(key)) {
+          return callback.apply(null, [c.data()]);
         }
       },
       run: function() {
