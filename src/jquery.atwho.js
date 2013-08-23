@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
+    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View;
     App = (function() {
 
       function App(inputor) {
@@ -216,16 +216,31 @@
         };
       };
 
-      Controller.prototype.insert = function(str) {
+      Controller.prototype.insert_content_for = function($li) {
+        var at, data, data_value, tpl;
+        data_value = $li.data('value');
+        tpl = this.get_opt('insert_tpl');
+        if (this.$inputor.is('textarea, input') || !tpl) {
+          return data_value;
+        }
+        at = this.get_opt('at');
+        data = $.extend({}, $li.data('atwho-item-info'), {
+          'atwho-data-value': data_value,
+          'atwho-at': at
+        });
+        return this.callbacks("tpl_eval").call(this, tpl, data);
+      };
+
+      Controller.prototype.insert = function(content) {
         var $inputor, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
         if ($inputor.is('textarea, input')) {
-          str = '' + str;
+          content = '' + content;
           source = $inputor.val();
           start_str = source.slice(0, this.query['head_pos'] || 0);
-          text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
+          text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
-          $inputor.caret('pos', start_str.length + str.length + 1);
+          $inputor.caret('pos', start_str.length + content.length + 1);
         } else if (window.getSelection) {
           sel = window.getSelection();
           range = sel.getRangeAt(0);
@@ -233,7 +248,7 @@
           range.setStart(range.endContainer, pos);
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
-          range.insertNode($("<span>" + str + "</span>")[0]);
+          range.insertNode($("<span class='atwho-insert-flag'>" + content + "</span>")[0]);
           range.collapse(false);
           range.insertNode($('<span>&nbsp;</span>')[0]);
           range.collapse(false);
@@ -242,7 +257,7 @@
         } else if (document.selection) {
           range = document.selection.createRange();
           range.moveStart('character', this.query.end_pos - this.query.head_pos);
-          range.pasteHTML("<span>" + str + "</span> ");
+          range.pasteHTML("<span>" + content + "</span> ");
           range.collapse(false);
           range.select();
         }
@@ -363,9 +378,10 @@
       };
 
       View.prototype.choose = function() {
-        var $li;
+        var $li, content;
         $li = this.$el.find(".cur");
-        this.context.insert(this.context.callbacks("before_insert").call(this.context, $li.data("value"), $li));
+        content = this.context.insert_content_for($li);
+        this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li));
         this.context.trigger("inserted", [$li]);
         return this.hide();
       };
@@ -433,12 +449,12 @@
         }
         this.$el.find('ul').empty();
         $ul = this.$el.find('ul');
-        tpl = this.context.get_opt('tpl', DEFAULT_TPL);
+        tpl = this.context.get_opt('tpl');
         for (_i = 0, _len = list.length; _i < _len; _i++) {
           item = list[_i];
           li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
           $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
-          $li.data("atwho-info", item);
+          $li.data("atwho-item-info", item);
           $ul.append($li);
         }
         this.show();
@@ -540,7 +556,6 @@
         return value;
       }
     };
-    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
     Api = {
       init: function(options) {
         var $this, app;
@@ -582,12 +597,14 @@
       at: void 0,
       alias: void 0,
       data: null,
-      tpl: DEFAULT_TPL,
+      tpl: "<li data-value='${name}'>${name}</li>",
+      insert_tpl: null,
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
+      insert_at: true,
+      start_with_space: true,
       limit: 5,
       max_len: 20,
-      start_with_space: true,
       display_timeout: 300
     };
   });

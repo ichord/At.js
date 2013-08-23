@@ -55,6 +55,7 @@
                 // alias: "emojis",
                 search_key: "nickname",
                 tpl:"<li data-value='${key}'>${nickname} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${nickname}.png'  height='20' width='20' /></li>"
+                ,insert_tpl:"<img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${nickname}.png'  height='20' width='20' /><span>${atwho-data-value}</span>"
                 ,'data':emojis
                 ,'start_with_space': false
             }).one('focus', function(e) {

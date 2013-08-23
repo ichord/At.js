@@ -24,16 +24,105 @@
     }
   })(function($) {
     "use strict";
-    var Caret, Mirror, methods, pluginName;
+    var EditableCaret, InputCaret, Mirror, Utils, methods, pluginName;
 
     pluginName = 'caret';
-    Caret = (function() {
-      function Caret($inputor) {
+    EditableCaret = (function() {
+      function EditableCaret($inputor) {
         this.$inputor = $inputor;
         this.domInputor = this.$inputor[0];
       }
 
-      Caret.prototype.getIEPos = function() {
+      EditableCaret.prototype.setPos = function(pos) {
+        return this.domInputor;
+      };
+
+      EditableCaret.prototype.getIEPosition = function() {
+        return $.noop();
+      };
+
+      EditableCaret.prototype.getPosition = function() {
+        return $.noop();
+      };
+
+      EditableCaret.prototype.getIEPos = function() {
+        var preCaretTextRange, textRange;
+
+        textRange = document.selection.createRange();
+        preCaretTextRange = document.body.createTextRange();
+        preCaretTextRange.moveToElementText(this.domInputor);
+        preCaretTextRange.setEndPoint("EndToEnd", textRange);
+        return preCaretTextRange.text.length;
+      };
+
+      EditableCaret.prototype.getPos = function() {
+        var clonedRange, pos, range;
+
+        if (document.selection) {
+          return this.getIEPos();
+        } else if (range = this.range()) {
+          clonedRange = range.cloneRange();
+          clonedRange.selectNodeContents(this.domInputor);
+          clonedRange.setEnd(range.endContainer, range.endOffset);
+          pos = clonedRange.toString().length;
+          clonedRange.detach();
+          return pos;
+        }
+      };
+
+      EditableCaret.prototype.getOffset = function(pos) {
+        var clonedRange, offset, range, rect;
+
+        offset = null;
+        if (window.getSelection && (range = this.range())) {
+          clonedRange = range.cloneRange();
+          clonedRange.setStart(range.endContainer, Math.max(1, range.endOffset) - 1);
+          clonedRange.setEnd(range.endContainer, range.endOffset);
+          rect = clonedRange.getBoundingClientRect();
+          offset = {
+            height: rect.height,
+            left: rect.left + rect.width,
+            top: rect.top
+          };
+          clonedRange.detach();
+          offset;
+        } else if (document.selection) {
+          range = document.selection.createRange().duplicate();
+          range.moveStart("character", -1);
+          rect = range.getBoundingClientRect();
+          offset = {
+            height: rect.bottom - rect.top,
+            left: rect.left,
+            top: rect.top
+          };
+        }
+        return Utils.adjustOffset(this.$inputor, offset);
+      };
+
+      EditableCaret.prototype.range = function() {
+        var sel;
+
+        if (!window.getSelection) {
+          return;
+        }
+        sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+          return sel.getRangeAt(0);
+        } else {
+          return null;
+        }
+      };
+
+      return EditableCaret;
+
+    })();
+    InputCaret = (function() {
+      function InputCaret($inputor) {
+        this.$inputor = $inputor;
+        this.domInputor = this.$inputor[0];
+      }
+
+      InputCaret.prototype.getIEPos = function() {
         var endRange, inputor, len, normalizedValue, pos, range, textInputRange;
 
         inputor = this.domInputor;
@@ -55,37 +144,15 @@
         return pos;
       };
 
-      Caret.prototype.getIEEditablePos = function() {
-        var preCaretTextRange, textRange;
-
-        textRange = document.selection.createRange();
-        preCaretTextRange = document.body.createTextRange();
-        preCaretTextRange.moveToElementText(this.domInputor);
-        preCaretTextRange.setEndPoint("EndToEnd", textRange);
-        return preCaretTextRange.text.length;
-      };
-
-      Caret.prototype.getPos = function() {
-        var clonedRange, inputor, pos, range;
-
-        inputor = this.domInputor;
-        inputor.focus();
-        pos = 0;
-        if (this.contentEditable() && (range = this.range())) {
-          clonedRange = range.cloneRange();
-          clonedRange.selectNodeContents(inputor);
-          clonedRange.setEnd(range.endContainer, range.endOffset);
-          pos = clonedRange.toString().length;
-          clonedRange.detach();
-        } else if (document.selection) {
-          pos = this.contentEditable() ? this.getIEEditablePos() : this.getIEPos();
+      InputCaret.prototype.getPos = function() {
+        if (document.selection) {
+          return this.getIEPos();
         } else {
-          pos = inputor.selectionStart;
+          return this.domInputor.selectionStart;
         }
-        return pos;
       };
 
-      Caret.prototype.setPos = function(pos) {
+      InputCaret.prototype.setPos = function(pos) {
         var inputor, range;
 
         inputor = this.domInputor;
@@ -99,80 +166,7 @@
         return inputor;
       };
 
-      Caret.prototype.getPosition = function(pos) {
-        var $inputor, at_rect, format, html, mirror, start_range;
-
-        $inputor = this.$inputor;
-        format = function(value) {
-          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
-        };
-        if (pos === void 0) {
-          pos = this.getPos();
-        }
-        start_range = $inputor.val().slice(0, pos);
-        html = "<span>" + format(start_range) + "</span>";
-        html += "<span id='caret'>|</span>";
-        mirror = new Mirror($inputor);
-        return at_rect = mirror.create(html).rect();
-      };
-
-      Caret.prototype.getOffset = function(pos) {
-        var $inputor, offset, position;
-
-        $inputor = this.$inputor;
-        offset = $inputor.offset();
-        position = this.getPosition(pos);
-        return offset = {
-          left: offset.left + position.left,
-          top: offset.top + position.top,
-          height: position.height
-        };
-      };
-
-      Caret.prototype.getEditableOffset = function() {
-        var clonedRange, offset, range, rect;
-
-        offset = null;
-        if (window.getSelection && (range = this.range())) {
-          clonedRange = range.cloneRange();
-          clonedRange.setStart(range.endContainer, Math.max(1, range.endOffset) - 1);
-          clonedRange.setEnd(range.endContainer, range.endOffset);
-          rect = clonedRange.getBoundingClientRect();
-          offset = {
-            height: rect.height,
-            left: rect.left + rect.width,
-            top: rect.top
-          };
-          clonedRange.detach();
-        } else if (document.selection) {
-          range = document.selection.createRange().duplicate();
-          range.moveStart("character", -1);
-          rect = range.getBoundingClientRect();
-          offset = {
-            height: rect.bottom - rect.top,
-            left: rect.left,
-            top: rect.top
-          };
-        }
-        return offset;
-      };
-
-      Caret.prototype.getIEPosition = function(pos) {
-        var h, inputorOffset, offset, x, y;
-
-        offset = this.getIEOffset(pos);
-        inputorOffset = this.$inputor.offset();
-        x = offset.left - inputorOffset.left;
-        y = offset.top - inputorOffset.top;
-        h = offset.height;
-        return {
-          left: x,
-          top: y,
-          height: h
-        };
-      };
-
-      Caret.prototype.getIEOffset = function(pos) {
+      InputCaret.prototype.getIEOffset = function(pos) {
         var h, range, textRange, x, y;
 
         textRange = this.domInputor.createTextRange();
@@ -192,34 +186,56 @@
         };
       };
 
-      Caret.prototype.range = function() {
-        var sel;
+      InputCaret.prototype.getOffset = function(pos) {
+        var $inputor, offset, position;
 
-        if (!window.getSelection) {
-          return;
-        }
-        sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-          return sel.getRangeAt(0);
+        $inputor = this.$inputor;
+        if (document.selection) {
+          return this.getIEOffset(pos);
         } else {
-          return null;
+          offset = $inputor.offset();
+          position = this.getPosition(pos);
+          return offset = {
+            left: offset.left + position.left,
+            top: offset.top + position.top,
+            height: position.height
+          };
         }
       };
 
-      Caret.prototype.adjustOffset = function(offset) {
-        if (!offset) {
-          return;
+      InputCaret.prototype.getPosition = function(pos) {
+        var $inputor, at_rect, format, html, mirror, start_range;
+
+        $inputor = this.$inputor;
+        format = function(value) {
+          return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
+        };
+        if (pos === void 0) {
+          pos = this.getPos();
         }
-        offset.top += $(window).scrollTop() + this.$inputor.scrollTop();
-        offset.left += +$(window).scrollLeft() + this.$inputor.scrollLeft();
-        return offset;
+        start_range = $inputor.val().slice(0, pos);
+        html = "<span>" + format(start_range) + "</span>";
+        html += "<span id='caret'>|</span>";
+        mirror = new Mirror($inputor);
+        return at_rect = mirror.create(html).rect();
       };
 
-      Caret.prototype.contentEditable = function() {
-        return !!(this.domInputor.contentEditable && this.domInputor.contentEditable === 'true');
+      InputCaret.prototype.getIEPosition = function(pos) {
+        var h, inputorOffset, offset, x, y;
+
+        offset = this.getIEOffset(pos);
+        inputorOffset = this.$inputor.offset();
+        x = offset.left - inputorOffset.left;
+        y = offset.top - inputorOffset.top;
+        h = offset.height;
+        return {
+          left: x,
+          top: y,
+          height: h
+        };
       };
 
-      return Caret;
+      return InputCaret;
 
     })();
     Mirror = (function() {
@@ -271,6 +287,19 @@
       return Mirror;
 
     })();
+    Utils = {
+      adjustOffset: function($inputor, offset) {
+        if (!offset) {
+          return;
+        }
+        offset.top += $(window).scrollTop() + $inputor.scrollTop();
+        offset.left += +$(window).scrollLeft() + $inputor.scrollLeft();
+        return offset;
+      },
+      contentEditable: function($inputor) {
+        return !!($inputor[0].contentEditable && $inputor[0].contentEditable === 'true');
+      }
+    };
     methods = {
       pos: function(pos) {
         if (pos) {
@@ -287,25 +316,26 @@
         }
       },
       offset: function(pos) {
-        if (this.contentEditable()) {
-          return this.adjustOffset(this.getEditableOffset());
-        } else if (document.selection) {
-          return this.adjustOffset(this.getIEOffset(pos));
-        } else {
-          return this.getOffset(pos);
-        }
+        return this.getOffset(pos);
       }
     };
-    return $.fn.caret = function(method) {
-      var caret;
+    $.fn.caret = function(method) {
+      var caret, _this;
 
-      caret = new Caret(this);
+      if (!(_this = $(this)).is(":focus")) {
+        _this.focus();
+      }
+      caret = Utils.contentEditable(this) ? new EditableCaret(this) : new InputCaret(this);
       if (methods[method]) {
         return methods[method].apply(caret, Array.prototype.slice.call(arguments, 1));
       } else {
         return $.error("Method " + method + " does not exist on jQuery.caret");
       }
     };
+    $.fn.caret.EditableCaret = EditableCaret;
+    $.fn.caret.InputCaret = InputCaret;
+    $.fn.caret.Utils = Utils;
+    return $.fn.caret.apis = methods;
   });
 
 }).call(this);
@@ -330,7 +360,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
+    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View;
     App = (function() {
 
       function App(inputor) {
@@ -528,16 +558,31 @@
         };
       };
 
-      Controller.prototype.insert = function(str) {
+      Controller.prototype.insert_content_for = function($li) {
+        var at, data, data_value, tpl;
+        data_value = $li.data('value');
+        tpl = this.get_opt('insert_tpl');
+        if (this.$inputor.is('textarea, input') || !tpl) {
+          return data_value;
+        }
+        at = this.get_opt('at');
+        data = $.extend({}, $li.data('atwho-item-info'), {
+          'atwho-data-value': data_value,
+          'atwho-at': at
+        });
+        return this.callbacks("tpl_eval").call(this, tpl, data);
+      };
+
+      Controller.prototype.insert = function(content) {
         var $inputor, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
         if ($inputor.is('textarea, input')) {
-          str = '' + str;
+          content = '' + content;
           source = $inputor.val();
           start_str = source.slice(0, this.query['head_pos'] || 0);
-          text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
+          text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
-          $inputor.caret('pos', start_str.length + str.length + 1);
+          $inputor.caret('pos', start_str.length + content.length + 1);
         } else if (window.getSelection) {
           sel = window.getSelection();
           range = sel.getRangeAt(0);
@@ -545,7 +590,7 @@
           range.setStart(range.endContainer, pos);
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
-          range.insertNode($("<span>" + str + "</span>")[0]);
+          range.insertNode($("<span class='atwho-insert-flag'>" + content + "</span>")[0]);
           range.collapse(false);
           range.insertNode($('<span>&nbsp;</span>')[0]);
           range.collapse(false);
@@ -554,7 +599,7 @@
         } else if (document.selection) {
           range = document.selection.createRange();
           range.moveStart('character', this.query.end_pos - this.query.head_pos);
-          range.pasteHTML("<span>" + str + "</span> ");
+          range.pasteHTML("<span>" + content + "</span> ");
           range.collapse(false);
           range.select();
         }
@@ -675,9 +720,10 @@
       };
 
       View.prototype.choose = function() {
-        var $li;
+        var $li, content;
         $li = this.$el.find(".cur");
-        this.context.insert(this.context.callbacks("before_insert").call(this.context, $li.data("value"), $li));
+        content = this.context.insert_content_for($li);
+        this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li));
         this.context.trigger("inserted", [$li]);
         return this.hide();
       };
@@ -745,12 +791,12 @@
         }
         this.$el.find('ul').empty();
         $ul = this.$el.find('ul');
-        tpl = this.context.get_opt('tpl', DEFAULT_TPL);
+        tpl = this.context.get_opt('tpl');
         for (_i = 0, _len = list.length; _i < _len; _i++) {
           item = list[_i];
           li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
           $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
-          $li.data("atwho-info", item);
+          $li.data("atwho-item-info", item);
           $ul.append($li);
         }
         this.show();
@@ -852,7 +898,6 @@
         return value;
       }
     };
-    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
     Api = {
       init: function(options) {
         var $this, app;
@@ -894,12 +939,14 @@
       at: void 0,
       alias: void 0,
       data: null,
-      tpl: DEFAULT_TPL,
+      tpl: "<li data-value='${name}'>${name}</li>",
+      insert_tpl: null,
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
+      insert_at: true,
+      start_with_space: true,
       limit: 5,
       max_len: 20,
-      start_with_space: true,
       display_timeout: 300
     };
   });

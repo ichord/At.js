@@ -196,21 +196,31 @@
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
+    insert_content_for: ($li) ->
+      data_value = $li.data('value')
+      tpl = this.get_opt('insert_tpl')
+      if @$inputor.is('textarea, input') or not tpl
+        return data_value
+
+      at = this.get_opt('at')
+      data = $.extend {}, $li.data('atwho-item-info'), {'atwho-data-value': data_value, 'atwho-at': at}
+      this.callbacks("tpl_eval").call(this, tpl, data)
+
     # Insert value of `data-value` attribute of chosen item into inputor
     #
-    # @param str [String] string to insert
-    insert: (str) ->
+    # @param content [String] string to insert
+    insert: (content) ->
       $inputor = @$inputor
-      # ensure str is str.
-      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
       if $inputor.is('textarea, input')
-        str = '' + str
+        # ensure str is str.
+        # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
+        content = '' + content
         source = $inputor.val()
         start_str = source.slice 0, (@query['head_pos'] || 0)
-        text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
+        text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
 
         $inputor.val text
-        $inputor.caret 'pos',start_str.length + str.length + 1
+        $inputor.caret 'pos',start_str.length + content.length + 1
       else if window.getSelection
         sel = window.getSelection()
         range = sel.getRangeAt(0)
@@ -218,7 +228,7 @@
         range.setStart(range.endContainer, pos)
         range.setEnd(range.endContainer, range.endOffset)
         range.deleteContents()
-        range.insertNode($("<span>#{str}</span>")[0])
+        range.insertNode($("<span class='atwho-insert-flag'>#{content}</span>")[0])
         range.collapse(false)
         range.insertNode($('<span>&nbsp;</span>')[0])
         range.collapse(false)
@@ -227,7 +237,7 @@
       else if document.selection # IE < 9
         range = document.selection.createRange();
         range.moveStart('character', @query.end_pos - @query.head_pos)
-        range.pasteHTML("<span>#{str}</span> ")
+        range.pasteHTML("<span>#{content}</span> ")
         range.collapse(false)
         range.select()
       $inputor.change()
@@ -331,7 +341,8 @@
 
     choose: ->
       $li = @$el.find ".cur"
-      @context.insert @context.callbacks("before_insert").call(@context, $li.data("value"), $li)
+      content = @context.insert_content_for $li
+      @context.insert @context.callbacks("before_insert").call(@context, content, $li)
       @context.trigger "inserted", [$li]
       this.hide()
 
@@ -375,12 +386,12 @@
 
       @$el.find('ul').empty()
       $ul = @$el.find('ul')
-      tpl = @context.get_opt('tpl', DEFAULT_TPL)
+      tpl = @context.get_opt('tpl')
 
       for item in list
         li = @context.callbacks("tpl_eval").call(@context, tpl, item)
         $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
-        $li.data("atwho-info", item)
+        $li.data("atwho-item-info", item)
         $ul.append $li
 
       this.show()
@@ -502,9 +513,6 @@
     before_insert: (value, $li) ->
       value
 
-
-  DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
-
   Api =
     # init or update an inputor with a special flag
     #
@@ -541,10 +549,12 @@
     at: undefined
     alias: undefined
     data: null
-    tpl: DEFAULT_TPL
+    tpl: "<li data-value='${name}'>${name}</li>"
+    insert_tpl: null#"<span>${atwho-at}</span><span>${atwho-data-value}</span>"
     callbacks: DEFAULT_CALLBACKS
     search_key: "name"
+    insert_at: yes
+    start_with_space: yes
     limit: 5
     max_len: 20
-    start_with_space: yes
     display_timeout: 300
