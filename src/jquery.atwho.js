@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, DEFAULT_TPL, KEY_CODE, Model, View;
+    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View;
     App = (function() {
 
       function App(inputor) {
@@ -138,11 +138,13 @@
       function Controller(app, key) {
         this.app = app;
         this.key = key;
+        this.at = this.key;
         this.$inputor = this.app.$inputor;
         this.id = this.$inputor[0].id || uuid();
         this.setting = null;
         this.query = null;
         this.pos = 0;
+        this.cur_rect = null;
         $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
         this.model = new Model(this);
         this.view = new View(this);
@@ -161,6 +163,25 @@
         } catch (error) {
           return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
         }
+      };
+
+      Controller.prototype.data = function(key) {
+        var ids;
+        if (key) {
+          key = "-" + (this.get_opt('alias') || this.at);
+        }
+        ids = {};
+        return $.map(this.$inputor.find("span.atwho-view-flag" + (key || "")), function(item) {
+          var data;
+          data = $(item).data('atwho-data-itemInfo');
+          if (ids[data.id]) {
+            return;
+          }
+          if (data.id) {
+            ids[data.id] = true;
+          }
+          return data;
+        });
       };
 
       Controller.prototype.trigger = function(name, data) {
@@ -183,9 +204,17 @@
         }
       };
 
+      Controller.prototype.content = function() {
+        if (this.$inputor.is('textarea, input')) {
+          return this.$inputor.val();
+        } else {
+          return this.$inputor.text();
+        }
+      };
+
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
-        content = this.$inputor.val();
+        content = this.content();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
@@ -208,6 +237,9 @@
       Controller.prototype.rect = function() {
         var c, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
+        if (this.$inputor.attr('contentEditable') === 'true') {
+          c = (this.cur_rect || (this.cur_rect = c)) || c;
+        }
         scale_bottom = document.selection ? 0 : 2;
         return {
           left: c.left,
@@ -216,15 +248,63 @@
         };
       };
 
-      Controller.prototype.insert = function(str) {
-        var $inputor, source, start_str, text;
+      Controller.prototype.reset_rect = function() {
+        if (this.$inputor.attr('contentEditable') === 'true') {
+          return this.cur_rect = null;
+        }
+      };
+
+      Controller.prototype.insert_content_for = function($li) {
+        var at, data, data_value, tpl;
+        data_value = $li.data('value');
+        tpl = this.get_opt('insert_tpl');
+        if (this.$inputor.is('textarea, input') || !tpl) {
+          return data_value;
+        }
+        at = this.get_opt('at');
+        data = $.extend({}, $li.data('atwho-data-itemInfo'), {
+          'atwho-data-value': data_value,
+          'atwho-at': at
+        });
+        return this.callbacks("tpl_eval").call(this, tpl, data);
+      };
+
+      Controller.prototype.insert = function(content, $li) {
+        var $inputor, $insert_node, at_len, pos, range, sel, should_show_the_at, source, start_str, text, the_at_text;
         $inputor = this.$inputor;
-        str = '' + str;
-        source = $inputor.val();
-        start_str = source.slice(0, this.query['head_pos'] || 0);
-        text = "" + start_str + str + " " + (source.slice(this.query['end_pos'] || 0));
-        $inputor.val(text);
-        $inputor.caret('pos', start_str.length + str.length + 1);
+        should_show_the_at = this.get_opt('show_the_at');
+        if ($inputor.attr('contentEditable') === 'true') {
+          the_at_text = should_show_the_at ? this.at : "";
+          $insert_node = $("<span contenteditable='false' " + ("class='atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at) + "'>") + ("" + the_at_text + content + "&nbsp;</span>"));
+          $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'));
+          $insert_node = $("<span contentEditable='true'></span>").html($insert_node);
+        }
+        if ($inputor.is('textarea, input')) {
+          content = '' + content;
+          source = $inputor.val();
+          at_len = should_show_the_at ? 0 : this.at.length;
+          start_str = source.slice(0, Math.max(this.query.head_pos - at_len, 0));
+          text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
+          $inputor.val(text);
+          $inputor.caret('pos', start_str.length + content.length + 1);
+        } else if (window.getSelection) {
+          sel = window.getSelection();
+          range = sel.getRangeAt(0);
+          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
+          range.setStart(range.endContainer, Math.max(pos, 0));
+          range.setEnd(range.endContainer, range.endOffset);
+          range.deleteContents();
+          range.insertNode($insert_node[0]);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else if (document.selection) {
+          range = document.selection.createRange();
+          range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
+          range.pasteHTML($insert_node[0]);
+          range.collapse(false);
+          range.select();
+        }
         return $inputor.change();
       };
 
@@ -342,9 +422,10 @@
       };
 
       View.prototype.choose = function() {
-        var $li;
+        var $li, content;
         $li = this.$el.find(".cur");
-        this.context.insert(this.context.callbacks("before_insert").call(this.context, $li.data("value"), $li));
+        content = this.context.insert_content_for($li);
+        this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
         this.context.trigger("inserted", [$li]);
         return this.hide();
       };
@@ -394,6 +475,7 @@
         var callback,
           _this = this;
         if (isNaN(time && this.visible())) {
+          this.context.reset_rect();
           return this.$el.hide();
         } else {
           callback = function() {
@@ -412,12 +494,12 @@
         }
         this.$el.find('ul').empty();
         $ul = this.$el.find('ul');
-        tpl = this.context.get_opt('tpl', DEFAULT_TPL);
+        tpl = this.context.get_opt('tpl');
         for (_i = 0, _len = list.length; _i < _len; _i++) {
           item = list[_i];
           li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
           $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
-          $li.data("atwho-info", item);
+          $li.data("atwho-data-itemInfo", item);
           $ul.append($li);
         }
         this.show();
@@ -519,7 +601,6 @@
         return value;
       }
     };
-    DEFAULT_TPL = "<li data-value='${name}'>${name}</li>";
     Api = {
       init: function(options) {
         var $this, app;
@@ -535,6 +616,12 @@
           return c.model.load(data);
         }
       },
+      getInsertedItems: function(key, callback) {
+        var c;
+        if (c = this.controller(key)) {
+          return callback.apply(null, [c.data()]);
+        }
+      },
       run: function() {
         return this.dispatch();
       }
@@ -544,7 +631,7 @@
       var _args;
       _args = arguments;
       $('body').append($CONTAINER);
-      return this.filter('textarea, input').each(function() {
+      return this.filter('textarea, input, [contenteditable=true]').each(function() {
         var app;
         if (typeof method === 'object' || !method) {
           return Api.init.apply(this, _args);
@@ -561,12 +648,14 @@
       at: void 0,
       alias: void 0,
       data: null,
-      tpl: DEFAULT_TPL,
+      tpl: "<li data-value='${name}'>${name}</li>",
+      insert_tpl: null,
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
+      show_the_at: true,
+      start_with_space: true,
       limit: 5,
       max_len: 20,
-      start_with_space: true,
       display_timeout: 300
     };
   });

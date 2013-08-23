@@ -105,11 +105,13 @@
       _uuid += 1
 
     constructor: (@app, @key) ->
+      @at = @key
       @$inputor = @app.$inputor
       @id = @$inputor[0].id || uuid()
       @setting  = null
       @query    = null
       @pos      = 0
+      @cur_rect = null
       $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
       @model    = new Model(this)
@@ -125,6 +127,16 @@
         DEFAULT_CALLBACKS[func_name].apply this, args
       catch error
         $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
+
+    data: (key)->
+      key = "-#{this.get_opt('alias') || @at}" if key
+      ids = {}
+      $.map @$inputor.find("span.atwho-view-flag#{key || ""}"), (item) ->
+        data = $(item).data('atwho-data-itemInfo')
+        return if ids[data.id]
+        ids[data.id] = true if data.id
+        data
+
 
     # Delegate custom `jQueryEvent` to the inputor
     # This function will add `atwho` as namespace to every jQuery event
@@ -163,16 +175,17 @@
       catch e
         null
 
+    content: -> if @$inputor.is('textarea, input') then @$inputor.val() else @$inputor.text()
+
     # Catch query string behind the key char
     #
     # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
     catch_query: ->
-      content = @$inputor.val()
+      content = this.content()
       caret_pos = @$inputor.caret('pos')
       subtext = content.slice(0,caret_pos)
 
       query = this.callbacks("matcher").call(this, @key, subtext, this.get_opt('start_with_space'))
-
       if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
         start = caret_pos - query.length
         end = start + query.length
@@ -189,23 +202,69 @@
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
+      c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
+    reset_rect: ->
+      @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
+
+    insert_content_for: ($li) ->
+      data_value = $li.data('value')
+      tpl = this.get_opt('insert_tpl')
+      if @$inputor.is('textarea, input') or not tpl
+        return data_value
+
+      at = this.get_opt('at')
+      data = $.extend {}, $li.data('atwho-data-itemInfo'), {'atwho-data-value': data_value, 'atwho-at': at}
+      this.callbacks("tpl_eval").call(this, tpl, data)
+
     # Insert value of `data-value` attribute of chosen item into inputor
     #
-    # @param str [String] string to insert
-    insert: (str) ->
+    # @param content [String] string to insert
+    insert: (content, $li) ->
       $inputor = @$inputor
-      # ensure str is str.
-      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      str = '' + str
-      source = $inputor.val()
-      start_str = source.slice 0, (@query['head_pos'] || 0)
-      text = "#{start_str}#{str} #{source.slice @query['end_pos'] || 0}"
+      should_show_the_at = this.get_opt('show_the_at')
 
-      $inputor.val text
-      $inputor.caret 'pos',start_str.length + str.length + 1
+      if $inputor.attr('contentEditable') == 'true'
+        the_at_text = if should_show_the_at then @at else ""
+        # $insert_node.attr('data-atwho-cid', _id) if _id = $li.data('atwho-data-itemInfo').id
+        $insert_node = $("<span contenteditable='false' " \
+          + "class='atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}'>" \
+          + "#{the_at_text}#{content}&nbsp;</span>")
+        $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'))
+        $insert_node = $("<span contentEditable='true'></span>").html($insert_node)
+
+      if $inputor.is('textarea, input')
+        # ensure str is str.
+        # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
+        content = '' + content
+        source = $inputor.val()
+        at_len = if should_show_the_at then 0 else @at.length
+        start_str = source.slice 0, Math.max(@query.head_pos - at_len, 0)
+        text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
+        $inputor.val text
+        $inputor.caret 'pos',start_str.length + content.length + 1
+      else if window.getSelection
+        sel = window.getSelection()
+        range = sel.getRangeAt(0)
+        pos = sel.anchorOffset - (@query.end_pos - @query.head_pos) - @at.length
+        range.setStart(range.endContainer, Math.max(pos,0))
+        range.setEnd(range.endContainer, range.endOffset)
+        range.deleteContents()
+        range.insertNode($insert_node[0])
+        range.collapse(false)
+        sel.removeAllRanges()
+        sel.addRange(range)
+      else if document.selection # IE < 9
+        # NOTE: have to add this <meta http-equiv="x-ua-compatible" content="IE=Edge"/> into <header>
+        #       to make it work batter.
+        # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
+        range = document.selection.createRange();
+        range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
+        range.pasteHTML($insert_node[0])
+        range.collapse(false)
+        range.select()
       $inputor.change()
 
     # Render list view
@@ -307,7 +366,8 @@
 
     choose: ->
       $li = @$el.find ".cur"
-      @context.insert @context.callbacks("before_insert").call(@context, $li.data("value"), $li)
+      content = @context.insert_content_for $li
+      @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li]
       this.hide()
 
@@ -337,6 +397,7 @@
 
     hide: (time) ->
       if isNaN time and this.visible()
+        @context.reset_rect()
         @$el.hide()
       else
         callback = => this.hide()
@@ -351,12 +412,12 @@
 
       @$el.find('ul').empty()
       $ul = @$el.find('ul')
-      tpl = @context.get_opt('tpl', DEFAULT_TPL)
+      tpl = @context.get_opt('tpl')
 
       for item in list
         li = @context.callbacks("tpl_eval").call(@context, tpl, item)
         $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
-        $li.data("atwho-info", item)
+        $li.data("atwho-data-itemInfo", item)
         $ul.append $li
 
       this.show()
@@ -478,9 +539,6 @@
     before_insert: (value, $li) ->
       value
 
-
-  DEFAULT_TPL = "<li data-value='${name}'>${name}</li>"
-
   Api =
     # init or update an inputor with a special flag
     #
@@ -497,6 +555,9 @@
     load: (key, data) ->
       c.model.load data if c = this.controller(key)
 
+    getInsertedItems: (key, callback) ->
+      callback.apply(null, [c.data()]) if c = this.controller(key)
+
     run: ->
       this.dispatch()
 
@@ -505,7 +566,7 @@
   $.fn.atwho = (method) ->
     _args = arguments
     $('body').append($CONTAINER)
-    @.filter('textarea, input').each () ->
+    @.filter('textarea, input, [contenteditable=true]').each () ->
       if typeof method is 'object' || !method
         Api.init.apply this, _args
       else if Api[method]
@@ -517,10 +578,12 @@
     at: undefined
     alias: undefined
     data: null
-    tpl: DEFAULT_TPL
+    tpl: "<li data-value='${name}'>${name}</li>"
+    insert_tpl: null#"<span>${atwho-at}</span><span>${atwho-data-value}</span>"
     callbacks: DEFAULT_CALLBACKS
     search_key: "name"
+    show_the_at: yes
+    start_with_space: yes
     limit: 5
     max_len: 20
-    start_with_space: yes
     display_timeout: 300
