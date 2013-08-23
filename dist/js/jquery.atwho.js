@@ -58,15 +58,15 @@
       EditableCaret.prototype.getPos = function() {
         var clonedRange, pos, range;
 
-        if (document.selection) {
-          return this.getIEPos();
-        } else if (range = this.range()) {
+        if (range = this.range()) {
           clonedRange = range.cloneRange();
           clonedRange.selectNodeContents(this.domInputor);
           clonedRange.setEnd(range.endContainer, range.endOffset);
           pos = clonedRange.toString().length;
           clonedRange.detach();
           return pos;
+        } else if (document.selection) {
+          return this.getIEPos();
         }
       };
 
@@ -96,7 +96,7 @@
             top: rect.top
           };
         }
-        return Utils.adjustOffset(this.$inputor, offset);
+        return Utils.adjustOffset(offset, this.$inputor);
       };
 
       EditableCaret.prototype.range = function() {
@@ -191,7 +191,7 @@
 
         $inputor = this.$inputor;
         if (document.selection) {
-          return this.getIEOffset(pos);
+          return Utils.adjustOffset(this.getIEOffset(pos), $inputor);
         } else {
           offset = $inputor.offset();
           position = this.getPosition(pos);
@@ -288,7 +288,7 @@
 
     })();
     Utils = {
-      adjustOffset: function($inputor, offset) {
+      adjustOffset: function(offset, $inputor) {
         if (!offset) {
           return;
         }
@@ -320,11 +320,8 @@
       }
     };
     $.fn.caret = function(method) {
-      var caret, _this;
+      var caret;
 
-      if (!(_this = $(this)).is(":focus")) {
-        _this.focus();
-      }
       caret = Utils.contentEditable(this) ? new EditableCaret(this) : new InputCaret(this);
       if (methods[method]) {
         return methods[method].apply(caret, Array.prototype.slice.call(arguments, 1));
@@ -525,9 +522,17 @@
         }
       };
 
+      Controller.prototype.content = function() {
+        if (this.$inputor.is('textarea, input')) {
+          return this.$inputor.val();
+        } else {
+          return this.$inputor.text();
+        }
+      };
+
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
-        content = this.$inputor.is('textarea, input') ? this.$inputor.val() : this.$inputor.text();
+        content = this.content();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
@@ -566,7 +571,7 @@
           return data_value;
         }
         at = this.get_opt('at');
-        data = $.extend({}, $li.data('atwho-item-info'), {
+        data = $.extend({}, $li.data('atwho-data-itemInfo'), {
           'atwho-data-value': data_value,
           'atwho-at': at
         });
@@ -574,23 +579,24 @@
       };
 
       Controller.prototype.insert = function(content) {
-        var $inputor, pos, range, sel, source, start_str, text;
+        var $inputor, at_len, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
+        at_len = this.get_opt('show_the_at') ? 0 : this.get_opt('at').length;
         if ($inputor.is('textarea, input')) {
           content = '' + content;
           source = $inputor.val();
-          start_str = source.slice(0, this.query['head_pos'] || 0);
+          start_str = source.slice(0, Math.max(this.query.head_pos - at_len, 0));
           text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
           $inputor.caret('pos', start_str.length + content.length + 1);
         } else if (window.getSelection) {
           sel = window.getSelection();
           range = sel.getRangeAt(0);
-          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos);
-          range.setStart(range.endContainer, pos);
+          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos) - at_len;
+          range.setStart(range.endContainer, Math.max(pos, 0));
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
-          range.insertNode($("<span class='atwho-insert-flag'>" + content + "</span>")[0]);
+          range.insertNode($("<span class='atwho-view-flag'>" + content + "</span>")[0]);
           range.collapse(false);
           range.insertNode($('<span>&nbsp;</span>')[0]);
           range.collapse(false);
@@ -598,7 +604,7 @@
           sel.addRange(range);
         } else if (document.selection) {
           range = document.selection.createRange();
-          range.moveStart('character', this.query.end_pos - this.query.head_pos);
+          range.moveStart('character', this.query.end_pos - this.query.head_pos - at_len);
           range.pasteHTML("<span>" + content + "</span> ");
           range.collapse(false);
           range.select();
@@ -796,7 +802,7 @@
           item = list[_i];
           li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
           $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
-          $li.data("atwho-item-info", item);
+          $li.data("atwho-data-itemInfo", item);
           $ul.append($li);
         }
         this.show();
@@ -943,7 +949,7 @@
       insert_tpl: null,
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
-      insert_at: true,
+      show_the_at: true,
       start_with_space: true,
       limit: 5,
       max_len: 20,
