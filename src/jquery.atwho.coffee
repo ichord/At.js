@@ -190,8 +190,12 @@
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
       c = @$inputor.caret('offset', @pos - 1)
+      c = (@_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
+
+    reset_rect: ->
+      @_rect = null if @$inputor.attr('contentEditable') == 'true'
 
     insert_content_for: ($li) ->
       data_value = $li.data('value')
@@ -374,6 +378,7 @@
 
     hide: (time) ->
       if isNaN time and this.visible()
+        @context.reset_rect()
         @$el.hide()
       else
         callback = => this.hide()

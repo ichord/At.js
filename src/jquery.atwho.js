@@ -216,12 +216,21 @@
       Controller.prototype.rect = function() {
         var c, scale_bottom;
         c = this.$inputor.caret('offset', this.pos - 1);
+        if (this.$inputor.attr('contentEditable') === 'true') {
+          c = (this._rect || (this._rect = c)) || c;
+        }
         scale_bottom = document.selection ? 0 : 2;
         return {
           left: c.left,
           top: c.top,
           bottom: c.top + c.height + scale_bottom
         };
+      };
+
+      Controller.prototype.reset_rect = function() {
+        if (this.$inputor.attr('contentEditable') === 'true') {
+          return this._rect = null;
+        }
       };
 
       Controller.prototype.insert_content_for = function($li) {
@@ -440,6 +449,7 @@
         var callback,
           _this = this;
         if (isNaN(time && this.visible())) {
+          this.context.reset_rect();
           return this.$el.hide();
         } else {
           callback = function() {
