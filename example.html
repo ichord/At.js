@@ -26,7 +26,7 @@
             "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
             "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"]
             emojis = $.map(emojis,function(value,i){
-                return {id: i, 'key': value+":",'nickname':value}
+                return {id: i, 'nickname':value}
             })
             data = $.map(data,function(value,i) {
                 return {id: i, 'name':value,'email':value+"@email.com"};
@@ -35,7 +35,7 @@
             $('.inputor').atwho('run').atwho({
                 at: "@",
                 alias: "at-mentions",
-                tpl: "<li data-value='${name}'>${name} <small>${name}</small></li>",
+                // tpl: "<li data-value='@${name}'>${name} <small>${name}</small></li>",
                 // max_len: 3,
                 // 'data':data,
                 'callbacks': {
@@ -55,7 +55,7 @@
                 at: ":",
                 // alias: "emojis",
                 search_key: "nickname",
-                tpl:"<li data-value='${key}'>${nickname} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${nickname}.png'  height='20' width='20' /></li>"
+                tpl:"<li data-value=':${nickname}:'>${nickname} <img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${nickname}.png'  height='20' width='20' /></li>"
                 ,insert_tpl:"<img src='http://a248.e.akamai.net/assets.github.com/images/icons/emoji/${nickname}.png'  height='20' width='20' />"
                 ,'data':emojis
                 ,show_the_at: false

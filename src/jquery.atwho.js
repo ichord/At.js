@@ -18,7 +18,7 @@
       return factory(window.jQuery);
     }
   })(function($) {
-    var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View;
+    var $CONTAINER, Api, App, Atwho, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View;
     App = (function() {
 
       function App(inputor) {
@@ -165,25 +165,6 @@
         }
       };
 
-      Controller.prototype.data = function(key) {
-        var ids;
-        if (key) {
-          key = "-" + (this.get_opt('alias') || this.at);
-        }
-        ids = {};
-        return $.map(this.$inputor.find("span.atwho-view-flag" + (key || "")), function(item) {
-          var data;
-          data = $(item).data('atwho-data-itemInfo');
-          if (ids[data.id]) {
-            return;
-          }
-          if (data.id) {
-            ids[data.id] = true;
-          }
-          return data;
-        });
-      };
-
       Controller.prototype.trigger = function(name, data) {
         var alias, event_name;
         data.push(this);
@@ -255,35 +236,31 @@
       };
 
       Controller.prototype.insert_content_for = function($li) {
-        var at, data, data_value, tpl;
+        var data, data_value, tpl;
         data_value = $li.data('value');
         tpl = this.get_opt('insert_tpl');
         if (this.$inputor.is('textarea, input') || !tpl) {
           return data_value;
         }
-        at = this.get_opt('at');
-        data = $.extend({}, $li.data('atwho-data-itemInfo'), {
+        data = $.extend({}, $li.data('item-data'), {
           'atwho-data-value': data_value,
-          'atwho-at': at
+          'atwho-at': this.at
         });
         return this.callbacks("tpl_eval").call(this, tpl, data);
       };
 
       Controller.prototype.insert = function(content, $li) {
-        var $inputor, $insert_node, at_len, pos, range, sel, should_show_the_at, source, start_str, text, the_at_text;
+        var $inputor, $insert_node, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
-        should_show_the_at = this.get_opt('show_the_at');
         if ($inputor.attr('contentEditable') === 'true') {
-          the_at_text = should_show_the_at ? this.at : "";
-          $insert_node = $("<span contenteditable='false' " + ("class='atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at) + "'>") + ("" + the_at_text + content + "&nbsp;</span>"));
-          $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'));
+          $insert_node = $("<span contenteditable='false' " + ("class='atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at) + "'>") + ("" + content + "&nbsp;</span>"));
+          $insert_node.data('atwho-data-item', $li.data('item-data'));
           $insert_node = $("<span contentEditable='true'></span>").html($insert_node);
         }
         if ($inputor.is('textarea, input')) {
           content = '' + content;
           source = $inputor.val();
-          at_len = should_show_the_at ? 0 : this.at.length;
-          start_str = source.slice(0, Math.max(this.query.head_pos - at_len, 0));
+          start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
           text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
           $inputor.caret('pos', start_str.length + content.length + 1);
@@ -497,9 +474,12 @@
         tpl = this.context.get_opt('tpl');
         for (_i = 0, _len = list.length; _i < _len; _i++) {
           item = list[_i];
+          item = $.extend({}, item, {
+            'atwho-at': this.context.at
+          });
           li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
           $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
-          $li.data("atwho-data-itemInfo", item);
+          $li.data("item-data", item);
           $ul.append($li);
         }
         this.show();
@@ -602,57 +582,83 @@
       }
     };
     Api = {
-      init: function(options) {
-        var $this, app;
-        app = ($this = $(this)).data("atwho");
-        if (!app) {
-          $this.data('atwho', (app = new App(this)));
-        }
-        return app.reg(options.at, options);
-      },
       load: function(key, data) {
         var c;
         if (c = this.controller(key)) {
           return c.model.load(data);
         }
       },
-      getInsertedItems: function(key, callback) {
-        var c;
-        if (c = this.controller(key)) {
-          return callback.apply(null, [c.data()]);
+      getInsertedItemsWithIDs: function(key) {
+        var c, ids, items;
+        if (!(c = this.controller(key))) {
+          return [null, null];
         }
+        if (key) {
+          key = "-" + (c.get_opt('alias') || c.at);
+        }
+        ids = [];
+        items = $.map(this.$inputor.find("span.atwho-view-flag" + (key || "")), function(item) {
+          var data;
+          data = $(item).data('atwho-data-item');
+          if (ids.indexOf(data.id) > -1) {
+            return;
+          }
+          if (data.id) {
+            ids.push = data.id;
+          }
+          return data;
+        });
+        return [ids, items];
+      },
+      getInsertedItems: function(key) {
+        return Api.getInsertedItemsWithIDs.apply(this, [key])[1];
+      },
+      getInsertedIDs: function(key) {
+        return Api.getInsertedItemsWithIDs.apply(this, [key])[0];
       },
       run: function() {
         return this.dispatch();
       }
     };
+    Atwho = {
+      init: function(options) {
+        var $this, app;
+        app = ($this = $(this)).data("atwho");
+        if (!app) {
+          $this.data('atwho', (app = new App(this)));
+        }
+        app.reg(options.at, options);
+        return this;
+      }
+    };
     $CONTAINER = $("<div id='atwho-container'></div>");
     $.fn.atwho = function(method) {
-      var _args;
+      var result, _args;
       _args = arguments;
       $('body').append($CONTAINER);
-      return this.filter('textarea, input, [contenteditable=true]').each(function() {
+      result = null;
+      this.filter('textarea, input, [contenteditable=true]').each(function() {
         var app;
         if (typeof method === 'object' || !method) {
-          return Api.init.apply(this, _args);
+          return Atwho.init.apply(this, _args);
         } else if (Api[method]) {
           if (app = $(this).data('atwho')) {
-            return Api[method].apply(app, Array.prototype.slice.call(_args, 1));
+            return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
           }
         } else {
           return $.error("Method " + method + " does not exist on jQuery.caret");
         }
       });
+      return result || this;
     };
     return $.fn.atwho["default"] = {
       at: void 0,
       alias: void 0,
       data: null,
-      tpl: "<li data-value='${name}'>${name}</li>",
-      insert_tpl: null,
+      tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
+      insert_tpl: "<span>${atwho-data-value}</span>",
       callbacks: DEFAULT_CALLBACKS,
       search_key: "name",
-      show_the_at: true,
       start_with_space: true,
       limit: 5,
       max_len: 20,

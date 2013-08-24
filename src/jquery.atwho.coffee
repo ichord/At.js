@@ -117,7 +117,6 @@
       @model    = new Model(this)
       @view     = new View(this)
 
-
     init: (setting) ->
       @setting = $.extend {}, @setting || $.fn.atwho.default, setting
       @model.reload @setting.data
@@ -127,16 +126,6 @@
         DEFAULT_CALLBACKS[func_name].apply this, args
       catch error
         $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
-
-    data: (key)->
-      key = "-#{this.get_opt('alias') || @at}" if key
-      ids = {}
-      $.map @$inputor.find("span.atwho-view-flag#{key || ""}"), (item) ->
-        data = $(item).data('atwho-data-itemInfo')
-        return if ids[data.id]
-        ids[data.id] = true if data.id
-        data
-
 
     # Delegate custom `jQueryEvent` to the inputor
     # This function will add `atwho` as namespace to every jQuery event
@@ -215,8 +204,7 @@
       if @$inputor.is('textarea, input') or not tpl
         return data_value
 
-      at = this.get_opt('at')
-      data = $.extend {}, $li.data('atwho-data-itemInfo'), {'atwho-data-value': data_value, 'atwho-at': at}
+      data = $.extend {}, $li.data('item-data'), {'atwho-data-value': data_value, 'atwho-at': @at}
       this.callbacks("tpl_eval").call(this, tpl, data)
 
     # Insert value of `data-value` attribute of chosen item into inputor
@@ -224,15 +212,12 @@
     # @param content [String] string to insert
     insert: (content, $li) ->
       $inputor = @$inputor
-      should_show_the_at = this.get_opt('show_the_at')
 
       if $inputor.attr('contentEditable') == 'true'
-        the_at_text = if should_show_the_at then @at else ""
-        # $insert_node.attr('data-atwho-cid', _id) if _id = $li.data('atwho-data-itemInfo').id
         $insert_node = $("<span contenteditable='false' " \
           + "class='atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}'>" \
-          + "#{the_at_text}#{content}&nbsp;</span>")
-        $insert_node.data('atwho-data-itemInfo', $li.data('atwho-data-itemInfo'))
+          + "#{content}&nbsp;</span>")
+        $insert_node.data('atwho-data-item', $li.data('item-data'))
         $insert_node = $("<span contentEditable='true'></span>").html($insert_node)
 
       if $inputor.is('textarea, input')
@@ -240,8 +225,7 @@
         # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
         content = '' + content
         source = $inputor.val()
-        at_len = if should_show_the_at then 0 else @at.length
-        start_str = source.slice 0, Math.max(@query.head_pos - at_len, 0)
+        start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
         text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
         $inputor.val text
         $inputor.caret 'pos',start_str.length + content.length + 1
@@ -415,9 +399,10 @@
       tpl = @context.get_opt('tpl')
 
       for item in list
+        item = $.extend {}, item, {'atwho-at': @context.at}
         li = @context.callbacks("tpl_eval").call(@context, tpl, item)
         $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
-        $li.data("atwho-data-itemInfo", item)
+        $li.data("item-data", item)
         $ul.append $li
 
       this.show()
@@ -540,6 +525,28 @@
       value
 
   Api =
+    # load a flag's data
+    #
+    # @params key[String] the flag
+    # @params data [Array] data to storage.
+    load: (key, data) -> c.model.load data if c = this.controller(key)
+
+    getInsertedItemsWithIDs: (key) ->
+      return [null, null] unless c = this.controller key
+      key = "-#{c.get_opt('alias') || c.at}" if key
+      ids = []
+      items = $.map @$inputor.find("span.atwho-view-flag#{key || ""}"), (item) ->
+        data = $(item).data('atwho-data-item')
+        return if ids.indexOf(data.id) > -1
+        ids.push = data.id if data.id
+        data
+      [ids, items]
+    getInsertedItems: (key) -> Api.getInsertedItemsWithIDs.apply(this, [key])[1]
+    getInsertedIDs: (key) -> Api.getInsertedItemsWithIDs.apply(this, [key])[0]
+
+    run: -> this.dispatch()
+
+  Atwho =
     # init or update an inputor with a special flag
     #
     # @params options [Object] settings of At.js
@@ -547,42 +554,31 @@
       app = ($this = $(this)).data "atwho"
       $this.data 'atwho', (app = new App(this)) if not app
       app.reg options.at, options
-
-    # load a flag's data
-    #
-    # @params key[String] the flag
-    # @params data [Array] data to storage.
-    load: (key, data) ->
-      c.model.load data if c = this.controller(key)
-
-    getInsertedItems: (key, callback) ->
-      callback.apply(null, [c.data()]) if c = this.controller(key)
-
-    run: ->
-      this.dispatch()
+      this
 
   $CONTAINER = $("<div id='atwho-container'></div>")
 
   $.fn.atwho = (method) ->
     _args = arguments
     $('body').append($CONTAINER)
-    @.filter('textarea, input, [contenteditable=true]').each () ->
+    result = null
+    this.filter('textarea, input, [contenteditable=true]').each ->
       if typeof method is 'object' || !method
-        Api.init.apply this, _args
+        Atwho.init.apply this, _args
       else if Api[method]
-        Api[method].apply app, Array::slice.call(_args, 1) if app = $(this).data('atwho')
+        result = Api[method].apply app, Array::slice.call(_args, 1) if app = $(this).data('atwho')
       else
         $.error "Method #{method} does not exist on jQuery.caret"
+    result || this
 
   $.fn.atwho.default =
     at: undefined
     alias: undefined
     data: null
-    tpl: "<li data-value='${name}'>${name}</li>"
-    insert_tpl: null#"<span>${atwho-at}</span><span>${atwho-data-value}</span>"
+    tpl: "<li data-value='${atwho-at}${name}'>${name}</li>"
+    insert_tpl: "<span>${atwho-data-value}</span>"
     callbacks: DEFAULT_CALLBACKS
     search_key: "name"
-    show_the_at: yes
     start_with_space: yes
     limit: 5
     max_len: 20
