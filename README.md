@@ -4,7 +4,7 @@
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and will concat `Caret.js` into `dist/js/jquery.atwho.js`.
 
-This branch have updated to `v0.3.2`. Please read **CHANGELOG.md** for more details.  
+This branch have updated to `v0.4.0`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 ### Demo
@@ -14,6 +14,7 @@ http://ichord.github.com/At.js
 
 ### Features Preview
 
+* support **contentEditable**
 * Can listen to any character
     not just '@', and set up multiple listeners for different characters with different behavior and data.
 * Listener events can be bound to multiple textareas
@@ -41,6 +42,7 @@ Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 
 ### History Version
 
+* branch `stable-v0.3` with tag `v0.3.3`
 * branch `stable-v0.2` with tag `v0.2.x`
 * branch `stable-v0.1.x` and tag `v0.1.7`
 

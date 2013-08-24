@@ -1,3 +1,14 @@
+### v0.4.0
+
+* update `Caret.js` to `v0.0.2`
+* `contenteditable` support !!
+* change content of default item template `tpl`
+* new rule to insert the `at` : will always remove the `at` from inputor but will add it back from `tpl` in default.
+  so, if you are using your own `tpl` and want to show the `at` char, you have to do it yourself.
+* add `insert_tpl` setting for `contenteditable`.
+  it will insert `data-value` of li element that eval from `tpl` in default.
+* new APIs for `contenteditable`: `getInsertedItemsWithIDs`, `getInsertedItems`, `getInsertedIDs`
+
 ### 2013-08-07 - v0.3.2
 
 * bower
