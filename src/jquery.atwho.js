@@ -145,6 +145,7 @@
         this.query = null;
         this.pos = 0;
         this.cur_rect = null;
+        this.range = null;
         $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
         this.model = new Model(this);
         this.view = new View(this);
@@ -235,6 +236,22 @@
         }
       };
 
+      Controller.prototype.mark_range = function() {
+        return this.range = this.get_range() || this.get_ie_range();
+      };
+
+      Controller.prototype.clear_range = function() {
+        return this.range = null;
+      };
+
+      Controller.prototype.get_range = function() {
+        return this.range || (window.getSelection ? window.getSelection().getRangeAt(0) : void 0);
+      };
+
+      Controller.prototype.get_ie_range = function() {
+        return this.range || (document.selection ? document.selection.createRange() : void 0);
+      };
+
       Controller.prototype.insert_content_for = function($li) {
         var data, data_value, tpl;
         data_value = $li.data('value');
@@ -264,19 +281,17 @@
           text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
           $inputor.caret('pos', start_str.length + content.length + 1);
-        } else if (window.getSelection) {
-          sel = window.getSelection();
-          range = sel.getRangeAt(0);
-          pos = sel.anchorOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
+        } else if (range = this.get_range()) {
+          pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
           range.setStart(range.endContainer, Math.max(pos, 0));
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
           range.insertNode($insert_node[0]);
           range.collapse(false);
+          sel = window.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
-        } else if (document.selection) {
-          range = document.selection.createRange();
+        } else if (range = this.get_ie_range()) {
           range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
           range.pasteHTML($insert_node[0]);
           range.collapse(false);
@@ -385,12 +400,17 @@
         var $menu,
           _this = this;
         $menu = this.$el.find('ul');
-        return $menu.on('mouseenter.view', 'li', function(e) {
+        $menu.on('mouseenter.atwho-view', 'li', function(e) {
           $menu.find('.cur').removeClass('cur');
           return $(e.currentTarget).addClass('cur');
         }).on('click', function(e) {
           _this.choose();
           return e.preventDefault();
+        });
+        return this.$el.on('mouseenter.atwho-view', 'ul', function(e) {
+          return _this.context.mark_range();
+        }).on('mouseleave.atwho-view', 'ul', function(e) {
+          return _this.context.clear_range();
         });
       };
 

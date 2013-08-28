@@ -112,6 +112,7 @@
       @query    = null
       @pos      = 0
       @cur_rect = null
+      @range    = null
       $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
       @model    = new Model(this)
@@ -198,6 +199,18 @@
     reset_rect: ->
       @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
 
+    mark_range: ->
+      @range = this.get_range() || this.get_ie_range()
+
+    clear_range: ->
+      @range = null
+
+    get_range: ->
+      @range || (window.getSelection().getRangeAt(0) if window.getSelection)
+
+    get_ie_range: ->
+      @range || (document.selection.createRange() if document.selection)
+
     insert_content_for: ($li) ->
       data_value = $li.data('value')
       tpl = this.get_opt('insert_tpl')
@@ -229,22 +242,20 @@
         text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
         $inputor.val text
         $inputor.caret 'pos',start_str.length + content.length + 1
-      else if window.getSelection
-        sel = window.getSelection()
-        range = sel.getRangeAt(0)
-        pos = sel.anchorOffset - (@query.end_pos - @query.head_pos) - @at.length
+      else if range = this.get_range()
+        pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
         range.setStart(range.endContainer, Math.max(pos,0))
         range.setEnd(range.endContainer, range.endOffset)
         range.deleteContents()
         range.insertNode($insert_node[0])
         range.collapse(false)
+        sel = window.getSelection()
         sel.removeAllRanges()
         sel.addRange(range)
-      else if document.selection # IE < 9
+      else if range = this.get_ie_range() # IE < 9
         # NOTE: have to add this <meta http-equiv="x-ua-compatible" content="IE=Edge"/> into <header>
         #       to make it work batter.
         # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
-        range = document.selection.createRange();
         range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
         range.pasteHTML($insert_node[0])
         range.collapse(false)
@@ -335,12 +346,18 @@
 
     bind_event: ->
       $menu = @$el.find('ul')
-      $menu.on 'mouseenter.view','li', (e) ->
+      $menu.on 'mouseenter.atwho-view','li', (e) ->
         $menu.find('.cur').removeClass 'cur'
         $(e.currentTarget).addClass 'cur'
       .on 'click', (e) =>
         this.choose()
         e.preventDefault()
+
+      @$el.on 'mouseenter.atwho-view', 'ul', (e) =>
+        @context.mark_range()
+      .on 'mouseleave.atwho-view', 'ul', (e) =>
+        @context.clear_range()
+
 
     # Check if view is visible
     #
