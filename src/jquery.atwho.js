@@ -218,7 +218,9 @@
 
       Controller.prototype.rect = function() {
         var c, scale_bottom;
-        c = this.$inputor.caret('offset', this.pos - 1);
+        if (!(c = this.$inputor.caret('offset', this.pos - 1))) {
+          return;
+        }
         if (this.$inputor.attr('contentEditable') === 'true') {
           c = (this.cur_rect || (this.cur_rect = c)) || c;
         }
@@ -267,12 +269,16 @@
       };
 
       Controller.prototype.insert = function(content, $li) {
-        var $inputor, $insert_node, pos, range, sel, source, start_str, text;
+        var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, text;
         $inputor = this.$inputor;
         if ($inputor.attr('contentEditable') === 'true') {
-          $insert_node = $("<span contenteditable='false' " + ("class='atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at) + "'>") + ("" + content + "&nbsp;</span>"));
-          $insert_node.data('atwho-data-item', $li.data('item-data'));
-          $insert_node = $("<span contentEditable='true'></span>").html($insert_node);
+          class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
+          content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
+          insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
+          $insert_node = $(insert_node).data('atwho-data-item', $li.data('item-data'));
+          if (document.selection) {
+            $insert_node = $("<span contenteditable='true'></span>").html($insert_node);
+          }
         }
         if ($inputor.is('textarea, input')) {
           content = '' + content;
@@ -297,6 +303,7 @@
           range.collapse(false);
           range.select();
         }
+        $inputor.focus();
         return $inputor.change();
       };
 
@@ -427,9 +434,8 @@
         return this.hide();
       };
 
-      View.prototype.reposition = function() {
-        var offset, rect;
-        rect = this.context.rect();
+      View.prototype.reposition = function(rect) {
+        var offset;
         if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
           rect.bottom = rect.top - this.$el.height();
         }
@@ -462,10 +468,13 @@
       };
 
       View.prototype.show = function() {
+        var rect;
         if (!this.visible()) {
           this.$el.show();
         }
-        return this.reposition();
+        if (rect = this.context.rect()) {
+          return this.reposition(rect);
+        }
       };
 
       View.prototype.hide = function(time) {

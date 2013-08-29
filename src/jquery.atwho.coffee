@@ -191,7 +191,7 @@
     #
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
-      c = @$inputor.caret('offset', @pos - 1)
+      return if not c = @$inputor.caret('offset', @pos - 1)
       c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
       scale_bottom = if document.selection then 0 else 2
       {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
@@ -227,11 +227,12 @@
       $inputor = @$inputor
 
       if $inputor.attr('contentEditable') == 'true'
-        $insert_node = $("<span contenteditable='false' " \
-          + "class='atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}'>" \
-          + "#{content}&nbsp;</span>")
-        $insert_node.data('atwho-data-item', $li.data('item-data'))
-        $insert_node = $("<span contentEditable='true'></span>").html($insert_node)
+        class_name = "atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}"
+        content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
+        insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
+        $insert_node = $(insert_node).data('atwho-data-item', $li.data('item-data'))
+        if document.selection
+          $insert_node = $("<span contenteditable='true'></span>").html($insert_node)
 
       if $inputor.is('textarea, input')
         # ensure str is str.
@@ -260,6 +261,7 @@
         range.pasteHTML($insert_node[0])
         range.collapse(false)
         range.select()
+      $inputor.focus()
       $inputor.change()
 
     # Render list view
@@ -372,8 +374,7 @@
       @context.trigger "inserted", [$li]
       this.hide()
 
-    reposition: ->
-      rect = @context.rect()
+    reposition: (rect) ->
       if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
           rect.bottom = rect.top - @$el.height()
       offset = {left:rect.left, top:rect.bottom}
@@ -394,7 +395,7 @@
 
     show: ->
       @$el.show() if not this.visible()
-      this.reposition()
+      this.reposition(rect) if rect = @context.rect()
 
     hide: (time) ->
       if isNaN time and this.visible()
