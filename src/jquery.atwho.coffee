@@ -30,18 +30,18 @@
       @$inputor = $(inputor)
       this.listen()
 
-    controller: (key) ->
-      @controllers[key || @current_flag]
+    controller: (at) ->
+      @controllers[at || @current_flag]
 
-    set_context_for: (key) ->
-      @current_flag = key
+    set_context_for: (at) ->
+      @current_flag = at
       this
 
-    # At.js can register multiple key char (flag) to every inputor such as "@" and ":"
+    # At.js can register multiple at char (flag) to every inputor such as "@" and ":"
     # Along with their own `settings` so that it works differently.
     # After register, we still can update their `settings` such as updating `data`
     #
-    # @param flag [String] key char (flag)
+    # @param flag [String] at char (flag)
     # @param settings [Hash] the settings
     reg: (flag, setting) ->
       controller = @controllers[flag] ||= new Controller(this, flag)
@@ -63,7 +63,7 @@
 
     dispatch: ->
       $.map @controllers, (c) =>
-        this.set_context_for c.key if c.look_up()
+        this.set_context_for c.at if c.look_up()
 
     on_keyup: (e) ->
       switch e.keyCode
@@ -104,8 +104,7 @@
     uuid = ->
       _uuid += 1
 
-    constructor: (@app, @key) ->
-      @at = @key
+    constructor: (@app, @at) ->
       @$inputor = @app.$inputor
       @id = @$inputor[0].id || uuid()
       @setting  = null
@@ -120,6 +119,7 @@
 
     init: (setting) ->
       @setting = $.extend {}, @setting || $.fn.atwho.default, setting
+      @view.init()
       @model.reload @setting.data
 
     call_default: (func_name, args...) ->
@@ -153,21 +153,21 @@
     callbacks: (func_name)->
       this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
 
-    # Because different registered key chars have different settings.
+    # Because different registered at chars have different settings.
     # so we should give their own for them.
     #
-    # @param key [String] setting's key name
+    # @param at [String] setting's at name
     # @param default_value [?] return this if nothing is returned from current settings.
     # @return [?] setting's value
-    get_opt: (key, default_value) ->
+    get_opt: (at, default_value) ->
       try
-        @setting[key]
+        @setting[at]
       catch e
         null
 
     content: -> if @$inputor.is('textarea, input') then @$inputor.val() else @$inputor.text()
 
-    # Catch query string behind the key char
+    # Catch query string behind the at char
     #
     # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
     catch_query: ->
@@ -175,19 +175,19 @@
       caret_pos = @$inputor.caret('pos')
       subtext = content.slice(0,caret_pos)
 
-      query = this.callbacks("matcher").call(this, @key, subtext, this.get_opt('start_with_space'))
+      query = this.callbacks("matcher").call(this, @at, subtext, this.get_opt('start_with_space'))
       if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
         start = caret_pos - query.length
         end = start + query.length
         @pos = start
         query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
-        this.trigger "matched", [@key, query.text]
+        this.trigger "matched", [@at, query.text]
       else
         @view.hide()
 
       @query = query
 
-    # Get offset of current key char(`flag`)
+    # Get offset of current at char(`flag`)
     #
     # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
     rect: ->
@@ -284,7 +284,7 @@
     _storage = {}
 
     constructor: (@context) ->
-      @key = @context.key
+      @at = @context.at
 
     saved: ->
       this.fetch() > 0
@@ -305,13 +305,13 @@
     # @param data [Array] set data
     # @return [Array|undefined] current data that are showing on the list view.
     fetch: ->
-      _storage[@key] || []
+      _storage[@at] || []
 
     # save special flag's data to storage
     #
     # @param data [Array] data to save
     save: (data) ->
-      _storage[@key] = @context.callbacks("before_save").call(@context, data || [])
+      _storage[@at] = @context.callbacks("before_save").call(@context, data || [])
 
     # load data. It wouldn't load for a second time if it has been loaded.
     #
@@ -337,14 +337,15 @@
 
     # @param controller [Object] The Controller.
     constructor: (@context) ->
-      @key = @context.key
-      @id = @context.get_opt("alias") || "at-view-#{@key.charCodeAt(0)}"
-      @$el = $("<div id='#{@id}' class='atwho-view'><ul id='#{@id}-ul' class='atwho-view-url'></ul></div>")
+      @$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>")
       @timeout_id = null
-
       # create HTML DOM of list view if it does not exist
       @context.$el.append(@$el)
       this.bind_event()
+
+    init: ->
+      id = @context.get_opt("alias") || @context.at.charCodeAt(0)
+      @$el.attr('id': "at-view-#{id}")
 
     bind_event: ->
       $menu = @$el.find('ul')
@@ -476,7 +477,7 @@
     #
     # @param query [String] Matched string.
     # @param data [Array] data list
-    # @param search_key [String] key char for searching.
+    # @param search_key [String] at char for searching.
     #
     # @return [Array] result data.
     filter: (query, data, search_key) ->
@@ -501,7 +502,7 @@
     #
     # @param query [String] matched string
     # @param items [Array] data that was refactored
-    # @param search_key [String] key char to search
+    # @param search_key [String] at char to search
     #
     # @return [Array] sorted data
     sorter: (query, items, search_key) ->
@@ -545,22 +546,22 @@
   Api =
     # load a flag's data
     #
-    # @params key[String] the flag
+    # @params at[String] the flag
     # @params data [Array] data to storage.
-    load: (key, data) -> c.model.load data if c = this.controller(key)
+    load: (at, data) -> c.model.load data if c = this.controller(at)
 
-    getInsertedItemsWithIDs: (key) ->
-      return [null, null] unless c = this.controller key
-      key = "-#{c.get_opt('alias') || c.at}" if key
+    getInsertedItemsWithIDs: (at) ->
+      return [null, null] unless c = this.controller at
+      at = "-#{c.get_opt('alias') || c.at}" if at
       ids = []
-      items = $.map @$inputor.find("span.atwho-view-flag#{key || ""}"), (item) ->
+      items = $.map @$inputor.find("span.atwho-view-flag#{at || ""}"), (item) ->
         data = $(item).data('atwho-data-item')
         return if ids.indexOf(data.id) > -1
         ids.push = data.id if data.id
         data
       [ids, items]
-    getInsertedItems: (key) -> Api.getInsertedItemsWithIDs.apply(this, [key])[1]
-    getInsertedIDs: (key) -> Api.getInsertedItemsWithIDs.apply(this, [key])[0]
+    getInsertedItems: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[1]
+    getInsertedIDs: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[0]
 
     run: -> this.dispatch()
 

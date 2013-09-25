@@ -376,12 +376,12 @@
         this.listen();
       }
 
-      App.prototype.controller = function(key) {
-        return this.controllers[key || this.current_flag];
+      App.prototype.controller = function(at) {
+        return this.controllers[at || this.current_flag];
       };
 
-      App.prototype.set_context_for = function(key) {
-        this.current_flag = key;
+      App.prototype.set_context_for = function(at) {
+        this.current_flag = at;
         return this;
       };
 
@@ -416,7 +416,7 @@
         var _this = this;
         return $.map(this.controllers, function(c) {
           if (c.look_up()) {
-            return _this.set_context_for(c.key);
+            return _this.set_context_for(c.at);
           }
         });
       };
@@ -483,10 +483,9 @@
         return _uuid += 1;
       };
 
-      function Controller(app, key) {
+      function Controller(app, at) {
         this.app = app;
-        this.key = key;
-        this.at = this.key;
+        this.at = at;
         this.$inputor = this.app.$inputor;
         this.id = this.$inputor[0].id || uuid();
         this.setting = null;
@@ -501,6 +500,7 @@
 
       Controller.prototype.init = function(setting) {
         this.setting = $.extend({}, this.setting || $.fn.atwho["default"], setting);
+        this.view.init();
         return this.model.reload(this.setting.data);
       };
 
@@ -526,9 +526,9 @@
         return this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name];
       };
 
-      Controller.prototype.get_opt = function(key, default_value) {
+      Controller.prototype.get_opt = function(at, default_value) {
         try {
-          return this.setting[key];
+          return this.setting[at];
         } catch (e) {
           return null;
         }
@@ -547,7 +547,7 @@
         content = this.content();
         caret_pos = this.$inputor.caret('pos');
         subtext = content.slice(0, caret_pos);
-        query = this.callbacks("matcher").call(this, this.key, subtext, this.get_opt('start_with_space'));
+        query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
         if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
           start = caret_pos - query.length;
           end = start + query.length;
@@ -557,7 +557,7 @@
             'head_pos': start,
             'end_pos': end
           };
-          this.trigger("matched", [this.key, query.text]);
+          this.trigger("matched", [this.at, query.text]);
         } else {
           this.view.hide();
         }
@@ -688,7 +688,7 @@
 
       function Model(context) {
         this.context = context;
-        this.key = this.context.key;
+        this.at = this.context.at;
       }
 
       Model.prototype.saved = function() {
@@ -706,11 +706,11 @@
       };
 
       Model.prototype.fetch = function() {
-        return _storage[this.key] || [];
+        return _storage[this.at] || [];
       };
 
       Model.prototype.save = function(data) {
-        return _storage[this.key] = this.context.callbacks("before_save").call(this.context, data || []);
+        return _storage[this.at] = this.context.callbacks("before_save").call(this.context, data || []);
       };
 
       Model.prototype.load = function(data) {
@@ -743,13 +743,19 @@
 
       function View(context) {
         this.context = context;
-        this.key = this.context.key;
-        this.id = this.context.get_opt("alias") || ("at-view-" + (this.key.charCodeAt(0)));
-        this.$el = $("<div id='" + this.id + "' class='atwho-view'><ul id='" + this.id + "-ul' class='atwho-view-url'></ul></div>");
+        this.$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>");
         this.timeout_id = null;
         this.context.$el.append(this.$el);
         this.bind_event();
       }
+
+      View.prototype.init = function() {
+        var id;
+        id = this.context.get_opt("alias") || this.context.at.charCodeAt(0);
+        return this.$el.attr({
+          'id': "at-view-" + id
+        });
+      };
 
       View.prototype.bind_event = function() {
         var $menu,
@@ -959,22 +965,22 @@
       }
     };
     Api = {
-      load: function(key, data) {
+      load: function(at, data) {
         var c;
-        if (c = this.controller(key)) {
+        if (c = this.controller(at)) {
           return c.model.load(data);
         }
       },
-      getInsertedItemsWithIDs: function(key) {
+      getInsertedItemsWithIDs: function(at) {
         var c, ids, items;
-        if (!(c = this.controller(key))) {
+        if (!(c = this.controller(at))) {
           return [null, null];
         }
-        if (key) {
-          key = "-" + (c.get_opt('alias') || c.at);
+        if (at) {
+          at = "-" + (c.get_opt('alias') || c.at);
         }
         ids = [];
-        items = $.map(this.$inputor.find("span.atwho-view-flag" + (key || "")), function(item) {
+        items = $.map(this.$inputor.find("span.atwho-view-flag" + (at || "")), function(item) {
           var data;
           data = $(item).data('atwho-data-item');
           if (ids.indexOf(data.id) > -1) {
@@ -987,11 +993,11 @@
         });
         return [ids, items];
       },
-      getInsertedItems: function(key) {
-        return Api.getInsertedItemsWithIDs.apply(this, [key])[1];
+      getInsertedItems: function(at) {
+        return Api.getInsertedItemsWithIDs.apply(this, [at])[1];
       },
-      getInsertedIDs: function(key) {
-        return Api.getInsertedItemsWithIDs.apply(this, [key])[0];
+      getInsertedIDs: function(at) {
+        return Api.getInsertedItemsWithIDs.apply(this, [at])[0];
       },
       run: function() {
         return this.dispatch();
