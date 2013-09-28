@@ -1,3 +1,9 @@
+### v0.4.1
+
+* b7721be - fix bug at view id was not been assign. close issues #99
+* 407f069 - fix bug: Can not autofocus after click the at-list in FireFox. #95
+* 917f033 - fix bug: click do not work in div-contenteditable. close issues #93
+
 ### v0.4.0
 
 * update `Caret.js` to `v0.0.2`
