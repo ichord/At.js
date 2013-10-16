@@ -4,7 +4,7 @@
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and will concat `Caret.js` into `dist/js/jquery.atwho.js`.
 
-This branch have updated to `v0.4.0`. Please read **CHANGELOG.md** for more details.  
+This branch has updated to `v0.4.0`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 ### Demo
@@ -20,9 +20,9 @@ http://ichord.github.com/At.js
 * Listener events can be bound to multiple textareas
 * Format returned data using templates
 * Keyboard controls in addition to mouse
-    `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values
+    `Tab` or `Enter` keys select the value, `Up` and `Down` navigates between values,
     `Right` and `left` will research the keyword.
-* Customer data handlers and template renders by a group of configurable callbacks.
+* Custom data handlers and template rendering by a group of configurable callbacks.
 * Support AMD
 
 ### Requirements
@@ -51,8 +51,8 @@ Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 * [@ichord](https://github.com/ichord)
 
 ### Hi
-Let me know you are using it, so I will work harder on it.  
-And if you like **At.js** ?! Tell me by adding website [here](https://github.com/ichord/At.js/wiki/Sites)  
+Let me know if you are using it, so I will work harder on it.  
+If you like **At.js** ?! Tell me by adding the website [here](https://github.com/ichord/At.js/wiki/Sites)  
 Hope you like it, Thanks.! :)
 
 ---
