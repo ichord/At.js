@@ -1,0 +1,16 @@
+{
+  "name": "At.js",
+  "repo": "ichord/At.js",
+  "description": "Add Github like mentions autocomplete to your application.",
+  "version": "0.4.1",
+  "demo": "http://ichord.github.com/At.js",
+  "keywords": ["autocomplete", "mentions", "ui"],
+  "dependencies": {
+    "ichord/Caret.js": "*",
+    "component/jquery": "*"
+  },
+  "main": ["dist/js/jquery.atwho.js"],
+  "scripts": ["dist/js/jquery.atwho.js"],
+  "styles": ["dist/css/jquery.atwho.css"],
+  "license": "MIT"
+}
