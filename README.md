@@ -4,7 +4,7 @@
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and will concat `Caret.js` into `dist/js/jquery.atwho.js`.
 
-This branch have updated to `v0.4.0`. Please read **CHANGELOG.md** for more details.  
+This branch have updated to `v0.4.x`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **You can do me a favor?!**
 
 ### Demo
@@ -28,7 +28,8 @@ http://ichord.github.com/At.js
 ### Requirements
 
 * jQuery >= 1.7.0.
-* [Caret.js](https://github.com/ichord/Caret.js) (You can just run `bower install` to get it) 
+* [Caret.js](https://github.com/ichord/Caret.js) 
+    (You can just run `bower install` or `component install` to get it) 
 
 ### Document
 https://github.com/ichord/At.js/wiki
@@ -39,6 +40,8 @@ If you are working with `Rails`. This gem: [jquery-atwho-rails](https://github.c
 ### Bower
 Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 
+### Component
+**ichord/At.js**
 
 ### History Version
 
@@ -52,7 +55,7 @@ Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 
 ### Hi
 Let me know you are using it, so I will work harder on it.  
-And if you like **At.js** ?! Tell me by adding website [here](https://github.com/ichord/At.js/wiki/Sites)  
+And if you like **At.js** ?! Just Email me or adding website [here](https://github.com/ichord/At.js/wiki/Sites)  
 Hope you like it, Thanks.! :)
 
 ---
