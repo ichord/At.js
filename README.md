@@ -1,11 +1,11 @@
-**Add Github like mentions autocomplete to your application.** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
+**An autocompletion library to autocomplete mentions, smileys etc. just like on Github or Twitter!** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
 
-### Notice
+#### Notice
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and will concat `Caret.js` into `dist/js/jquery.atwho.js`.
 
-This branch have updated to `v0.4.x`. Please read **CHANGELOG.md** for more details.  
-English Documentation will keep improving. Maybe **You can do me a favor?!**
+This branch has been updated to `v0.4.x`. Please read **CHANGELOG.md** for more details.  
+English Documentation will keep improving. Maybe **you can do me a favor?**
 
 ### Demo
 
@@ -14,36 +14,42 @@ http://ichord.github.com/At.js
 
 ### Features Preview
 
-* support **contentEditable**
-* Can listen to any character
-    not just '@', and set up multiple listeners for different characters with different behavior and data.
-* Listener events can be bound to multiple textareas
+* Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements
+* Can listen to any character and not just '@'. Can set up multiple listeners for different characters with different behavior and data
+* Listener events can be bound to multiple inputors.
 * Format returned data using templates
 * Keyboard controls in addition to mouse
-    `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values
-    `Right` and `left` will research the keyword.
-* Customer data handlers and template renders by a group of configurable callbacks.
-* Support AMD
+    - `Tab` or `Enter` keys select the value, `Up` and `Down` navigate between values
+    - `Right` and `left` will re-search the keyword.
+* Custom data handlers and template renderers using a group of configurable callbacks
+* Supports AMD
 
 ### Requirements
 
 * jQuery >= 1.7.0.
 * [Caret.js](https://github.com/ichord/Caret.js) 
-    (You can just run `bower install` or `component install` to get it) 
+    (You can use `Component` or `Bower` to install it.) 
 
-### Document
+### Documentation
 https://github.com/ichord/At.js/wiki
 
-### Rails
-If you are working with `Rails`. This gem: [jquery-atwho-rails](https://github.com/ichord/jquery-atwho-rails) may help you.
+### Integrating with your Application
 
-### Bower
-Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
+Simply include the following files in your HTML and you are good to go.
 
-### Component
-**ichord/At.js**
+```html
+<link href="css/jquery.atwho.css" rel="stylesheet">
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="js/jquery.atwho.js"></script>
+```
+#### Bower & Component
+For installing using Bower you can use `jquery.atwho` and for Component please use `ichord/At.js`.
 
-### History Version
+#### Rails
+You can include At.js in your `Rails` application using the gem [`jquery-atwho-rails`](https://github.com/ichord/jquery-atwho-rails). 
+
+
+### Version History
 
 * branch `stable-v0.3` with tag `v0.3.3`
 * branch `stable-v0.2` with tag `v0.2.x`
@@ -53,10 +59,10 @@ Someone register At.js in **bower** as **jquery.atwho**. so, just use it!
 
 * [@ichord](https://github.com/ichord)
 
-### Hi
-Let me know you are using it, so I will work harder on it.  
-And if you like **At.js** ?! Just Email me or adding website [here](https://github.com/ichord/At.js/wiki/Sites)  
-Hope you like it, Thanks.! :)
+#### PS
+Let me know if you are using **At.js**. It will motivate me to work harder.
+And if you like **At.js**, just email me and add your website [here](https://github.com/ichord/At.js/wiki/Sites)  
+Hope you like it, Thanks! :)
 
 ---
 
