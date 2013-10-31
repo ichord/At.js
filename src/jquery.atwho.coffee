@@ -298,7 +298,7 @@
       data = this.fetch()
       search_key = @context.get_opt("search_key")
       if _ref = @context.callbacks('remote_filter')
-        return _ref.call(@context, query, callback)
+        return _ref.call(@context, query, callback, @context.get_opt("params"))
       callback data = @context.callbacks('filter').call(@context, query, data, search_key)
 
     # get or set current data which would be shown on the list view.

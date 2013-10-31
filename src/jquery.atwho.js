@@ -351,10 +351,10 @@
         var data, search_key, _ref;
         data = this.fetch();
         search_key = this.context.get_opt("search_key");
-        if((_ref = this.context.callbacks('remote_filter')) != null) {
-          return _ref.call(this.context, query, callback);
+        if (_ref = this.context.callbacks('remote_filter')) {
+          return _ref.call(this.context, query, callback, this.context.get_opt("params"));
         }
-        callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
+        return callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
       };
 
       Model.prototype.fetch = function() {
