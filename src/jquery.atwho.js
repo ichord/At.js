@@ -351,10 +351,10 @@
         var data, search_key, _ref;
         data = this.fetch();
         search_key = this.context.get_opt("search_key");
-        callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
-        if (!(data && data.length > 0)) {
-          return (_ref = this.context.callbacks('remote_filter')) != null ? _ref.call(this.context, query, callback) : void 0;
+        if (_ref = this.context.callbacks('remote_filter')) {
+          return _ref.call(this.context, query, callback, this.context.get_opt("params"));
         }
+        return callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
       };
 
       Model.prototype.fetch = function() {
@@ -500,7 +500,7 @@
 
       View.prototype.render = function(list) {
         var $li, $ul, item, li, tpl, _i, _len;
-        if (!$.isArray(list || list.length <= 0)) {
+        if (!$.isArray(list.length <= 0 || list)) {
           this.hide();
           return;
         }

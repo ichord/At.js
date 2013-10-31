@@ -297,8 +297,9 @@
     query: (query, callback) ->
       data = this.fetch()
       search_key = @context.get_opt("search_key")
+      if _ref = @context.callbacks('remote_filter')
+        return _ref.call(@context, query, callback, @context.get_opt("params"))
       callback data = @context.callbacks('filter').call(@context, query, data, search_key)
-      @context.callbacks('remote_filter')?.call(@context, query, callback) unless data and data.length > 0
 
     # get or set current data which would be shown on the list view.
     #
@@ -409,7 +410,7 @@
 
     # render list view
     render: (list) ->
-      if not $.isArray list or list.length <= 0
+      if not $.isArray list.length <= 0 or list
         this.hide()
         return
 
