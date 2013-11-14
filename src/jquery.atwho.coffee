@@ -199,6 +199,17 @@
     reset_rect: ->
       @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
 
+    z_index: ->
+      z_index = 0
+      @$inputor.parents().each (index, element) ->
+      if $(element).css('position') != '' and $(element).css('position') != 'static'
+        if $(element).css('z-index') != 'auto'
+          $(element).css('z-index')
+          return false
+
+      return z_index
+
+
     mark_range: ->
       @range = this.get_range() || this.get_ie_range()
 
@@ -380,6 +391,7 @@
           rect.bottom = rect.top - @$el.height()
       offset = {left:rect.left, top:rect.bottom}
       @$el.offset offset
+      @$el.css('z_index', @context.z_index)
       @context.trigger "reposition", [offset]
 
     next: ->
