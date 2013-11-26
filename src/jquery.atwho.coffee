@@ -27,11 +27,12 @@
     constructor: (inputor) ->
       @current_flag = null
       @controllers = {}
+      @alias_maps = {}
       @$inputor = $(inputor)
       this.listen()
 
     controller: (at) ->
-      @controllers[at || @current_flag]
+      @controllers[@alias_maps[at] || at || @current_flag]
 
     set_context_for: (at) ->
       @current_flag = at
@@ -45,7 +46,8 @@
     # @param settings [Hash] the settings
     reg: (flag, setting) ->
       controller = @controllers[flag] ||= new Controller(this, flag)
-      @controllers[setting.alias] = controller if setting.alias
+      # TODO: it will produce rubbish alias map, reduse this.
+      @alias_maps[setting.alias] = flag if setting.alias
       controller.init setting
       this
 
@@ -297,8 +299,12 @@
     query: (query, callback) ->
       data = this.fetch()
       search_key = @context.get_opt("search_key")
-      callback data = @context.callbacks('filter').call(@context, query, data, search_key)
-      @context.callbacks('remote_filter')?.call(@context, query, callback) unless data and data.length > 0
+      data = @context.callbacks('filter').call(@context, query, data, search_key) || []
+      _remote_filter = @context.callbacks('remote_filter')
+      if data.length > 0 or (!_remote_filter and data.length == 0)
+        callback data
+      else
+        _remote_filter.call(@context, query, callback)
 
     # get or set current data which would be shown on the list view.
     #
@@ -409,7 +415,7 @@
 
     # render list view
     render: (list) ->
-      if not $.isArray list or list.length <= 0
+      if not ($.isArray(list) and list.length > 0)
         this.hide()
         return
 

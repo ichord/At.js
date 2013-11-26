@@ -48,7 +48,12 @@
                     // },
                     remote_filter: function (query, callback) {
                         // this.super_call("remote_filter", query, callback)
-                        callback(null)
+                        console.log("calling remote_filter width query: " + query);
+                        callback(null);
+                    },
+                    filter: function (query, data, search_key) {
+                        console.log("calling filter with query" + query);
+                        return this.call_default("filter", query, data, search_key);
                     }
                 }
             }).atwho({
@@ -72,6 +77,16 @@
             }).one('matched.atwho', function(e) {
                 console.log(e.type, e.namespace)
             });
+
+            // $('#inputor').atwho({
+            //     at: '#',
+            //     data: ['1', '2', '3']
+            // })
+
+            // $('#inputor2').atwho({
+            //     at: '#',
+            //     data: ['a', 'b', 'c']
+            // })
 
             // $('#inputor3').atwho({
             //   at: "@",
@@ -99,6 +114,7 @@
             // $('input').atwho({at: "@", 'data':data})
 
         });
+
 </script>
 <style type="text/css" media="screen">
 body {
