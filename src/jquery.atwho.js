@@ -24,12 +24,13 @@
       function App(inputor) {
         this.current_flag = null;
         this.controllers = {};
+        this.alias_maps = {};
         this.$inputor = $(inputor);
         this.listen();
       }
 
       App.prototype.controller = function(at) {
-        return this.controllers[at || this.current_flag];
+        return this.controllers[this.alias_maps[at] || at || this.current_flag];
       };
 
       App.prototype.set_context_for = function(at) {
@@ -41,7 +42,7 @@
         var controller, _base;
         controller = (_base = this.controllers)[flag] || (_base[flag] = new Controller(this, flag));
         if (setting.alias) {
-          this.controllers[setting.alias] = controller;
+          this.alias_maps[setting.alias] = flag;
         }
         controller.init(setting);
         return this;
@@ -334,13 +335,11 @@
 
     })();
     Model = (function() {
-      var _storage;
-
-      _storage = {};
 
       function Model(context) {
         this.context = context;
         this.at = this.context.at;
+        this.storage = this.context.$inputor;
       }
 
       Model.prototype.saved = function() {
@@ -348,21 +347,24 @@
       };
 
       Model.prototype.query = function(query, callback) {
-        var data, search_key, _ref;
+        var data, search_key, _remote_filter;
         data = this.fetch();
         search_key = this.context.get_opt("search_key");
-        callback(data = this.context.callbacks('filter').call(this.context, query, data, search_key));
-        if (!(data && data.length > 0)) {
-          return (_ref = this.context.callbacks('remote_filter')) != null ? _ref.call(this.context, query, callback) : void 0;
+        data = this.context.callbacks('filter').call(this.context, query, data, search_key) || [];
+        _remote_filter = this.context.callbacks('remote_filter');
+        if (data.length > 0 || (!_remote_filter && data.length === 0)) {
+          return callback(data);
+        } else {
+          return _remote_filter.call(this.context, query, callback);
         }
       };
 
       Model.prototype.fetch = function() {
-        return _storage[this.at] || [];
+        return this.storage.data(this.at) || [];
       };
 
       Model.prototype.save = function(data) {
-        return _storage[this.at] = this.context.callbacks("before_save").call(this.context, data || []);
+        return this.storage.data(this.at, this.context.callbacks("before_save").call(this.context, data || []));
       };
 
       Model.prototype.load = function(data) {
@@ -500,7 +502,7 @@
 
       View.prototype.render = function(list) {
         var $li, $ul, item, li, tpl, _i, _len;
-        if (!$.isArray(list || list.length <= 0)) {
+        if (!($.isArray(list) && list.length > 0)) {
           this.hide();
           return;
         }
