@@ -683,13 +683,11 @@
 
     })();
     Model = (function() {
-      var _storage;
-
-      _storage = {};
 
       function Model(context) {
         this.context = context;
         this.at = this.context.at;
+        this.storage = this.context.$inputor;
       }
 
       Model.prototype.saved = function() {
@@ -710,11 +708,11 @@
       };
 
       Model.prototype.fetch = function() {
-        return _storage[this.at] || [];
+        return this.storage.data(this.at) || [];
       };
 
       Model.prototype.save = function(data) {
-        return _storage[this.at] = this.context.callbacks("before_save").call(this.context, data || []);
+        return this.storage.data(this.at, this.context.callbacks("before_save").call(this.context, data || []));
       };
 
       Model.prototype.load = function(data) {

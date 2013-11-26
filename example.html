@@ -52,7 +52,7 @@
                         callback(null);
                     },
                     filter: function (query, data, search_key) {
-                        console.log("calling filter with query" + query);
+                        console.log("calling filter with query: " + query);
                         return this.call_default("filter", query, data, search_key);
                     }
                 }
@@ -78,15 +78,15 @@
                 console.log(e.type, e.namespace)
             });
 
-            // $('#inputor').atwho({
-            //     at: '#',
-            //     data: ['1', '2', '3']
-            // })
+            $('#inputor').atwho({
+                at: '#',
+                data: ['1', '2', '3']
+            })
 
-            // $('#inputor2').atwho({
-            //     at: '#',
-            //     data: ['a', 'b', 'c']
-            // })
+            $('#inputor2').atwho({
+                at: '#',
+                data: ['a', 'b', 'c']
+            })
 
             // $('#inputor3').atwho({
             //   at: "@",

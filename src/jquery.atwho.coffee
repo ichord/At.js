@@ -283,10 +283,11 @@
 
   # Class to process data
   class Model
-    _storage = {}
 
     constructor: (@context) ->
       @at = @context.at
+      # NOTE: bind data storage to inputor maybe App class can handle it.
+      @storage = @context.$inputor
 
     saved: ->
       this.fetch() > 0
@@ -311,13 +312,13 @@
     # @param data [Array] set data
     # @return [Array|undefined] current data that are showing on the list view.
     fetch: ->
-      _storage[@at] || []
+      @storage.data(@at) || []
 
     # save special flag's data to storage
     #
     # @param data [Array] data to save
     save: (data) ->
-      _storage[@at] = @context.callbacks("before_save").call(@context, data || [])
+      @storage.data @at, @context.callbacks("before_save").call(@context, data || [])
 
     # load data. It wouldn't load for a second time if it has been loaded.
     #
