@@ -1,3 +1,8 @@
+### v0.4.2
+
+* 4169b74 - binding data storage to the inputor. issues #121
+* 11d053f - reduse querying twice. issues#112
+
 ### v0.4.1
 
 * b7721be - fix bug at view id was not been assign. close issues #99
