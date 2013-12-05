@@ -25,7 +25,6 @@
   })(function($) {
     "use strict";
     var EditableCaret, InputCaret, Mirror, Utils, methods, pluginName;
-
     pluginName = 'caret';
     EditableCaret = (function() {
       function EditableCaret($inputor) {
@@ -47,7 +46,6 @@
 
       EditableCaret.prototype.getOldIEPos = function() {
         var preCaretTextRange, textRange;
-
         textRange = document.selection.createRange();
         preCaretTextRange = document.body.createTextRange();
         preCaretTextRange.moveToElementText(this.domInputor);
@@ -57,7 +55,6 @@
 
       EditableCaret.prototype.getPos = function() {
         var clonedRange, pos, range;
-
         if (range = this.range()) {
           clonedRange = range.cloneRange();
           clonedRange.selectNodeContents(this.domInputor);
@@ -72,7 +69,6 @@
 
       EditableCaret.prototype.getOldIEOffset = function() {
         var range, rect;
-
         range = document.selection.createRange().duplicate();
         range.moveStart("character", -1);
         rect = range.getBoundingClientRect();
@@ -85,7 +81,6 @@
 
       EditableCaret.prototype.getOffset = function(pos) {
         var clonedRange, offset, range, rect;
-
         offset = null;
         if (window.getSelection && (range = this.range())) {
           if (range.endOffset - 1 < 0) {
@@ -105,12 +100,15 @@
         } else if (document.selection) {
           this.getOldIEOffset();
         }
-        return Utils.adjustOffset(offset, this.$inputor);
+        if (offset) {
+          offset.top += $(window).scrollTop();
+          offset.left += $(window).scrollLeft();
+        }
+        return offset;
       };
 
       EditableCaret.prototype.range = function() {
         var sel;
-
         if (!window.getSelection) {
           return;
         }
@@ -133,7 +131,6 @@
 
       InputCaret.prototype.getIEPos = function() {
         var endRange, inputor, len, normalizedValue, pos, range, textInputRange;
-
         inputor = this.domInputor;
         range = document.selection.createRange();
         pos = 0;
@@ -163,7 +160,6 @@
 
       InputCaret.prototype.setPos = function(pos) {
         var inputor, range;
-
         inputor = this.domInputor;
         if (document.selection) {
           range = inputor.createTextRange();
@@ -177,7 +173,6 @@
 
       InputCaret.prototype.getIEOffset = function(pos) {
         var h, range, textRange, x, y;
-
         textRange = this.domInputor.createTextRange();
         if (pos) {
           textRange.move('character', pos);
@@ -197,16 +192,18 @@
 
       InputCaret.prototype.getOffset = function(pos) {
         var $inputor, offset, position;
-
         $inputor = this.$inputor;
         if (document.selection) {
-          return Utils.adjustOffset(this.getIEOffset(pos), $inputor);
+          offset = this.getIEOffset(pos);
+          offset.top += $(window).scrollTop() + $inputor.scrollTop();
+          offset.left += $(window).scrollLeft() + $inputor.scrollLeft();
+          return offset;
         } else {
           offset = $inputor.offset();
           position = this.getPosition(pos);
           return offset = {
-            left: offset.left + position.left,
-            top: offset.top + position.top,
+            left: offset.left + position.left - $inputor.scrollLeft(),
+            top: offset.top + position.top - $inputor.scrollTop(),
             height: position.height
           };
         }
@@ -214,7 +211,6 @@
 
       InputCaret.prototype.getPosition = function(pos) {
         var $inputor, at_rect, format, html, mirror, start_range;
-
         $inputor = this.$inputor;
         format = function(value) {
           return value.replace(/</g, '&lt').replace(/>/g, '&gt').replace(/`/g, '&#96').replace(/"/g, '&quot').replace(/\r\n|\r|\n/g, "<br />");
@@ -231,7 +227,6 @@
 
       InputCaret.prototype.getIEPosition = function(pos) {
         var h, inputorOffset, offset, x, y;
-
         offset = this.getIEOffset(pos);
         inputorOffset = this.$inputor.offset();
         x = offset.left - inputorOffset.left;
@@ -257,7 +252,6 @@
       Mirror.prototype.mirrorCss = function() {
         var css,
           _this = this;
-
         css = {
           position: 'absolute',
           left: -9999,
@@ -281,7 +275,6 @@
 
       Mirror.prototype.rect = function() {
         var $flag, pos, rect;
-
         $flag = this.$mirror.find("#caret");
         pos = $flag.position();
         rect = {
@@ -301,8 +294,8 @@
         if (!offset) {
           return;
         }
-        offset.top += $(window).scrollTop() + $inputor.scrollTop();
-        offset.left += +$(window).scrollLeft() + $inputor.scrollLeft();
+        offset.top += $(window).scrollTop();
+        offset.left += $(window).scrollLeft();
         return offset;
       },
       contentEditable: function($inputor) {
@@ -330,7 +323,6 @@
     };
     $.fn.caret = function(method) {
       var caret;
-
       caret = Utils.contentEditable(this) ? new EditableCaret(this) : new InputCaret(this);
       if (methods[method]) {
         return methods[method].apply(caret, Array.prototype.slice.call(arguments, 1));
