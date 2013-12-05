@@ -1,3 +1,7 @@
+### v0.4.3
+
+* e8e7561 update `Caret.js` to `v0.0.4`
+
 ### v0.4.2
 
 * 4169b74 - binding data storage to the inputor. issues #121
