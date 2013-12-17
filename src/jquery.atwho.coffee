@@ -202,7 +202,8 @@
       @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
 
     mark_range: ->
-      @range = this.get_range() || this.get_ie_range()
+      @range = this.get_range()
+      @ie_range = this.get_ie_range()
 
     clear_range: ->
       @range = null
@@ -211,7 +212,7 @@
       @range || (window.getSelection().getRangeAt(0) if window.getSelection)
 
     get_ie_range: ->
-      @range || (document.selection.createRange() if document.selection)
+      @ie_range || (document.selection.createRange() if document.selection)
 
     insert_content_for: ($li) ->
       data_value = $li.data('value')

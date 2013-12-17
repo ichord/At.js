@@ -240,7 +240,8 @@
       };
 
       Controller.prototype.mark_range = function() {
-        return this.range = this.get_range() || this.get_ie_range();
+        this.range = this.get_range();
+        return this.ie_range = this.get_ie_range();
       };
 
       Controller.prototype.clear_range = function() {
@@ -252,7 +253,7 @@
       };
 
       Controller.prototype.get_ie_range = function() {
-        return this.range || (document.selection ? document.selection.createRange() : void 0);
+        return this.ie_range || (document.selection ? document.selection.createRange() : void 0);
       };
 
       Controller.prototype.insert_content_for = function($li) {
