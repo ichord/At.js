@@ -81,7 +81,6 @@
 
       EditableCaret.prototype.getOffset = function(pos) {
         var clonedRange, offset, range, rect;
-        offset = null;
         if (window.getSelection && (range = this.range())) {
           if (range.endOffset - 1 < 0) {
             return null;
@@ -96,9 +95,8 @@
             top: rect.top
           };
           clonedRange.detach();
-          offset;
         } else if (document.selection) {
-          this.getOldIEOffset();
+          offset = this.getOldIEOffset();
         }
         if (offset) {
           offset.top += $(window).scrollTop();
@@ -172,14 +170,10 @@
       };
 
       InputCaret.prototype.getIEOffset = function(pos) {
-        var h, range, textRange, x, y;
+        var h, textRange, x, y;
         textRange = this.domInputor.createTextRange();
-        if (pos) {
-          textRange.move('character', pos);
-        } else {
-          range = document.selection.createRange();
-          textRange.moveToBookmark(range.getBookmark());
-        }
+        pos || (pos = this.getPos());
+        textRange.move('character', pos);
         x = textRange.boundingLeft;
         y = textRange.boundingTop;
         h = textRange.boundingHeight;

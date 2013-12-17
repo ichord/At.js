@@ -6,7 +6,7 @@
   "demo": "http://ichord.github.com/At.js",
   "keywords": ["autocomplete", "mentions", "ui"],
   "dependencies": {
-    "ichord/Caret.js": "0.0.4",
+    "ichord/Caret.js": "0.0.5",
     "component/jquery": "*"
   },
   "main": ["dist/js/jquery.atwho.js"],

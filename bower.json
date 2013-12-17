@@ -10,6 +10,6 @@
     "spec"
   ],
   "dependencies": {
-    "Caret.js": "ichord/Caret.js#0.0.4"
+    "Caret.js": "ichord/Caret.js#0.0.5"
   }
 }
