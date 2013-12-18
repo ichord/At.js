@@ -301,7 +301,7 @@
           sel.addRange(range);
         } else if (range = this.get_ie_range()) {
           range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-          range.pasteHTML($insert_node[0]);
+          range.pasteHTML(content_node);
           range.collapse(false);
           range.select();
         }
