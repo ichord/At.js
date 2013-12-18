@@ -1,3 +1,18 @@
+### v0.4.4
+
+* 9ac7e75 - improve contentEditable for IE 8
+
+	It's still some bugs in IE 8, just DON'T use it
+    I don't want to spend more time on IE 8.
+    So it would be the ending fixup. And i will still leave related code for
+    a while maybe in case anyone want to help to improve it.
+    Just encourge your users to upgrate the browers or just switch to a
+    batter one please !!
+
+* a8371b3 - move project page to master from gh-pages. 
+* 24b6225 - fix bugs #122
+* 645e030 - update Caret.js to v0.0.5
+
 ### v0.4.3
 
 * e8e7561 update `Caret.js` to `v0.0.4`

@@ -14,7 +14,7 @@ http://ichord.github.com/At.js
 
 ### Features Preview
 
-* Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements
+* Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements (NOT include IE 8)
 * Can listen to any character and not just '@'. Can set up multiple listeners for different characters with different behavior and data
 * Listener events can be bound to multiple inputors.
 * Format returned data using templates
@@ -60,7 +60,7 @@ You can include At.js in your `Rails` application using the gem [`jquery-atwho-r
 * [@ichord](https://github.com/ichord)
 
 #### PS
-Let me know if you are using **At.js**. It will motivate me to work harder.
+Let me know if you are using **At.js**. It will motivate me to work harder.  
 And if you like **At.js**, just email me and add your website [here](https://github.com/ichord/At.js/wiki/Sites)  
 Hope you like it, Thanks! :)
 
