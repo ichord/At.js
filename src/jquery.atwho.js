@@ -198,7 +198,7 @@
       Controller.prototype.catch_query = function() {
         var caret_pos, content, end, query, start, subtext;
         content = this.content();
-        caret_pos = this.$inputor.caret('pos');
+        caret_pos = this.$inputor.caret('pos', this.setting.cWindow);
         subtext = content.slice(0, caret_pos);
         query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
         if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
@@ -219,7 +219,7 @@
 
       Controller.prototype.rect = function() {
         var c, scale_bottom;
-        if (!(c = this.$inputor.caret('offset', this.pos - 1))) {
+        if (!(c = this.$inputor.caret('offset', this.setting.cWindow, this.pos - 1))) {
           return;
         }
         if (this.$inputor.attr('contentEditable') === 'true') {
@@ -249,7 +249,9 @@
       };
 
       Controller.prototype.get_range = function() {
-        return this.range || (window.getSelection ? window.getSelection().getRangeAt(0) : void 0);
+        var thisWin = this.setting.cWindow;
+
+        return thisWin.getSelection ? thisWin.getSelection().getRangeAt(0) : (this.range || void 0);
       };
 
       Controller.prototype.get_ie_range = function() {
@@ -271,7 +273,7 @@
       };
 
       Controller.prototype.insert = function(content, $li) {
-        var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, text;
+        var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, text, thisWin;
         $inputor = this.$inputor;
         if ($inputor.attr('contentEditable') === 'true') {
           class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
@@ -290,18 +292,19 @@
           $inputor.val(text);
           $inputor.caret('pos', start_str.length + content.length + 1);
         } else if (range = this.get_range()) {
+          thisWin = this.setting.cWindow;
           pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
           range.setStart(range.endContainer, Math.max(pos, 0));
           range.setEnd(range.endContainer, range.endOffset);
           range.deleteContents();
           range.insertNode($insert_node[0]);
           range.collapse(false);
-          sel = window.getSelection();
+          sel = thisWin.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
         } else if (range = this.get_ie_range()) {
           range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-          range.pasteHTML(content_node);
+          range.pasteHTML($insert_node[0]);
           range.collapse(false);
           range.select();
         }
@@ -444,8 +447,10 @@
       };
 
       View.prototype.reposition = function(rect) {
-        var offset;
-        if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
+        var offset, thisWin;
+        thisWin = this.context.setting.cWindow;
+
+        if (rect.bottom + this.$el.height() - $(thisWin).scrollTop() > $(thisWin).height()) {
           rect.bottom = rect.top - this.$el.height();
         }
         offset = {
@@ -700,7 +705,8 @@
       start_with_space: true,
       limit: 5,
       max_len: 20,
-      display_timeout: 300
+      display_timeout: 300,
+      cWindow: window
     };
   });
 
