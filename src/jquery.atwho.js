@@ -140,6 +140,8 @@
         this.app = app;
         this.at = at;
         this.$inputor = this.app.$inputor;
+        this.oDocument = this.$inputor[0].ownerDocument;
+        this.oWindow = this.oDocument.defaultView || this.oDocument.parentWindow;
         this.id = this.$inputor[0].id || uuid();
         this.setting = null;
         this.query = null;
@@ -249,11 +251,11 @@
       };
 
       Controller.prototype.get_range = function() {
-        return this.range || (window.getSelection ? window.getSelection().getRangeAt(0) : void 0);
+        return this.range || (this.oWindow.getSelection ? this.oWindow.getSelection().getRangeAt(0) : void 0);
       };
 
       Controller.prototype.get_ie_range = function() {
-        return this.ie_range || (document.selection ? document.selection.createRange() : void 0);
+        return this.ie_range || (this.oDocument.selection ? this.oDocument.selection.createRange() : void 0);
       };
 
       Controller.prototype.insert_content_for = function($li) {
@@ -278,7 +280,7 @@
           content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
           insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
           $insert_node = $(insert_node).data('atwho-data-item', $li.data('item-data'));
-          if (document.selection) {
+          if (this.oDocument.selection) {
             $insert_node = $("<span contenteditable='true'></span>").html($insert_node);
           }
         }
@@ -296,7 +298,7 @@
           range.deleteContents();
           range.insertNode($insert_node[0]);
           range.collapse(false);
-          sel = window.getSelection();
+          sel = this.oWindow.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
         } else if (range = this.get_ie_range()) {
