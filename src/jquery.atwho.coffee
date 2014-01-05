@@ -108,6 +108,9 @@
 
     constructor: (@app, @at) ->
       @$inputor = @app.$inputor
+      @oDocument = @$inputor[0].ownerDocument
+      @oWindow = @oDocument.defaultView || @oDocument.parentWindow
+
       @id = @$inputor[0].id || uuid()
       @setting  = null
       @query    = null
@@ -209,10 +212,10 @@
       @range = null
 
     get_range: ->
-      @range || (window.getSelection().getRangeAt(0) if window.getSelection)
+      @range || (@oWindow.getSelection().getRangeAt(0) if @oWindow.getSelection)
 
     get_ie_range: ->
-      @ie_range || (document.selection.createRange() if document.selection)
+      @ie_range || (@oDocument.selection.createRange() if @oDocument.selection)
 
     insert_content_for: ($li) ->
       data_value = $li.data('value')
@@ -234,7 +237,7 @@
         content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
         insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
         $insert_node = $(insert_node).data('atwho-data-item', $li.data('item-data'))
-        if document.selection
+        if @oDocument.selection
           $insert_node = $("<span contenteditable='true'></span>").html($insert_node)
 
       if $inputor.is('textarea, input')
@@ -253,7 +256,7 @@
         range.deleteContents()
         range.insertNode($insert_node[0])
         range.collapse(false)
-        sel = window.getSelection()
+        sel = @oWindow.getSelection()
         sel.removeAllRanges()
         sel.addRange(range)
       else if range = this.get_ie_range() # IE < 9

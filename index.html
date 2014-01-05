@@ -52,6 +52,13 @@
     $inputor.caret('pos', 47);
     $inputor.focus().atwho('run');
     $('#editable').atwho(at_config).atwho(emoji_config);
+
+    ifr = $('#iframe1')[0]
+    ifrBody = ifr.contentDocument.body
+    ifrBody.contentEditable = true
+    ifrBody.id = 'ifrBody'
+    ifrBody.innerHTML = 'For <strong>WYSIWYG</strong> which using <strong>iframe</strong> such as <strong>ckeditor</strong>'
+    $(ifrBody).atwho(at_config)
   });
 
   </script>
@@ -165,6 +172,10 @@
           <b>Try here now!</b><img src="http://a248.e.akamai.net/assets.github.com/images/icons/emoji/point_right.png" height="20" width="20">
           <b>:h</b>
         </p>
+      </div>
+
+      <div>
+        <iframe src="" id="iframe1" class="inputor"></iframe>
       </div>
 
       <footer>
