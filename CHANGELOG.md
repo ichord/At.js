@@ -1,3 +1,7 @@
+### v0.4.5
+
+* 664a765 support iframe 
+
 ### v0.4.4
 
 * 9ac7e75 - improve contentEditable for IE 8
