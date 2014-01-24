@@ -205,8 +205,9 @@
       @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
 
     mark_range: ->
-      @range = this.get_range()
-      @ie_range = this.get_ie_range()
+      if @$inputor.attr('contentEditable') == 'true'
+        @range = this.get_range()
+        @ie_range = this.get_ie_range()
 
     clear_range: ->
       @range = null

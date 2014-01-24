@@ -242,8 +242,10 @@
       };
 
       Controller.prototype.mark_range = function() {
-        this.range = this.get_range();
-        return this.ie_range = this.get_ie_range();
+        if (this.$inputor.attr('contentEditable') === 'true') {
+          this.range = this.get_range();
+          return this.ie_range = this.get_ie_range();
+        }
       };
 
       Controller.prototype.clear_range = function() {
