@@ -1,3 +1,7 @@
+### v0.4.6
+
+* 2d9ab23 fix `wrong document` error in IE iframe
+
 ### v0.4.5
 
 * 664a765 support iframe 
