@@ -46,7 +46,14 @@ Simply include the following files in your HTML and you are good to go.
 For installing using Bower you can use `jquery.atwho` and for Component please use `ichord/At.js`.
 
 #### Rails
-You can include At.js in your `Rails` application using the gem [`jquery-atwho-rails`](https://github.com/ichord/jquery-atwho-rails). 
+
+In your Gemfile include the following line
+
+```
+gem "jquery-atwho-rails", "~> 0.4.1"
+```
+
+and run `bundle install`
 
 
 ### Version History
