@@ -206,17 +206,8 @@
 
     mark_range: ->
       if @$inputor.attr('contentEditable') == 'true'
-        @range = this.get_range()
-        @ie_range = this.get_ie_range()
-
-    clear_range: ->
-      @range = null
-
-    get_range: ->
-      @range || (@oWindow.getSelection().getRangeAt(0) if @oWindow.getSelection)
-
-    get_ie_range: ->
-      @ie_range || (@oDocument.selection.createRange() if @oDocument.selection)
+        @range = @oWindow.getSelection().getRangeAt(0) if @oWindow.getSelection
+        @ie8_range = @oDocument.selection.createRange() if @oDocument.selection
 
     insert_content_for: ($li) ->
       data_value = $li.data('value')
@@ -250,7 +241,7 @@
         text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
         $inputor.val text
         $inputor.caret 'pos',start_str.length + content.length + 1
-      else if range = this.get_range()
+      else if range = @range
         pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
         range.setStart(range.endContainer, Math.max(pos,0))
         range.setEnd(range.endContainer, range.endOffset)
@@ -260,7 +251,7 @@
         sel = @oWindow.getSelection()
         sel.removeAllRanges()
         sel.addRange(range)
-      else if range = this.get_ie_range() # IE < 9
+      else if range = @ie8_range # IE < 9
         # NOTE: have to add this <meta http-equiv="x-ua-compatible" content="IE=Edge"/> into <header>
         #       to make it work batter.
         # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
@@ -368,12 +359,6 @@
         this.choose()
         e.preventDefault()
 
-      @$el.on 'mouseenter.atwho-view', 'ul', (e) =>
-        @context.mark_range()
-      .on 'mouseleave.atwho-view', 'ul', (e) =>
-        @context.clear_range()
-
-
     # Check if view is visible
     #
     # @return [Boolean]
@@ -407,6 +392,7 @@
       prev.addClass 'cur'
 
     show: ->
+      @context.mark_range()
       @$el.show() if not this.visible()
       this.reposition(rect) if rect = @context.rect()
 
@@ -437,7 +423,7 @@
         $ul.append $li
 
       this.show()
-      $ul.find("li:first").addClass "cur"
+      $ul.find("li:first").addClass "cur" 
 
   KEY_CODE =
     DOWN: 40

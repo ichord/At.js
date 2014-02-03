@@ -582,21 +582,13 @@
 
       Controller.prototype.mark_range = function() {
         if (this.$inputor.attr('contentEditable') === 'true') {
-          this.range = this.get_range();
-          return this.ie_range = this.get_ie_range();
+          if (this.oWindow.getSelection) {
+            this.range = this.oWindow.getSelection().getRangeAt(0);
+          }
+          if (this.oDocument.selection) {
+            return this.ie8_range = this.oDocument.selection.createRange();
+          }
         }
-      };
-
-      Controller.prototype.clear_range = function() {
-        return this.range = null;
-      };
-
-      Controller.prototype.get_range = function() {
-        return this.range || (this.oWindow.getSelection ? this.oWindow.getSelection().getRangeAt(0) : void 0);
-      };
-
-      Controller.prototype.get_ie_range = function() {
-        return this.ie_range || (this.oDocument.selection ? this.oDocument.selection.createRange() : void 0);
       };
 
       Controller.prototype.insert_content_for = function($li) {
@@ -632,7 +624,7 @@
           text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
           $inputor.val(text);
           $inputor.caret('pos', start_str.length + content.length + 1);
-        } else if (range = this.get_range()) {
+        } else if (range = this.range) {
           pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
           range.setStart(range.endContainer, Math.max(pos, 0));
           range.setEnd(range.endContainer, range.endOffset);
@@ -642,7 +634,7 @@
           sel = this.oWindow.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
-        } else if (range = this.get_ie_range()) {
+        } else if (range = this.ie8_range) {
           range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
           range.pasteHTML(content_node);
           range.collapse(false);
@@ -759,17 +751,12 @@
         var $menu,
           _this = this;
         $menu = this.$el.find('ul');
-        $menu.on('mouseenter.atwho-view', 'li', function(e) {
+        return $menu.on('mouseenter.atwho-view', 'li', function(e) {
           $menu.find('.cur').removeClass('cur');
           return $(e.currentTarget).addClass('cur');
         }).on('click', function(e) {
           _this.choose();
           return e.preventDefault();
-        });
-        return this.$el.on('mouseenter.atwho-view', 'ul', function(e) {
-          return _this.context.mark_range();
-        }).on('mouseleave.atwho-view', 'ul', function(e) {
-          return _this.context.clear_range();
         });
       };
 
@@ -821,6 +808,7 @@
 
       View.prototype.show = function() {
         var rect;
+        this.context.mark_range();
         if (!this.visible()) {
           this.$el.show();
         }
