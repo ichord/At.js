@@ -57,7 +57,7 @@ You can include At.js in your `Rails` application using the gem [`jquery-atwho-r
 
 ### Core Team Members
 
-* [@ichord](https://github.com/ichord)
+* [@ichord](https://twitter.com/_ichord)
 
 #### PS
 Let me know if you are using **At.js**. It will motivate me to work harder.  
