@@ -1,5 +1,4 @@
 describe "jquery.atwho", ->
-
   $inputor = null
   fixtures = null
   app = null
@@ -94,7 +93,7 @@ describe "jquery.atwho", ->
       expect(highlighted).toBe(result)
 
     it "can insert the text which be choosed", ->
-      spyOn(callbacks, "before_insert").andCallThrough()
+      spyOn(callbacks, "before_insert").and.callThrough()
 
       trigger_atwho()
       expect(callbacks.before_insert).toHaveBeenCalled()
@@ -140,7 +139,7 @@ describe "jquery.atwho", ->
       controller = null
 
       beforeEach ->
-        jasmine.Ajax.useMock()
+        jasmine.Ajax.install()
         controller = app.controller()
         controller.model.save null
         $inputor.atwho
@@ -153,7 +152,7 @@ describe "jquery.atwho", ->
       it "should load data after focus inputor", ->
         simulate_input()
 
-        request = mostRecentAjaxRequest()
+        request = jasmine.Ajax.requests.mostRecent()
         response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
         request.response
           status: 200
@@ -162,7 +161,7 @@ describe "jquery.atwho", ->
         expect(controller.model.fetch().length).toBe 3
 
     it "setting timeout", ->
-      jasmine.Clock.useMock()
+      jasmine.clock().install()
       $inputor.atwho
         at: "@"
         display_timeout: 500
@@ -172,8 +171,9 @@ describe "jquery.atwho", ->
       view = controller.view.$el
 
       expect(view).not.toBeHidden()
-      jasmine.Clock.tick 503
+      jasmine.clock().tick 503
       expect(view).toBeHidden()
+      jasmine.clock().uninstall()
 
     it "escape RegExp flag", ->
       $inputor = $('#inputor2').atwho
@@ -209,26 +209,26 @@ describe "jquery.atwho", ->
       expect(controller.view.visible()).toBe(false)
 
     it "trigger tab", ->
-      spyOn(callbacks, "before_insert").andCallThrough()
+      spyOn(callbacks, "before_insert").and.callThrough()
       tab_event = $.Event("keydown.atwho", keyCode: KEY_CODE.TAB)
       $inputor.trigger(tab_event)
       expect(controller.view.visible()).toBe(false)
       expect(callbacks.before_insert).toHaveBeenCalled()
 
     it "trigger enter", ->
-      spyOn(callbacks, "before_insert").andCallThrough()
+      spyOn(callbacks, "before_insert").and.callThrough()
       enter_event = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
       $inputor.trigger(enter_event)
       expect(callbacks.before_insert).toHaveBeenCalled()
 
     it "trigger up", ->
-      spyOn(controller.view, "prev").andCallThrough()
+      spyOn(controller.view, "prev").and.callThrough()
       up_event = $.Event("keydown.atwho", keyCode: KEY_CODE.UP)
       $inputor.trigger(up_event)
       expect(controller.view.prev).toHaveBeenCalled()
 
     it "trigger down", ->
-      spyOn(controller.view, "next").andCallThrough()
+      spyOn(controller.view, "next").and.callThrough()
       down_event = $.Event("keydown.atwho", keyCode: KEY_CODE.DOWN)
       $inputor.trigger(down_event)
       expect(controller.view.next).toHaveBeenCalled()
@@ -277,14 +277,14 @@ describe "jquery.atwho", ->
       expect(controller.model.fetch().length).toBe 2
 
     it "don't change data setting while using remote filter", ->
-      jasmine.Ajax.useMock()
+      # jasmine.Ajax.install()
       $inputor.atwho
         at: "@"
         data: "/atwho.json"
 
       simulate_input()
 
-      request = mostRecentAjaxRequest()
+      request = jasmine.Ajax.requests.mostRecent()
       response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
       request.response
         status: 200

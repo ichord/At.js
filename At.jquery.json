@@ -25,5 +25,5 @@
   "dependencies": {
     "jquery": "*"
   },
-  "keywords": []
+  "keywords": ['autocomplete']
 }

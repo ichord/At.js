@@ -6,3 +6,5 @@ spec/javascripts/*.js
 _*
 bower_components/
 components
+.grunt
+*.log
