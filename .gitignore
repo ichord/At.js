@@ -8,3 +8,5 @@ bower_components/
 components
 .grunt
 *.log
+spec/javascripts/*.js
+spec/spec_helper.js
