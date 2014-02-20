@@ -9,14 +9,28 @@
 
 @triggerAtwhoAt = ($inputor) ->
   simulateTypingIn $inputor
-  simulate_choose $inputor
+  simulateChoose $inputor
 
 @simulateTypingIn = ($inputor, flag) ->
   $inputor.data("atwho").set_context_for flag || "@"
-  $inputor.caret('pos', 31)
+  oDocument = $inputor[0].ownerDocument
+  oWindow = oDocument.defaultView || oDocument.parentWindow
+  if $inputor.attr('contentEditable') == 'true' && oWindow.getSelection
+    $inputor.focus()
+    sel = oWindow.getSelection()
+    range = sel.getRangeAt(0)
+    clonedRange = range.cloneRange()
+    clonedRange.selectNodeContents($inputor[0])
+    clonedRange.setStart(range.endContainer, 31)
+    clonedRange.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(clonedRange) 
+  else
+    $inputor.caret('pos', 31)
+
   $inputor.trigger("keyup")
 
-@simulate_choose = ($inputor) ->
+@simulateChoose = ($inputor) ->
   e = $.Event("keydown", keyCode: KEY_CODE.ENTER)
   $inputor.trigger(e)
 

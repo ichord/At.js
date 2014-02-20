@@ -17,10 +17,10 @@ module.exports = (grunt) ->
       specs:
         files:[
           {
-            expand: true, cwd: 'spec/coffeescripts', ext: ".spec.js",
-            src: '*.spec.coffee', dest: 'spec/javascripts',
+            expand: true, cwd: 'spec/javascripts', ext: ".spec.js",
+            src: '*.spec.coffee', dest: 'spec/build/javascripts',
           },
-          src: 'spec/spec_helper.coffee', dest: 'spec/spec_helper.js'
+          src: 'spec/spec_helper.coffee', dest: 'spec/build/spec_helper.js'
         ]
 
     uglify:
@@ -29,12 +29,12 @@ module.exports = (grunt) ->
 
     watch:
       coffee:
-        files: ['src/*.coffee', 'spec/coffeescripts/*.spec.coffee', 'spec/spec_helper.coffee']
+        files: ['src/*.coffee', 'spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
         tasks: ['coffee', 'uglify', 'notify']
       test:
         options:
           debounceDelay: 250
-        files: ['spec/coffeescripts/*.spec.coffee', 'spec/spec_helper.coffee']
+        files: ['spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
         tasks: ['test', 'notify']
 
     jasmine:
@@ -42,15 +42,15 @@ module.exports = (grunt) ->
         src: 'dist/js/<%= pkg.name %>.js',
         options:
           keepRunner: true
-          styles: 'src/<%= pkg.name %>.css',
-          specs: 'spec/javascripts/*.spec.js',
+          styles: 'dist/css/<%= pkg.name %>.css',
+          specs: 'spec/build/javascripts/*.spec.js',
           vendor: [
             'bower_components/jquery/jquery.min.js',
             'bower_components/Caret.js/src/*.js'
           ],
           helpers: [
             'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
-            'spec/spec_helper.js',
+            'spec/build/spec_helper.js',
             'spec/helpers/*.js'
           ]
 
@@ -78,6 +78,9 @@ module.exports = (grunt) ->
         options:
           message: 'Build Successfully'
 
+    copy:
+      css: {src: 'src/jquery.atwho.css', dest: 'dist/css/jquery.atwho.css'}
+
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
@@ -86,10 +89,11 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-connect'
   grunt.loadNpmTasks 'grunt-json-replace'
   grunt.loadNpmTasks 'grunt-notify'
+  grunt.loadNpmTasks 'grunt-contrib-copy'
 
   # alias
   grunt.registerTask 'update-version', 'json-replace'
 
   grunt.registerTask "server", ["coffee", "jasmine:dist:build", "connect"]
   grunt.registerTask "test", ["coffee", "jasmine"]
-  grunt.registerTask "default", ['test', 'uglify', 'update-version']
+  grunt.registerTask "default", ['test', 'uglify', 'copy', 'update-version']
