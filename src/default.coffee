@@ -67,7 +67,7 @@ DEFAULT_CALLBACKS =
   #   $.ajax url,
   #     data: params
   #     success: (data) ->
-  #       render_view(data)
+  #       callback(data)
 
   # Sorter data of course.
   #
