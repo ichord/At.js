@@ -1,3 +1,11 @@
+### v0.4.7
+
+* resolved #133, #135, #137.
+* add `beforeDestroy` event
+* wouldn't concat `caret.js` into `dist/js/jquery.atwho.js` any more.
+* seperate `jquery.atwho.coffee` into pieces.
+* seperate testing.
+
 ### v0.4.6
 
 * 2d9ab23 fix `wrong document` error in IE iframe
