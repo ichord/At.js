@@ -2,7 +2,7 @@
 
 #### Notice
 
-At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js) and will concat `Caret.js` into `dist/js/jquery.atwho.js`.
+At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).
 
 This branch has been updated to `v0.4.x`. Please read **CHANGELOG.md** for more details.  
 English Documentation will keep improving. Maybe **you can do me a favor?**
@@ -40,8 +40,17 @@ Simply include the following files in your HTML and you are good to go.
 ```html
 <link href="css/jquery.atwho.css" rel="stylesheet">
 <script src="http://code.jquery.com/jquery.js"></script>
+<script src="js/jquery.caret.js"></script>
 <script src="js/jquery.atwho.js"></script>
 ```
+
+```javascript
+$('#inputor').atwho({
+    at: "@",
+    data:['Peter', 'Tom', 'Anne']
+})
+```
+
 #### Bower & Component
 For installing using Bower you can use `jquery.atwho` and for Component please use `ichord/At.js`.
 
