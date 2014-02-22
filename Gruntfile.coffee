@@ -90,8 +90,7 @@ module.exports = (grunt) ->
       'update-version':
         files:[
           {src: 'bower.json', dest: 'bower.json'},
-          {src: 'component.json', dest: 'component.json'},
-          {src: 'At.jquery.json', dest: 'At.jquery.json'}
+          {src: 'component.json', dest: 'component.json'}
         ]
 
     notify:
