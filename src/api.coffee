@@ -19,6 +19,9 @@ Api =
   getInsertedIDs: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[0]
 
   run: -> this.dispatch()
+  destroy: ->
+    this.shutdown()
+    @$inputor.data('atwho', null)
 
 Atwho =
   # init or update an inputor with a special flag

@@ -32,14 +32,18 @@ class App
   # binding jQuery events of `inputor`'s
   listen: ->
     @$inputor
-      .on 'keyup.atwho', (e) =>
+      .on 'keyup.atwhoInner', (e) =>
         this.on_keyup(e)
-      .on 'keydown.atwho', (e) =>
+      .on 'keydown.atwhoInner', (e) =>
         this.on_keydown(e)
-      .on 'scroll.atwho', (e) =>
+      .on 'scroll.atwhoInner', (e) =>
         this.controller()?.view.hide()
-      .on 'blur.atwho', (e) =>
+      .on 'blur.atwhoInner', (e) =>
         c.view.hide(c.get_opt("display_timeout")) if c = this.controller()
+
+  shutdown: ->
+    c.destroy() for _, c of @controllers
+    @$inputor.off '.atwhoInner'
 
   dispatch: ->
     $.map @controllers, (c) =>

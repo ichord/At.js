@@ -14,6 +14,9 @@ class View
     id = @context.get_opt("alias") || @context.at.charCodeAt(0)
     @$el.attr('id': "at-view-#{id}")
 
+  destroy: ->
+    @$el.remove()
+
   bind_event: ->
     $menu = @$el.find('ul')
     $menu.on 'mouseenter.atwho-view','li', (e) ->

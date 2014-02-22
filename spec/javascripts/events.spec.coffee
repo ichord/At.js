@@ -9,7 +9,7 @@ describe "events", ->
     $inputor = $("#inputor").atwho at: "@", data: fixtures["names"]
     app = getAppOf $inputor
 
-	describe "jquery", ->
+	describe "inner", ->
 	  controller = null
 	  callbacks = null
 
@@ -19,32 +19,32 @@ describe "events", ->
 	    simulateTypingIn $inputor
 
 	  it "trigger esc", ->
-	    esc_event = $.Event("keyup.atwho", keyCode: KEY_CODE.ESC)
+	    esc_event = $.Event("keyup.atwhoInner", keyCode: KEY_CODE.ESC)
 	    $inputor.trigger(esc_event)
 	    expect(controller.view.visible()).toBe(false)
 
 	  it "trigger tab", ->
 	    spyOn(callbacks, "before_insert").and.callThrough()
-	    tab_event = $.Event("keydown.atwho", keyCode: KEY_CODE.TAB)
+	    tab_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.TAB)
 	    $inputor.trigger(tab_event)
 	    expect(controller.view.visible()).toBe(false)
 	    expect(callbacks.before_insert).toHaveBeenCalled()
 
 	  it "trigger enter", ->
 	    spyOn(callbacks, "before_insert").and.callThrough()
-	    enter_event = $.Event("keydown.atwho", keyCode: KEY_CODE.ENTER)
+	    enter_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.ENTER)
 	    $inputor.trigger(enter_event)
 	    expect(callbacks.before_insert).toHaveBeenCalled()
 
 	  it "trigger up", ->
 	    spyOn(controller.view, "prev").and.callThrough()
-	    up_event = $.Event("keydown.atwho", keyCode: KEY_CODE.UP)
+	    up_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.UP)
 	    $inputor.trigger(up_event)
 	    expect(controller.view.prev).toHaveBeenCalled()
 
 	  it "trigger down", ->
 	    spyOn(controller.view, "next").and.callThrough()
-	    down_event = $.Event("keydown.atwho", keyCode: KEY_CODE.DOWN)
+	    down_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.DOWN)
 	    $inputor.trigger(down_event)
 	    expect(controller.view.next).toHaveBeenCalled()
 
@@ -73,3 +73,8 @@ describe "events", ->
 	    event = spyOnEvent($inputor, "matched-at-memtions.atwho")
 	    triggerAtwhoAt $inputor
 	    expect(event).toHaveBeenTriggered()
+
+	  it "trigger beforeDestroy", ->
+	  	destroy_event = spyOnEvent($inputor, "beforeDestroy.atwho")
+	  	$inputor.atwho 'destroy'
+	  	expect(destroy_event).toHaveBeenTriggered()

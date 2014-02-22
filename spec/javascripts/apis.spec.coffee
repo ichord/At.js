@@ -72,3 +72,10 @@ describe "api", ->
 
       expect(app.controller().view.$el).not.toBeHidden()
 
+    it 'destroy', ->
+      $inputor.atwho at: "~"
+      view_id = app.controller('~').view.$el.attr('id')
+      $inputor.atwho 'destroy'
+      expect($("##{view_id}").length).toBe 0
+      expect($inputor.data('atwho')).toBe null
+      expect($inputor.data('~')).toBe null

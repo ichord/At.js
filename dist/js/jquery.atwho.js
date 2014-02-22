@@ -45,20 +45,20 @@ App = (function() {
   };
 
   App.prototype.listen = function() {
-    return this.$inputor.on('keyup.atwho', (function(_this) {
+    return this.$inputor.on('keyup.atwhoInner', (function(_this) {
       return function(e) {
         return _this.on_keyup(e);
       };
-    })(this)).on('keydown.atwho', (function(_this) {
+    })(this)).on('keydown.atwhoInner', (function(_this) {
       return function(e) {
         return _this.on_keydown(e);
       };
-    })(this)).on('scroll.atwho', (function(_this) {
+    })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
         var _ref;
         return (_ref = _this.controller()) != null ? _ref.view.hide() : void 0;
       };
-    })(this)).on('blur.atwho', (function(_this) {
+    })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
         var c;
         if (c = _this.controller()) {
@@ -66,6 +66,16 @@ App = (function() {
         }
       };
     })(this));
+  };
+
+  App.prototype.shutdown = function() {
+    var c, _, _ref;
+    _ref = this.controllers;
+    for (_ in _ref) {
+      c = _ref[_];
+      c.destroy();
+    }
+    return this.$inputor.off('.atwhoInner');
   };
 
   App.prototype.dispatch = function() {
@@ -164,6 +174,12 @@ Controller = (function() {
     return this.model.reload(this.setting.data);
   };
 
+  Controller.prototype.destroy = function() {
+    this.trigger('beforeDestroy');
+    this.model.destroy();
+    return this.view.destroy();
+  };
+
   Controller.prototype.call_default = function() {
     var args, error, func_name;
     func_name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
@@ -177,6 +193,9 @@ Controller = (function() {
 
   Controller.prototype.trigger = function(name, data) {
     var alias, event_name;
+    if (data == null) {
+      data = [];
+    }
     data.push(this);
     alias = this.get_opt('alias');
     event_name = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
@@ -349,6 +368,10 @@ Model = (function() {
     this.storage = this.context.$inputor;
   }
 
+  Model.prototype.destroy = function() {
+    return this.storage.data(this.at, null);
+  };
+
   Model.prototype.saved = function() {
     return this.fetch() > 0;
   };
@@ -417,6 +440,10 @@ View = (function() {
     return this.$el.attr({
       'id': "at-view-" + id
     });
+  };
+
+  View.prototype.destroy = function() {
+    return this.$el.remove();
   };
 
   View.prototype.bind_event = function() {
@@ -666,6 +693,10 @@ Api = {
   },
   run: function() {
     return this.dispatch();
+  },
+  destroy: function() {
+    this.shutdown();
+    return this.$inputor.data('atwho', null);
   }
 };
 

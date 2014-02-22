@@ -24,6 +24,11 @@ class Controller
     @view.init()
     @model.reload @setting.data
 
+  destroy: ->
+    this.trigger 'beforeDestroy'
+    @model.destroy()
+    @view.destroy()
+
   call_default: (func_name, args...) ->
     try
       DEFAULT_CALLBACKS[func_name].apply this, args
@@ -42,7 +47,7 @@ class Controller
   #
   # @param name [String] Event name
   # @param data [Array] data to callback
-  trigger: (name, data) ->
+  trigger: (name, data=[]) ->
     data.push this
     alias = this.get_opt('alias')
     event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"

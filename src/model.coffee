@@ -6,6 +6,9 @@ class Model
     # NOTE: bind data storage to inputor maybe App class can handle it.
     @storage = @context.$inputor
 
+  destroy: ->
+    @storage.data(@at, null)
+
   saved: ->
     this.fetch() > 0
 
