@@ -10,7 +10,7 @@
     "ui"
   ],
   "dependencies": {
-    "ichord/Caret.js": "0.0.5",
+    "ichord/Caret.js": "v0.0.6",
     "component/jquery": "*"
   },
   "main": [
