@@ -156,7 +156,7 @@ class Controller
       range.pasteHTML(content_node)
       range.collapse(false)
       range.select()
-    $inputor.focus()
+    $inputor.focus() if not $inputor.is ':focus'
     $inputor.change()
 
   # Render list view

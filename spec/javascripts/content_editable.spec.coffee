@@ -13,5 +13,6 @@ describe "content editable", ->
 
 	it "insert by click", ->
 		simulateTypingIn $inputor
+		$inputor.blur()
 		app.controller().view.$el.find('ul').children().first().trigger('click')
 		expect($inputor.text()).toContain('@Jobs')

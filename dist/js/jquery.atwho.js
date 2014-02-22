@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.6 - 2014-02-21
+/*! jquery.atwho - v0.4.6 - 2014-02-22
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -309,7 +309,9 @@ Controller = (function() {
       range.collapse(false);
       range.select();
     }
-    $inputor.focus();
+    if (!$inputor.is(':focus')) {
+      $inputor.focus();
+    }
     return $inputor.change();
   };
 
