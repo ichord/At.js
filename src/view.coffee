@@ -60,13 +60,16 @@ class View
 
   show: ->
     @context.mark_range()
-    @$el.show() if not this.visible()
+    if not this.visible()
+      @$el.show()
+      @context.trigger 'shown'
     this.reposition(rect) if rect = @context.rect()
 
   hide: (time) ->
     if isNaN time and this.visible()
       @context.reset_rect()
       @$el.hide()
+      @context.trigger 'hidden'
     else
       callback = => this.hide()
       clearTimeout @timeout_id
@@ -90,4 +93,4 @@ class View
       $ul.append $li
 
     this.show()
-    $ul.find("li:first").addClass "cur" 
+    $ul.find("li:first").addClass "cur"
