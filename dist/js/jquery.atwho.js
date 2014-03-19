@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.7 - 2014-03-03
+/*! jquery.atwho - v0.4.7 - 2014-03-19
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -99,7 +99,14 @@ App = (function() {
         break;
       case KEY_CODE.DOWN:
       case KEY_CODE.UP:
+      case KEY_CODE.CTRL:
         $.noop();
+        break;
+      case KEY_CODE.P:
+      case KEY_CODE.N:
+        if (!e.ctrlKey) {
+          this.dispatch();
+        }
         break;
       default:
         this.dispatch();
@@ -122,6 +129,20 @@ App = (function() {
         view.prev();
         break;
       case KEY_CODE.DOWN:
+        e.preventDefault();
+        view.next();
+        break;
+      case KEY_CODE.P:
+        if (!e.ctrlKey) {
+          return;
+        }
+        e.preventDefault();
+        view.prev();
+        break;
+      case KEY_CODE.N:
+        if (!e.ctrlKey) {
+          return;
+        }
         e.preventDefault();
         view.next();
         break;
@@ -567,7 +588,10 @@ KEY_CODE = {
   UP: 38,
   ESC: 27,
   TAB: 9,
-  ENTER: 13
+  ENTER: 13,
+  CTRL: 17,
+  P: 80,
+  N: 78
 };
 
 DEFAULT_CALLBACKS = {

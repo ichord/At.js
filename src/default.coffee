@@ -4,6 +4,9 @@ KEY_CODE =
   ESC: 27
   TAB: 9
   ENTER: 13
+  CTRL: 17
+  P: 80
+  N: 78
 
 # Functions set for handling and rendering the data.
 # Others developers can override these methods to tweak At.js such as matcher.

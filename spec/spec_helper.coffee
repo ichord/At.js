@@ -4,6 +4,9 @@
   ESC: 27
   TAB: 9
   ENTER: 13
+  CTRL: 17
+  P: 80
+  N: 78
 
 @fixtures or= loadJSONFixtures("data.json")["data.json"]
 
@@ -24,7 +27,7 @@
     clonedRange.setStart(range.endContainer, 31)
     clonedRange.collapse(true)
     sel.removeAllRanges()
-    sel.addRange(clonedRange) 
+    sel.addRange(clonedRange)
   else
     $inputor.caret('pos', 31)
 

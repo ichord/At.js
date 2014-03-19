@@ -48,6 +48,30 @@ describe "events", ->
 	    $inputor.trigger(down_event)
 	    expect(controller.view.next).toHaveBeenCalled()
 
+	  it "trigger up(ctrl + p)", ->
+	    spyOn(controller.view, "prev").and.callThrough()
+	    up_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.P, ctrlKey: true)
+	    $inputor.trigger(up_event)
+	    expect(controller.view.prev).toHaveBeenCalled()
+
+	  it "trigger down(ctrl + n)", ->
+	    spyOn(controller.view, "next").and.callThrough()
+	    down_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.N, ctrlKey: true)
+	    $inputor.trigger(down_event)
+	    expect(controller.view.next).toHaveBeenCalled()
+
+	   it "trigger p", ->
+	    spyOn(controller.view, "prev").and.callThrough()
+	    p_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.P, ctrlKey: false)
+	    $inputor.trigger(p_event)
+	    expect(controller.view.prev).not.toHaveBeenCalled()
+
+	   it "trigger n", ->
+	    spyOn(controller.view, "prev").and.callThrough()
+	    n_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.N, ctrlKey: false)
+	    $inputor.trigger(n_event)
+	    expect(controller.view.prev).not.toHaveBeenCalled()
+
 	describe "atwho", ->
 
 	  it "trigger matched", ->
