@@ -54,8 +54,10 @@ class App
       when KEY_CODE.ESC
         e.preventDefault()
         this.controller()?.view.hide()
-      when KEY_CODE.DOWN, KEY_CODE.UP
+      when KEY_CODE.DOWN, KEY_CODE.UP, KEY_CODE.CTRL
         $.noop()
+      when KEY_CODE.P, KEY_CODE.N
+        this.dispatch() if not e.ctrlKey
       else
         this.dispatch()
     # coffeescript will return everywhere!!
@@ -73,6 +75,14 @@ class App
         e.preventDefault()
         view.prev()
       when KEY_CODE.DOWN
+        e.preventDefault()
+        view.next()
+      when KEY_CODE.P
+        return if not e.ctrlKey
+        e.preventDefault()
+        view.prev()
+      when KEY_CODE.N
+        return if not e.ctrlKey
         e.preventDefault()
         view.next()
       when KEY_CODE.TAB, KEY_CODE.ENTER
