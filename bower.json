@@ -14,5 +14,15 @@
   },
   "devDependencies": {
     "jasmine-jquery": "~2.0.2"
-  }
+  },
+  "keywords": [
+    "mention",
+    "mentions",
+    "autocomplete",
+    "autocompletion",
+    "autosuggest",
+    "autosuggestion",
+    "atjs",
+    "at.js"
+  ]
 }
