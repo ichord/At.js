@@ -511,7 +511,7 @@ View = (function() {
   };
 
   View.prototype.reposition = function(rect) {
-    var offset;
+    var offset, _ref;
     if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
@@ -519,6 +519,9 @@ View = (function() {
       left: rect.left,
       top: rect.bottom
     };
+    if ((_ref = this.context.callbacks("before_reposition")) != null) {
+      _ref.call(this.context, offset);
+    }
     this.$el.offset(offset);
     return this.context.trigger("reposition", [offset]);
   };

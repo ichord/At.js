@@ -116,3 +116,11 @@ DEFAULT_CALLBACKS =
   # @param $li [jQuery Object] the chosen item
   before_insert: (value, $li) ->
     value
+
+  # You can adjust the menu's offset here.
+  #
+  # @param offset [Hash] offset will be applied to menu
+  # before_reposition: (offset) ->
+  #   offset.left += 10
+  #   offset.top += 10
+  #   offset
