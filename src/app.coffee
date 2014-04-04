@@ -58,7 +58,9 @@ class App
         c.view.hide(c.get_opt("display_timeout")) if c = this.controller()
 
   shutdown: ->
-    c.destroy() for _, c of @controllers
+    for _, c of @controllers
+      c.destroy() 
+      delete @controllers[_]
     @$inputor.off '.atwhoInner'
 
   dispatch: ->

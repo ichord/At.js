@@ -25,6 +25,7 @@ class Controller
     this.trigger 'beforeDestroy'
     @model.destroy()
     @view.destroy()
+    @$el.remove()
 
   call_default: (func_name, args...) ->
     try

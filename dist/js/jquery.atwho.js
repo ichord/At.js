@@ -94,6 +94,7 @@ App = (function() {
     for (_ in _ref) {
       c = _ref[_];
       c.destroy();
+      delete this.controllers[_];
     }
     return this.$inputor.off('.atwhoInner');
   };
@@ -212,7 +213,8 @@ Controller = (function() {
   Controller.prototype.destroy = function() {
     this.trigger('beforeDestroy');
     this.model.destroy();
-    return this.view.destroy();
+    this.view.destroy();
+    return this.$el.remove();
   };
 
   Controller.prototype.call_default = function() {
