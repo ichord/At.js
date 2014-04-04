@@ -7,7 +7,23 @@ class App
     @controllers = {}
     @alias_maps = {}
     @$inputor = $(inputor)
+    @iframe = null
+    this.setIframe()
     this.listen()
+
+  setIframe: (iframe) ->
+    if iframe
+      @window = iframe.contentWindow
+      @document = iframe.contentDocument || @window.document
+      @iframe = iframe
+      this
+    else
+      @document = @$inputor[0].ownerDocument
+      @window = @document.defaultView || @document.parentWindow
+      try
+        @iframe = @window.frameElement
+      catch error
+        # throws error in cross-domain iframes
 
   controller: (at) ->
     @controllers[@alias_maps[at] || at || @current_flag]

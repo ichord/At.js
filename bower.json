@@ -10,7 +10,7 @@
     "spec"
   ],
   "dependencies": {
-    "Caret.js": "ichord/Caret.js#0.0.6"
+    "Caret.js": "ichord/Caret.js#0.0.8"
   },
   "devDependencies": {
     "jasmine-jquery": "~2.0.2"
