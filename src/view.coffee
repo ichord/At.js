@@ -43,6 +43,7 @@ class View
     if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
         rect.bottom = rect.top - @$el.height()
     offset = {left:rect.left, top:rect.bottom}
+    @context.callbacks("before_reposition")?.call(@context, offset)
     @$el.offset offset
     @context.trigger "reposition", [offset]
 

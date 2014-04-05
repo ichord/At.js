@@ -1,14 +1,11 @@
 class Controller
-  _uuid = 0
-  uuid = ->
-    _uuid += 1
+  uid: ->
+    (Math.random().toString(16)+"000000000").substr(2,8) + (new Date().getTime())
 
   constructor: (@app, @at) ->
     @$inputor = @app.$inputor
-    @oDocument = @$inputor[0].ownerDocument
-    @oWindow = @oDocument.defaultView || @oDocument.parentWindow
+    @id = @$inputor[0].id || this.uid()
 
-    @id = @$inputor[0].id || uuid()
     @setting  = null
     @query    = null
     @pos      = 0
@@ -28,6 +25,7 @@ class Controller
     this.trigger 'beforeDestroy'
     @model.destroy()
     @view.destroy()
+    @$el.remove()
 
   call_default: (func_name, args...) ->
     try
@@ -98,9 +96,9 @@ class Controller
   #
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
-    return if not c = @$inputor.caret('offset', @pos - 1)
+    return if not c = @$inputor.caret({iframe: @app.iframe}).caret('offset', @pos - 1)
     c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
-    scale_bottom = if document.selection then 0 else 2
+    scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
   reset_rect: ->
@@ -108,8 +106,8 @@ class Controller
 
   mark_range: ->
     if @$inputor.attr('contentEditable') == 'true'
-      @range = @oWindow.getSelection().getRangeAt(0) if @oWindow.getSelection
-      @ie8_range = @oDocument.selection.createRange() if @oDocument.selection
+      @range = @app.window.getSelection().getRangeAt(0) if @app.window.getSelection
+      @ie8_range = @app.document.selection.createRange() if @app.document.selection
 
   insert_content_for: ($li) ->
     data_value = $li.data('value')
@@ -130,9 +128,9 @@ class Controller
       class_name = "atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}"
       content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
       insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
-      $insert_node = $(insert_node, @oDocument).data('atwho-data-item', $li.data('item-data'))
-      if @oDocument.selection
-        $insert_node = $("<span contenteditable='true'></span>", @oDocument).html($insert_node)
+      $insert_node = $(insert_node, @app.document).data('atwho-data-item', $li.data('item-data'))
+      if @app.document.selection
+        $insert_node = $("<span contenteditable='true'></span>", @app.document).html($insert_node)
 
     if $inputor.is('textarea, input')
       # ensure str is str.
@@ -150,7 +148,7 @@ class Controller
       range.deleteContents()
       range.insertNode($insert_node[0])
       range.collapse(false)
-      sel = @oWindow.getSelection()
+      sel = @app.window.getSelection()
       sel.removeAllRanges()
       sel.addRange(range)
     else if range = @ie8_range # IE < 9

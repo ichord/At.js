@@ -1,3 +1,10 @@
+### v0.4.8
+
+* 79bbef4  destroy atwho view container dom 
+* 0372d65  update bower and component keywords 
+* 52a41f5  add optional `before_repostion` callback 
+* cc1c239  Fixes #143 - ichord
+
 ### v0.4.7
 
 * resolved #133, #135, #137.

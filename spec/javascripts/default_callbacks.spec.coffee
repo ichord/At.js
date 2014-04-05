@@ -71,3 +71,14 @@ describe "default callbacks", ->
 
     triggerAtwhoAt $inputor
     expect(callbacks.before_insert).toHaveBeenCalled()
+
+  it "can adjust offset before reposition", ->
+    before_reposition = jasmine.createSpy("before_reposition")
+    $inputor.atwho
+      at: "@"
+      data: null,
+      callbacks:
+        remote_filter: before_reposition
+
+    simulateTypingIn $inputor
+    expect(before_reposition).toHaveBeenCalled()

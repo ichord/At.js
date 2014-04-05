@@ -17,6 +17,7 @@ Api =
     [ids, items]
   getInsertedItems: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[1]
   getInsertedIDs: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[0]
+  setIframe: (iframe) -> this.setIframe(iframe)
 
   run: -> this.dispatch()
   destroy: ->

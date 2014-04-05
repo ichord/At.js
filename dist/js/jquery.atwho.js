@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.7 - 2014-03-19
+/*! jquery.atwho - v0.4.8 - 2014-04-05
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -22,8 +22,28 @@ App = (function() {
     this.controllers = {};
     this.alias_maps = {};
     this.$inputor = $(inputor);
+    this.iframe = null;
+    this.setIframe();
     this.listen();
   }
+
+  App.prototype.setIframe = function(iframe) {
+    var error;
+    if (iframe) {
+      this.window = iframe.contentWindow;
+      this.document = iframe.contentDocument || this.window.document;
+      this.iframe = iframe;
+      return this;
+    } else {
+      this.document = this.$inputor[0].ownerDocument;
+      this.window = this.document.defaultView || this.document.parentWindow;
+      try {
+        return this.iframe = this.window.frameElement;
+      } catch (_error) {
+        error = _error;
+      }
+    }
+  };
 
   App.prototype.controller = function(at) {
     return this.controllers[this.alias_maps[at] || at || this.current_flag];
@@ -74,6 +94,7 @@ App = (function() {
     for (_ in _ref) {
       c = _ref[_];
       c.destroy();
+      delete this.controllers[_];
     }
     return this.$inputor.off('.atwhoInner');
   };
@@ -164,21 +185,15 @@ App = (function() {
 })();
 
 Controller = (function() {
-  var uuid, _uuid;
-
-  _uuid = 0;
-
-  uuid = function() {
-    return _uuid += 1;
+  Controller.prototype.uid = function() {
+    return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
   };
 
   function Controller(app, at) {
     this.app = app;
     this.at = at;
     this.$inputor = this.app.$inputor;
-    this.oDocument = this.$inputor[0].ownerDocument;
-    this.oWindow = this.oDocument.defaultView || this.oDocument.parentWindow;
-    this.id = this.$inputor[0].id || uuid();
+    this.id = this.$inputor[0].id || this.uid();
     this.setting = null;
     this.query = null;
     this.pos = 0;
@@ -198,7 +213,8 @@ Controller = (function() {
   Controller.prototype.destroy = function() {
     this.trigger('beforeDestroy');
     this.model.destroy();
-    return this.view.destroy();
+    this.view.destroy();
+    return this.$el.remove();
   };
 
   Controller.prototype.call_default = function() {
@@ -269,13 +285,15 @@ Controller = (function() {
 
   Controller.prototype.rect = function() {
     var c, scale_bottom;
-    if (!(c = this.$inputor.caret('offset', this.pos - 1))) {
+    if (!(c = this.$inputor.caret({
+      iframe: this.app.iframe
+    }).caret('offset', this.pos - 1))) {
       return;
     }
     if (this.$inputor.attr('contentEditable') === 'true') {
       c = (this.cur_rect || (this.cur_rect = c)) || c;
     }
-    scale_bottom = document.selection ? 0 : 2;
+    scale_bottom = this.app.document.selection ? 0 : 2;
     return {
       left: c.left,
       top: c.top,
@@ -291,11 +309,11 @@ Controller = (function() {
 
   Controller.prototype.mark_range = function() {
     if (this.$inputor.attr('contentEditable') === 'true') {
-      if (this.oWindow.getSelection) {
-        this.range = this.oWindow.getSelection().getRangeAt(0);
+      if (this.app.window.getSelection) {
+        this.range = this.app.window.getSelection().getRangeAt(0);
       }
-      if (this.oDocument.selection) {
-        return this.ie8_range = this.oDocument.selection.createRange();
+      if (this.app.document.selection) {
+        return this.ie8_range = this.app.document.selection.createRange();
       }
     }
   };
@@ -321,9 +339,9 @@ Controller = (function() {
       class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
       content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
       insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
-      $insert_node = $(insert_node, this.oDocument).data('atwho-data-item', $li.data('item-data'));
-      if (this.oDocument.selection) {
-        $insert_node = $("<span contenteditable='true'></span>", this.oDocument).html($insert_node);
+      $insert_node = $(insert_node, this.app.document).data('atwho-data-item', $li.data('item-data'));
+      if (this.app.document.selection) {
+        $insert_node = $("<span contenteditable='true'></span>", this.app.document).html($insert_node);
       }
     }
     if ($inputor.is('textarea, input')) {
@@ -340,7 +358,7 @@ Controller = (function() {
       range.deleteContents();
       range.insertNode($insert_node[0]);
       range.collapse(false);
-      sel = this.oWindow.getSelection();
+      sel = this.app.window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else if (range = this.ie8_range) {
@@ -495,7 +513,7 @@ View = (function() {
   };
 
   View.prototype.reposition = function(rect) {
-    var offset;
+    var offset, _ref;
     if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
@@ -503,6 +521,9 @@ View = (function() {
       left: rect.left,
       top: rect.bottom
     };
+    if ((_ref = this.context.callbacks("before_reposition")) != null) {
+      _ref.call(this.context, offset);
+    }
     this.$el.offset(offset);
     return this.context.trigger("reposition", [offset]);
   };
@@ -716,6 +737,9 @@ Api = {
   },
   getInsertedIDs: function(at) {
     return Api.getInsertedItemsWithIDs.apply(this, [at])[0];
+  },
+  setIframe: function(iframe) {
+    return this.setIframe(iframe);
   },
   run: function() {
     return this.dispatch();
