@@ -597,7 +597,7 @@ View = (function() {
       $ul.append($li);
     }
     this.show();
-    if (this.context.get_opt('highlgiht_first')) {
+    if (this.context.get_opt('highlight_first')) {
       return $ul.find("li:first").addClass("cur");
     }
   };

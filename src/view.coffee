@@ -94,4 +94,4 @@ class View
       $ul.append $li
 
     this.show()
-    $ul.find("li:first").addClass "cur" if @context.get_opt('highlgiht_first')
+    $ul.find("li:first").addClass "cur" if @context.get_opt('highlight_first')
