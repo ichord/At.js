@@ -115,4 +115,4 @@ module.exports = (grunt) ->
 
   grunt.registerTask "server", ["compile", "jasmine:dist:build", "connect"]
   grunt.registerTask "test", ["compile", "jasmine"]
-  grunt.registerTask "default", ['compile', 'uglify', 'update-version']
+  grunt.registerTask "default", ['test', 'uglify', 'update-version']

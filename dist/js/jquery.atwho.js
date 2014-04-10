@@ -505,11 +505,12 @@ View = (function() {
 
   View.prototype.choose = function() {
     var $li, content;
-    $li = this.$el.find(".cur");
-    content = this.context.insert_content_for($li);
-    this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-    this.context.trigger("inserted", [$li]);
-    return this.hide();
+    if (($li = this.$el.find(".cur")).length) {
+      content = this.context.insert_content_for($li);
+      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
+      this.context.trigger("inserted", [$li]);
+      return this.hide();
+    }
   };
 
   View.prototype.reposition = function(rect) {
@@ -597,7 +598,7 @@ View = (function() {
       $ul.append($li);
     }
     this.show();
-    if (this.context.get_opt('highlgiht_first')) {
+    if (this.context.get_opt('highlight_first')) {
       return $ul.find("li:first").addClass("cur");
     }
   };
@@ -655,7 +656,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       item = data[_i];
-      if (~item[search_key].toLowerCase().indexOf(query)) {
+      if (~item[search_key].toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
     }
@@ -670,7 +671,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       item = items[_i];
-      item.atwho_order = item[search_key].toLowerCase().indexOf(query);
+      item.atwho_order = item[search_key].toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
       }

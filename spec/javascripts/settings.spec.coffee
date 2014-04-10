@@ -74,6 +74,14 @@ describe "settings", ->
     simulateTypingIn $inputor
     expect(controller.view.visible()).toBe true
 
+  it 'highlight first', ->
+    simulateTypingIn $inputor
+    expect(controller.view.$el.find('ul li:first')).toHaveClass('cur')
+    $inputor.atwho
+      at: '@'
+      highlight_first: false
+    simulateTypingIn $inputor
+    expect(controller.view.$el.find('ul li:first')).not.toHaveClass('cur')
 
   describe "`data` as url and load remote data", ->
 
