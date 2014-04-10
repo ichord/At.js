@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.8 - 2014-04-05
+/*! jquery.atwho - v0.4.8 - 2014-04-10
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -597,7 +597,9 @@ View = (function() {
       $ul.append($li);
     }
     this.show();
-    return $ul.find("li:first").addClass("cur");
+    if (this.context.get_opt('highlgiht_first')) {
+      return $ul.find("li:first").addClass("cur");
+    }
   };
 
   return View;
@@ -793,6 +795,7 @@ $.fn.atwho["default"] = {
   callbacks: DEFAULT_CALLBACKS,
   search_key: "name",
   start_with_space: true,
+  highlight_first: true,
   limit: 5,
   max_len: 20,
   display_timeout: 300

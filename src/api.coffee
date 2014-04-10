@@ -58,6 +58,7 @@ $.fn.atwho.default =
   callbacks: DEFAULT_CALLBACKS
   search_key: "name"
   start_with_space: yes
+  highlight_first: yes
   limit: 5
   max_len: 20
   display_timeout: 300
