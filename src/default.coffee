@@ -58,7 +58,7 @@ DEFAULT_CALLBACKS =
     # !!null #=> false; !!undefined #=> false; !!'' #=> false;
     _results = []
     for item in data
-      _results.push item if ~item[search_key].toLowerCase().indexOf query
+      _results.push item if ~item[search_key].toLowerCase().indexOf query.toLowerCase()
     _results
 
   # If a function is given, At.js will invoke it if local filter can not find any data
@@ -84,7 +84,7 @@ DEFAULT_CALLBACKS =
 
     _results = []
     for item in items
-      item.atwho_order = item[search_key].toLowerCase().indexOf query
+      item.atwho_order = item[search_key].toLowerCase().indexOf query.toLowerCase()
       _results.push item if item.atwho_order > -1
 
     _results.sort (a,b) -> a.atwho_order - b.atwho_order
