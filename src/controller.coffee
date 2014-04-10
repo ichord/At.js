@@ -85,7 +85,7 @@ class Controller
       start = caret_pos - query.length
       end = start + query.length
       @pos = start
-      query = {'text': query.toLowerCase(), 'head_pos': start, 'end_pos': end}
+      query = {'text': query, 'head_pos': start, 'end_pos': end}
       this.trigger "matched", [@at, query.text]
     else
       @view.hide()
