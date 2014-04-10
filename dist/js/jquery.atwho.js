@@ -505,11 +505,12 @@ View = (function() {
 
   View.prototype.choose = function() {
     var $li, content;
-    $li = this.$el.find(".cur");
-    content = this.context.insert_content_for($li);
-    this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-    this.context.trigger("inserted", [$li]);
-    return this.hide();
+    if (($li = this.$el.find(".cur")).length) {
+      content = this.context.insert_content_for($li);
+      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
+      this.context.trigger("inserted", [$li]);
+      return this.hide();
+    }
   };
 
   View.prototype.reposition = function(rect) {

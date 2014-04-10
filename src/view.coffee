@@ -33,11 +33,11 @@ class View
     @$el.is(":visible")
 
   choose: ->
-    $li = @$el.find ".cur"
-    content = @context.insert_content_for $li
-    @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
-    @context.trigger "inserted", [$li]
-    this.hide()
+    if ($li = @$el.find ".cur").length
+      content = @context.insert_content_for $li
+      @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
+      @context.trigger "inserted", [$li]
+      this.hide()
 
   reposition: (rect) ->
     if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
