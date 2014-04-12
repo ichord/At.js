@@ -1,3 +1,7 @@
+### v0.4.9
+
+* f317bd7 not lowercase query, add `highlight_first` option
+
 ### v0.4.8
 
 * 79bbef4  destroy atwho view container dom 
