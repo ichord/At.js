@@ -1,6 +1,6 @@
 {
   "name": "At.js",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "main": "dist/js/jquery.atwho.js",
   "ignore": [
     "**/.*",
@@ -10,7 +10,8 @@
     "spec"
   ],
   "dependencies": {
-    "Caret.js": "ichord/Caret.js#0.0.8"
+    "jQuery": ">=1.7.0",
+    "Caret.js": ">= 0.0.9"
   },
   "devDependencies": {
     "jasmine-jquery": "~2.0.2"
