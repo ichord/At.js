@@ -66,7 +66,7 @@ module.exports = (grunt) ->
           styles: 'dist/css/<%= pkg.name %>.css',
           specs: 'spec/build/javascripts/*.spec.js',
           vendor: [
-            'bower_components/jquery/jquery.min.js',
+            'bower_components/jquery/dist/jquery.js',
             'bower_components/Caret.js/src/*.js'
           ],
           helpers: [
