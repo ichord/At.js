@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.10 - 2014-04-18
+/*! jquery.atwho - v0.4.10 - 2014-04-24
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -102,8 +102,18 @@ App = (function() {
   App.prototype.dispatch = function() {
     return $.map(this.controllers, (function(_this) {
       return function(c) {
-        if (c.look_up()) {
-          return _this.set_context_for(c.at);
+        var delay;
+        if (delay = c.get_opt('delay')) {
+          clearTimeout(_this.delayedCallback);
+          return _this.delayedCallback = setTimeout(function() {
+            if (c.look_up()) {
+              return _this.set_context_for(c.at);
+            }
+          }, delay);
+        } else {
+          if (c.look_up()) {
+            return _this.set_context_for(c.at);
+          }
         }
       };
     })(this));
@@ -799,7 +809,8 @@ $.fn.atwho["default"] = {
   highlight_first: true,
   limit: 5,
   max_len: 20,
-  display_timeout: 300
+  display_timeout: 300,
+  delay: null
 };
 
   });
