@@ -83,6 +83,13 @@ describe "settings", ->
     simulateTypingIn $inputor
     expect(controller.view.$el.find('ul li:first')).not.toHaveClass('cur')
 
+  it 'query out of max_len', ->
+    $inputor.atwho
+      at: '@'
+      max_len: 0
+    simulateTypingIn $inputor
+    expect(controller.query).toBe null
+
   describe "`data` as url and load remote data", ->
 
     beforeEach ->

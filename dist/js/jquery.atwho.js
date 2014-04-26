@@ -288,6 +288,7 @@ Controller = (function() {
       };
       this.trigger("matched", [this.at, query.text]);
     } else {
+      query = null;
       this.view.hide();
     }
     return this.query = query;
