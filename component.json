@@ -2,7 +2,7 @@
   "name": "At.js",
   "repo": "ichord/At.js",
   "description": "Add Github like mentions autocomplete to your application.",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "demo": "http://ichord.github.com/At.js",
   "dependencies": {
     "ichord/Caret.js": ">= 0.0.9",
