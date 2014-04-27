@@ -47,6 +47,8 @@ module.exports = (grunt) ->
     uglify:
       dist:
         src: 'dist/js/<%= pkg.name %>.js', dest: 'dist/js/<%= pkg.name %>.min.js'
+    cssmin:
+      minify: {src: 'src/jquery.atwho.css', dest: 'dist/css/jquery.atwho.min.css'}
 
     watch:
       coffee:
@@ -108,10 +110,11 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-notify'
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-concat'
+  grunt.loadNpmTasks 'grunt-contrib-cssmin'
 
   # alias
   grunt.registerTask 'update-version', 'json-replace'
-  grunt.registerTask 'compile', ['coffee', 'concat', 'copy']
+  grunt.registerTask 'compile', ['coffee', 'concat', 'copy', 'cssmin']
 
   grunt.registerTask "server", ["compile", "jasmine:dist:build", "connect"]
   grunt.registerTask "test", ["compile", "jasmine"]
