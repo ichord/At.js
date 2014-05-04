@@ -53,12 +53,12 @@ module.exports = (grunt) ->
     watch:
       coffee:
         files: ['src/*.coffee', 'spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
-        tasks: ['compile', 'notify']
+        tasks: ['compile']
       test:
         options:
           debounceDelay: 250
         files: ['spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
-        tasks: ['test', 'notify']
+        tasks: ['test']
 
     jasmine:
       dist:
@@ -95,11 +95,6 @@ module.exports = (grunt) ->
           {src: 'component.json', dest: 'component.json'}
         ]
 
-    notify:
-      success:
-        options:
-          message: 'Build Successfully'
-
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
@@ -107,7 +102,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-contrib-connect'
   grunt.loadNpmTasks 'grunt-json-replace'
-  grunt.loadNpmTasks 'grunt-notify'
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-cssmin'
