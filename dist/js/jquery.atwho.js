@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.11 - 2014-04-27
+/*! jquery.atwho - v0.4.11 - 2014-05-28
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -356,12 +356,12 @@ Controller = (function() {
       }
     }
     if ($inputor.is('textarea, input')) {
-      content = '' + content;
+      content = this.get_opt('space_after') ? content + ' ' : '' + content;
       source = $inputor.val();
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
+      text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
       $inputor.val(text);
-      $inputor.caret('pos', start_str.length + content.length + 1);
+      $inputor.caret('pos', start_str.length + content.length);
     } else if (range = this.range) {
       pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
       range.setStart(range.endContainer, Math.max(pos, 0));
@@ -801,6 +801,7 @@ $.fn.atwho = function(method) {
 $.fn.atwho["default"] = {
   at: void 0,
   alias: void 0,
+  space_after: true,
   data: null,
   tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
   insert_tpl: "<span>${atwho-data-value}</span>",

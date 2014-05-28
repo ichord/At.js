@@ -136,12 +136,12 @@ class Controller
     if $inputor.is('textarea, input')
       # ensure str is str.
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      content = '' + content
+      content = if this.get_opt('space_after') then content + ' ' else '' + content
       source = $inputor.val()
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
-      text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
+      text = "#{start_str}#{content}#{source.slice @query['end_pos'] || 0}"
       $inputor.val text
-      $inputor.caret 'pos',start_str.length + content.length + 1
+      $inputor.caret 'pos',start_str.length + content.length
     else if range = @range
       pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
       range.setStart(range.endContainer, Math.max(pos,0))
