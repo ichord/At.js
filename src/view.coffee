@@ -60,6 +60,9 @@ class View
     prev.addClass 'cur'
 
   show: ->
+    if @choosing
+      @choosing = false
+      return
     @context.mark_range()
     if not this.visible()
       @$el.show()

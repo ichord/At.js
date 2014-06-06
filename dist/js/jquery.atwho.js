@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.11 - 2014-05-28
+/*! jquery.atwho - v0.4.11 - 2014-06-05
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -183,6 +183,7 @@ App = (function() {
           return;
         }
         e.preventDefault();
+        view.choosing = true;
         view.choose();
         break;
       default:
@@ -562,6 +563,10 @@ View = (function() {
 
   View.prototype.show = function() {
     var rect;
+    if (this.choosing) {
+      this.choosing = false;
+      return;
+    }
     this.context.mark_range();
     if (!this.visible()) {
       this.$el.show();

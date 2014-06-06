@@ -59,7 +59,7 @@ class App
 
   shutdown: ->
     for _, c of @controllers
-      c.destroy() 
+      c.destroy()
       delete @controllers[_]
     @$inputor.off '.atwhoInner'
 
@@ -112,6 +112,7 @@ class App
       when KEY_CODE.TAB, KEY_CODE.ENTER
         return if not view.visible()
         e.preventDefault()
+        view.choosing = true
         view.choose()
       else
         $.noop()
