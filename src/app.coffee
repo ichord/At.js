@@ -26,7 +26,15 @@ class App
         # throws error in cross-domain iframes
 
   controller: (at) ->
-    @controllers[@alias_maps[at] || at || @current_flag]
+    if @alias_maps[at]
+      current = @controllers[@alias_maps[at]]
+    else
+      for current_flag, c of @controllers
+        if current_flag is at
+          current = c
+          break
+
+    if current then current else @controllers[@current_flag]
 
   set_context_for: (at) ->
     @current_flag = at

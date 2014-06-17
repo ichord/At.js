@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.11 - 2014-06-05
+/*! jquery.atwho - v0.4.11 - 2014-06-18
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -46,7 +46,24 @@ App = (function() {
   };
 
   App.prototype.controller = function(at) {
-    return this.controllers[this.alias_maps[at] || at || this.current_flag];
+    var c, current, current_flag, _ref;
+    if (this.alias_maps[at]) {
+      current = this.controllers[this.alias_maps[at]];
+    } else {
+      _ref = this.controllers;
+      for (current_flag in _ref) {
+        c = _ref[current_flag];
+        if (current_flag === at) {
+          current = c;
+          break;
+        }
+      }
+    }
+    if (current) {
+      return current;
+    } else {
+      return this.controllers[this.current_flag];
+    }
   };
 
   App.prototype.set_context_for = function(at) {

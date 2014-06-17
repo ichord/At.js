@@ -24,6 +24,11 @@ describe "settings", ->
     expect(controller.get_opt("limit")).toBe 8
     $.extend $.fn.atwho.default.callbacks, old
 
+  it "setting empty at", ->
+    $inputor = $("<input/>").atwho at: ""
+    controller = $inputor.data('atwho').controller ""
+    expect(controller).toBeDefined()
+
   it "update specific settings", ->
     $inputor.atwho at: "@", limit: 3
     expect(controller.setting.limit).toBe(3)
