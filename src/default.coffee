@@ -107,7 +107,7 @@ DEFAULT_CALLBACKS =
   # @return [String] highlighted string.
   highlighter: (li, query) ->
     return li if not query
-    regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
+    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
     li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
   # What to do before inserting item's value into inputor.
