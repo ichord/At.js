@@ -34,7 +34,8 @@ class View
     @$el.is(":visible")
 
   choose: (e) ->
-  	@hide_event = e if e?
+    if e?
+      @hide_event = e
     if ($li = @$el.find ".cur").length
       content = @context.insert_content_for $li
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li

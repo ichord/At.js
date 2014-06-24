@@ -535,7 +535,15 @@ View = (function() {
 
   View.prototype.choose = function(e) {
     var $li, content;
-    return this.hide_event = e(e != null ? ($li = this.$el.find(".cur")).length ? (content = this.context.insert_content_for($li), this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li), this.context.trigger("inserted", [$li, this.hide_event]), this.hide()) : void 0 : void 0);
+    if (e != null) {
+      this.hide_event = e;
+    }
+    if (($li = this.$el.find(".cur")).length) {
+      content = this.context.insert_content_for($li);
+      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
+      this.context.trigger("inserted", [$li, this.hide_event]);
+      return this.hide();
+    }
   };
 
   View.prototype.reposition = function(rect) {
