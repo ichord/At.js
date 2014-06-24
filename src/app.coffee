@@ -102,7 +102,7 @@ class App
     switch e.keyCode
       when KEY_CODE.ESC
         e.preventDefault()
-        view.hide()
+        view.hide(null, e)
       when KEY_CODE.UP
         e.preventDefault()
         view.prev()
@@ -121,7 +121,7 @@ class App
         return if not view.visible()
         e.preventDefault()
         view.choosing = true
-        view.choose()
+        view.choose(e)
       else
         $.noop()
     return

@@ -170,7 +170,7 @@ App = (function() {
     switch (e.keyCode) {
       case KEY_CODE.ESC:
         e.preventDefault();
-        view.hide();
+        view.hide(null, e);
         break;
       case KEY_CODE.UP:
         e.preventDefault();
@@ -201,7 +201,7 @@ App = (function() {
         }
         e.preventDefault();
         view.choosing = true;
-        view.choose();
+        view.choose(e);
         break;
       default:
         $.noop();
@@ -522,7 +522,7 @@ View = (function() {
       return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
-        _this.click_event = e;
+        _this.hide_event = e;
         _this.choose();
         return e.preventDefault();
       };
@@ -533,14 +533,9 @@ View = (function() {
     return this.$el.is(":visible");
   };
 
-  View.prototype.choose = function() {
+  View.prototype.choose = function(e) {
     var $li, content;
-    if (($li = this.$el.find(".cur")).length) {
-      content = this.context.insert_content_for($li);
-      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-      this.context.trigger("inserted", [$li, this.click_event]);
-      return this.hide();
-    }
+    return this.hide_event = e(e != null ? ($li = this.$el.find(".cur")).length ? (content = this.context.insert_content_for($li), this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li), this.context.trigger("inserted", [$li, this.hide_event]), this.hide()) : void 0 : void 0);
   };
 
   View.prototype.reposition = function(rect) {
@@ -595,16 +590,19 @@ View = (function() {
     }
   };
 
-  View.prototype.hide = function(time) {
+  View.prototype.hide = function(time, e) {
     var callback;
+    if (e != null) {
+      this.hide_event = e;
+    }
     if (!this.visible()) {
       return;
     }
     if (isNaN(time)) {
       this.context.reset_rect();
       this.$el.hide();
-      this.context.trigger('hidden', [this.click_event]);
-      return this.click_event = void 0;
+      this.context.trigger('hidden', [this.hide_event]);
+      return this.hide_event = void 0;
     } else {
       callback = (function(_this) {
         return function() {

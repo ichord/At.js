@@ -23,7 +23,7 @@ class View
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
     .on 'click', (e) =>
-      @click_event = e
+      @hide_event = e
       this.choose()
       e.preventDefault()
 
@@ -33,11 +33,12 @@ class View
   visible: ->
     @$el.is(":visible")
 
-  choose: ->
+  choose: (e) ->
+  	@hide_event = e if e?
     if ($li = @$el.find ".cur").length
       content = @context.insert_content_for $li
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
-      @context.trigger "inserted", [$li, @click_event]
+      @context.trigger "inserted", [$li, @hide_event]
       this.hide()
 
   reposition: (rect) ->
@@ -70,13 +71,15 @@ class View
       @context.trigger 'shown'
     this.reposition(rect) if rect = @context.rect()
 
-  hide: (time) ->
+  hide: (time, e) ->
+    if e?
+      @hide_event = e
     return if not this.visible()
     if isNaN(time)
       @context.reset_rect()
       @$el.hide()
-      @context.trigger 'hidden', [@click_event]
-      @click_event = undefined
+      @context.trigger 'hidden', [@hide_event]
+      @hide_event = undefined
     else
       callback = => this.hide()
       clearTimeout @timeout_id
