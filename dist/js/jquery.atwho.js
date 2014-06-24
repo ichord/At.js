@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.11 - 2014-06-18
+/*! jquery.atwho - v0.4.11 - 2014-06-25
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -522,6 +522,7 @@ View = (function() {
       return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
+        _this.click_event = e;
         _this.choose();
         return e.preventDefault();
       };
@@ -537,7 +538,7 @@ View = (function() {
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insert_content_for($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-      this.context.trigger("inserted", [$li]);
+      this.context.trigger("inserted", [$li, this.click_event]);
       return this.hide();
     }
   };
@@ -596,10 +597,14 @@ View = (function() {
 
   View.prototype.hide = function(time) {
     var callback;
-    if (isNaN(time && this.visible())) {
+    if (!this.visible()) {
+      return;
+    }
+    if (isNaN(time)) {
       this.context.reset_rect();
       this.$el.hide();
-      return this.context.trigger('hidden');
+      this.context.trigger('hidden', [this.click_event]);
+      return this.click_event = void 0;
     } else {
       callback = (function(_this) {
         return function() {
