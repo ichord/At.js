@@ -93,13 +93,13 @@ App = (function() {
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
         var _ref;
-        return (_ref = _this.controller()) != null ? _ref.view.hide() : void 0;
+        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
       };
     })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(c.get_opt("display_timeout"));
+          return c.view.hide(e, c.get_opt("display_timeout"));
         }
       };
     })(this));
@@ -170,7 +170,7 @@ App = (function() {
     switch (e.keyCode) {
       case KEY_CODE.ESC:
         e.preventDefault();
-        view.hide();
+        view.hide(e);
         break;
       case KEY_CODE.UP:
         e.preventDefault();
@@ -201,7 +201,7 @@ App = (function() {
         }
         e.preventDefault();
         view.choosing = true;
-        view.choose();
+        view.choose(e);
         break;
       default:
         $.noop();
@@ -522,8 +522,7 @@ View = (function() {
       return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
-        _this.click_event = e;
-        _this.choose();
+        _this.choose(e);
         return e.preventDefault();
       };
     })(this));
@@ -533,13 +532,13 @@ View = (function() {
     return this.$el.is(":visible");
   };
 
-  View.prototype.choose = function() {
+  View.prototype.choose = function(e) {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insert_content_for($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-      this.context.trigger("inserted", [$li, this.click_event]);
-      return this.hide();
+      this.context.trigger("inserted", [$li, e]);
+      return this.hide(e);
     }
   };
 
@@ -595,7 +594,7 @@ View = (function() {
     }
   };
 
-  View.prototype.hide = function(time) {
+  View.prototype.hide = function(e, time) {
     var callback;
     if (!this.visible()) {
       return;
@@ -603,8 +602,7 @@ View = (function() {
     if (isNaN(time)) {
       this.context.reset_rect();
       this.$el.hide();
-      this.context.trigger('hidden', [this.click_event]);
-      return this.click_event = void 0;
+      return this.context.trigger('hidden', [e]);
     } else {
       callback = (function(_this) {
         return function() {
