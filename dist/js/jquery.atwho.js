@@ -99,7 +99,7 @@ App = (function() {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(c.get_opt("display_timeout"));
+          return c.view.hide(null, c.get_opt("display_timeout"));
         }
       };
     })(this));
@@ -170,7 +170,7 @@ App = (function() {
     switch (e.keyCode) {
       case KEY_CODE.ESC:
         e.preventDefault();
-        view.hide(null, e);
+        view.hide(e);
         break;
       case KEY_CODE.UP:
         e.preventDefault();
@@ -522,8 +522,7 @@ View = (function() {
       return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
-        _this.hide_event = e;
-        _this.choose();
+        _this.choose(e);
         return e.preventDefault();
       };
     })(this));
@@ -535,14 +534,11 @@ View = (function() {
 
   View.prototype.choose = function(e) {
     var $li, content;
-    if (e != null) {
-      this.hide_event = e;
-    }
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insert_content_for($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-      this.context.trigger("inserted", [$li, this.hide_event]);
-      return this.hide();
+      this.context.trigger("inserted", [$li, e]);
+      return this.hide(e);
     }
   };
 
@@ -598,18 +594,15 @@ View = (function() {
     }
   };
 
-  View.prototype.hide = function(time, e) {
+  View.prototype.hide = function(e, time) {
     var callback;
-    if (e != null) {
-      this.hide_event = e;
-    }
     if (!this.visible()) {
       return;
     }
     if (isNaN(time)) {
       this.context.reset_rect();
       this.$el.hide();
-      this.context.trigger('hidden', [this.hide_event]);
+      this.context.trigger('hidden', [e]);
       return this.hide_event = void 0;
     } else {
       callback = (function(_this) {

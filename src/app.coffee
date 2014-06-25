@@ -61,9 +61,9 @@ class App
       .on 'keydown.atwhoInner', (e) =>
         this.on_keydown(e)
       .on 'scroll.atwhoInner', (e) =>
-        this.controller()?.view.hide()
+        this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
-        c.view.hide(c.get_opt("display_timeout")) if c = this.controller()
+        c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
 
   shutdown: ->
     for _, c of @controllers
@@ -102,7 +102,7 @@ class App
     switch e.keyCode
       when KEY_CODE.ESC
         e.preventDefault()
-        view.hide(null, e)
+        view.hide(e)
       when KEY_CODE.UP
         e.preventDefault()
         view.prev()

@@ -23,8 +23,7 @@ class View
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
     .on 'click', (e) =>
-      @hide_event = e
-      this.choose()
+      this.choose(e)
       e.preventDefault()
 
   # Check if view is visible
@@ -34,13 +33,11 @@ class View
     @$el.is(":visible")
 
   choose: (e) ->
-    if e?
-      @hide_event = e
     if ($li = @$el.find ".cur").length
       content = @context.insert_content_for $li
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
-      @context.trigger "inserted", [$li, @hide_event]
-      this.hide()
+      @context.trigger "inserted", [$li, e]
+      this.hide(e)
 
   reposition: (rect) ->
     if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
@@ -72,14 +69,12 @@ class View
       @context.trigger 'shown'
     this.reposition(rect) if rect = @context.rect()
 
-  hide: (time, e) ->
-    if e?
-      @hide_event = e
+  hide: (e, time) ->
     return if not this.visible()
     if isNaN(time)
       @context.reset_rect()
       @$el.hide()
-      @context.trigger 'hidden', [@hide_event]
+      @context.trigger 'hidden', [e]
       @hide_event = undefined
     else
       callback = => this.hide()
