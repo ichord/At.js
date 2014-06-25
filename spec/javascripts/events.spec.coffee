@@ -26,7 +26,6 @@ describe "events", ->
 	  it "trigger tab", ->
 	    spyOn(callbacks, "before_insert").and.callThrough()
 	    tab_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.TAB)
-	    console.log tab_event
 	    $inputor.trigger(tab_event)
 	    expect(controller.view.visible()).toBe(false)
 	    expect(callbacks.before_insert).toHaveBeenCalled()
