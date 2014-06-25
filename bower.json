@@ -1,6 +1,6 @@
 {
   "name": "At.js",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "main": [
     "dist/js/jquery.atwho.js",
     "dist/css/jquery.atwho.css"

@@ -1,3 +1,11 @@
+### v0.4.12
+
+* eeafab1 - fix error: will always call hidden atwho event
+* b0f6ceb - Highlighter finds the first occurrence
+* da256db - Adds possibility of having empty prefix (at keyword) in controllers
+* b884225 - add `space_after` option
+* 65d6273 - Passes esc/tab/return keyup events through to emitted hide event
+
 ### v0.4.11
 
 * bf938db - add `delay` setting, support delay searching
