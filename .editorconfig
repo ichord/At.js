@@ -1,0 +1,12 @@
+# http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = "utf8"
+
+[*.coffee]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
