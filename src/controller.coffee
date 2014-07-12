@@ -127,7 +127,10 @@ class Controller
 
     if $inputor.attr('contentEditable') == 'true'
       class_name = "atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}"
-      content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
+      if (suffix = this.get_opt 'suffix') == " "
+        content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
+      else
+        content_node = '' + content + suffix
       insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
       $insert_node = $(insert_node, @app.document).data('atwho-data-item', $li.data('item-data'))
       if @app.document.selection
@@ -136,7 +139,7 @@ class Controller
     if $inputor.is('textarea, input')
       # ensure str is str.
       # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      content = if this.get_opt('space_after') then content + ' ' else '' + content
+      content = '' + content + this.get_opt('suffix')
       source = $inputor.val()
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
       text = "#{start_str}#{content}#{source.slice @query['end_pos'] || 0}"

@@ -96,6 +96,11 @@ App = (function() {
           return c.view.hide(e, c.get_opt("display_timeout"));
         }
       };
+    })(this)).on('click.atwhoInner', (function(_this) {
+      return function(e) {
+        var _ref;
+        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
+      };
     })(this));
   };
 
@@ -194,7 +199,6 @@ App = (function() {
           return;
         }
         e.preventDefault();
-        view.choosing = true;
         view.choose(e);
         break;
       default:
@@ -358,11 +362,15 @@ Controller = (function() {
   };
 
   Controller.prototype.insert = function(content, $li) {
-    var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, text;
+    var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, suffix, text;
     $inputor = this.$inputor;
     if ($inputor.attr('contentEditable') === 'true') {
       class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
-      content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
+      if ((suffix = this.get_opt('suffix')) === " ") {
+        content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
+      } else {
+        content_node = '' + content + suffix;
+      }
       insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
       $insert_node = $(insert_node, this.app.document).data('atwho-data-item', $li.data('item-data'));
       if (this.app.document.selection) {
@@ -370,7 +378,7 @@ Controller = (function() {
       }
     }
     if ($inputor.is('textarea, input')) {
-      content = this.get_opt('space_after') ? content + ' ' : '' + content;
+      content = '' + content + this.get_opt('suffix');
       source = $inputor.val();
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
       text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
@@ -536,7 +544,10 @@ View = (function() {
       content = this.context.insert_content_for($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
       this.context.trigger("inserted", [$li, e]);
-      return this.hide(e);
+      this.hide(e);
+    }
+    if (this.context.get_opt("hide_without_suffix")) {
+      return this.stop_showing = true;
     }
   };
 
@@ -578,8 +589,8 @@ View = (function() {
 
   View.prototype.show = function() {
     var rect;
-    if (this.choosing) {
-      this.choosing = false;
+    if (this.stop_showing) {
+      this.stop_showing = false;
       return;
     }
     this.context.mark_range();
@@ -814,12 +825,13 @@ $.fn.atwho = function(method) {
 $.fn.atwho["default"] = {
   at: void 0,
   alias: void 0,
-  space_after: true,
   data: null,
   tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
   insert_tpl: "<span>${atwho-data-value}</span>",
   callbacks: DEFAULT_CALLBACKS,
   search_key: "name",
+  suffix: " ",
+  hide_without_suffix: false,
   start_with_space: true,
   highlight_first: true,
   limit: 5,

@@ -118,7 +118,6 @@ class App
       when KEY_CODE.TAB, KEY_CODE.ENTER
         return if not view.visible()
         e.preventDefault()
-        view.choosing = true
         view.choose(e)
       else
         $.noop()

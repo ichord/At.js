@@ -38,6 +38,7 @@ class View
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
+    @stop_showing = yes if @context.get_opt("hide_without_suffix")
 
   reposition: (rect) ->
     if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
@@ -60,8 +61,8 @@ class View
     prev.addClass 'cur'
 
   show: ->
-    if @choosing
-      @choosing = false
+    if @stop_showing
+      @stop_showing = false
       return
     @context.mark_range()
     if not this.visible()

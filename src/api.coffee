@@ -44,12 +44,13 @@ $.fn.atwho = (method) ->
 $.fn.atwho.default =
   at: undefined
   alias: undefined
-  space_after: true
   data: null
   tpl: "<li data-value='${atwho-at}${name}'>${name}</li>"
   insert_tpl: "<span>${atwho-data-value}</span>"
   callbacks: DEFAULT_CALLBACKS
   search_key: "name"
+  suffix: " "
+  hide_without_suffix: no
   start_with_space: yes
   highlight_first: yes
   limit: 5
