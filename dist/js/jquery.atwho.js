@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.12 - 2014-06-26
+/*! jquery.atwho - v0.4.12 - 2014-07-12
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -13,7 +13,7 @@
     }
   })(function($) {
 
-var $CONTAINER, Api, App, Atwho, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
+var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
   __slice = [].slice;
 
 App = (function() {
@@ -28,20 +28,14 @@ App = (function() {
   }
 
   App.prototype.setIframe = function(iframe) {
-    var error;
     if (iframe) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
-      this.iframe = iframe;
-      return this;
+      return this.iframe = iframe;
     } else {
-      this.document = this.$inputor[0].ownerDocument;
-      this.window = this.document.defaultView || this.document.parentWindow;
-      try {
-        return this.iframe = this.window.frameElement;
-      } catch (_error) {
-        error = _error;
-      }
+      this.document = document;
+      this.window = window;
+      return this.iframe = null;
     }
   };
 
@@ -292,7 +286,9 @@ Controller = (function() {
   Controller.prototype.catch_query = function() {
     var caret_pos, content, end, query, start, subtext;
     content = this.content();
-    caret_pos = this.$inputor.caret('pos');
+    caret_pos = this.$inputor.caret('pos', {
+      iframe: this.app.iframe
+    });
     subtext = content.slice(0, caret_pos);
     query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
     if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
@@ -314,9 +310,9 @@ Controller = (function() {
 
   Controller.prototype.rect = function() {
     var c, scale_bottom;
-    if (!(c = this.$inputor.caret({
+    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
-    }).caret('offset', this.pos - 1))) {
+    }))) {
       return;
     }
     if (this.$inputor.attr('contentEditable') === 'true') {
@@ -379,7 +375,9 @@ Controller = (function() {
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
       text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
       $inputor.val(text);
-      $inputor.caret('pos', start_str.length + content.length);
+      $inputor.caret('pos', start_str.length + content.length, {
+        iframe: this.app.iframe
+      });
     } else if (range = this.range) {
       pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
       range.setStart(range.endContainer, Math.max(pos, 0));
@@ -778,7 +776,8 @@ Api = {
     return Api.getInsertedItemsWithIDs.apply(this, [at])[0];
   },
   setIframe: function(iframe) {
-    return this.setIframe(iframe);
+    this.setIframe(iframe);
+    return null;
   },
   run: function() {
     return this.dispatch();
@@ -786,18 +785,6 @@ Api = {
   destroy: function() {
     this.shutdown();
     return this.$inputor.data('atwho', null);
-  }
-};
-
-Atwho = {
-  init: function(options) {
-    var $this, app;
-    app = ($this = $(this)).data("atwho");
-    if (!app) {
-      $this.data('atwho', (app = new App(this)));
-    }
-    app.reg(options.at, options);
-    return this;
   }
 };
 
@@ -809,13 +796,14 @@ $.fn.atwho = function(method) {
   $('body').append($CONTAINER);
   result = null;
   this.filter('textarea, input, [contenteditable=true]').each(function() {
-    var app;
+    var $this, app;
+    if (!(app = ($this = $(this)).data("atwho"))) {
+      $this.data('atwho', (app = new App(this)));
+    }
     if (typeof method === 'object' || !method) {
-      return Atwho.init.apply(this, _args);
-    } else if (Api[method]) {
-      if (app = $(this).data('atwho')) {
-        return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
-      }
+      return app.reg(method.at, method);
+    } else if (Api[method] && app) {
+      return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
     } else {
       return $.error("Method " + method + " does not exist on jQuery.caret");
     }

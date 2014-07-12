@@ -16,14 +16,10 @@ class App
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
       @iframe = iframe
-      this
     else
-      @document = @$inputor[0].ownerDocument
-      @window = @document.defaultView || @document.parentWindow
-      try
-        @iframe = @window.frameElement
-      catch error
-        # throws error in cross-domain iframes
+      @document = document
+      @window = window
+      @iframe = null
 
   controller: (at) ->
     if @alias_maps[at]

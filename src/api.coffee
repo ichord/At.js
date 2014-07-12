@@ -17,22 +17,12 @@ Api =
     [ids, items]
   getInsertedItems: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[1]
   getInsertedIDs: (at) -> Api.getInsertedItemsWithIDs.apply(this, [at])[0]
-  setIframe: (iframe) -> this.setIframe(iframe)
+  setIframe: (iframe) -> this.setIframe(iframe); null;
 
   run: -> this.dispatch()
   destroy: ->
     this.shutdown()
     @$inputor.data('atwho', null)
-
-Atwho =
-  # init or update an inputor with a special flag
-  #
-  # @params options [Object] settings of At.js
-  init: (options) ->
-    app = ($this = $(this)).data "atwho"
-    $this.data 'atwho', (app = new App(this)) if not app
-    app.reg options.at, options
-    this
 
 $CONTAINER = $("<div id='atwho-container'></div>")
 
@@ -41,10 +31,12 @@ $.fn.atwho = (method) ->
   $('body').append($CONTAINER)
   result = null
   this.filter('textarea, input, [contenteditable=true]').each ->
+    if not app = ($this = $ this).data "atwho"
+      $this.data 'atwho', (app = new App this)
     if typeof method is 'object' || !method
-      Atwho.init.apply this, _args
-    else if Api[method]
-      result = Api[method].apply app, Array::slice.call(_args, 1) if app = $(this).data('atwho')
+      app.reg method.at, method
+    else if Api[method] and app
+      result = Api[method].apply app, Array::slice.call(_args, 1)
     else
       $.error "Method #{method} does not exist on jQuery.caret"
   result || this

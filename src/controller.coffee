@@ -77,8 +77,8 @@ class Controller
   # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
   catch_query: ->
     content = this.content()
-    caret_pos = @$inputor.caret('pos')
-    subtext = content.slice(0,caret_pos)
+    caret_pos = @$inputor.caret('pos', {iframe: @app.iframe})
+    subtext = content.slice(0, caret_pos)
 
     query = this.callbacks("matcher").call(this, @at, subtext, this.get_opt('start_with_space'))
     if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
@@ -97,7 +97,7 @@ class Controller
   #
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
-    return if not c = @$inputor.caret({iframe: @app.iframe}).caret('offset', @pos - 1)
+    return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
     c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
     scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
@@ -141,7 +141,7 @@ class Controller
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
       text = "#{start_str}#{content}#{source.slice @query['end_pos'] || 0}"
       $inputor.val text
-      $inputor.caret 'pos',start_str.length + content.length
+      $inputor.caret('pos', start_str.length + content.length, {iframe: @app.iframe})
     else if range = @range
       pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
       range.setStart(range.endContainer, Math.max(pos,0))
