@@ -138,7 +138,9 @@ class Controller
       range.setStart(range.endContainer, Math.max(pos,0))
       range.setEnd(range.endContainer, range.endOffset)
       range.deleteContents()
-      range.insertNode $(wrapped_content, @app.document)[0]
+      content_node = $(wrapped_content, @app.document)[0]
+      range.insertNode content_node
+      range.setEndAfter content_node
       range.collapse(false)
       sel = @app.window.getSelection()
       sel.removeAllRanges()
