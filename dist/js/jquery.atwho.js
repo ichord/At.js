@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.12 - 2014-07-13
+/*! jquery.atwho - v0.5.0 - 2014-07-14
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -362,7 +362,7 @@ Controller = (function() {
   };
 
   Controller.prototype.insert = function(content, $li) {
-    var $inputor, pos, range, sel, source, start_str, text, wrapped_content;
+    var $inputor, content_node, pos, range, sel, source, start_str, text, wrapped_content;
     $inputor = this.$inputor;
     wrapped_content = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
     if ($inputor.is('textarea, input')) {
@@ -378,14 +378,16 @@ Controller = (function() {
       range.setStart(range.endContainer, Math.max(pos, 0));
       range.setEnd(range.endContainer, range.endOffset);
       range.deleteContents();
-      range.insertNode($(wrapped_content, this.app.document)[0]);
+      content_node = $(wrapped_content, this.app.document)[0];
+      range.insertNode(content_node);
+      range.setEndAfter(content_node);
       range.collapse(false);
       sel = this.app.window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else if (range = this.ie8_range) {
       range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML($(wrapped_content, this.app.document)[0]);
+      range.pasteHTML(wrapped_content);
       range.collapse(false);
       range.select();
     }

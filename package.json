@@ -6,7 +6,7 @@
   },
   "homepage": "http://ichord.github.com/At.js",
   "license": "MIT",
-  "version": "0.4.12",
+  "version": "0.5.0",
   "engines": {
     "node": ">= 0.6.0"
   },

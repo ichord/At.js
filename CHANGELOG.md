@@ -1,3 +1,14 @@
+### v0.5.0
+
+* 593893c - refactor inserting of contenteditable
+  Adding `inserting_wrapper` for customize wrapping inserting content.
+  Not to insert item as a block in Firefox. check out issue #109.
+  Removing `getInsertedItems`, `getInsertedIDs` API. You have to collect them on your own.
+* 4d3fb8f - have to set IFRAME manually
+* 1f13a16 - change space_after to suffix
+* b099ebb - fix caret position error after inserting
+* 2c47d7a - fix #178 hide view while clicking somewhere else
+
 ### v0.4.12
 
 * eeafab1 - fix error: will always call hidden atwho event
