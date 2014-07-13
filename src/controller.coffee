@@ -125,32 +125,20 @@ class Controller
   insert: (content, $li) ->
     $inputor = @$inputor
 
-    if $inputor.attr('contentEditable') == 'true'
-      class_name = "atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}"
-      if (suffix = this.get_opt 'suffix') == " "
-        content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
-      else
-        content_node = '' + content + suffix
-      insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
-      $insert_node = $(insert_node, @app.document).data('atwho-data-item', $li.data('item-data'))
-      if @app.document.selection
-        $insert_node = $("<span contenteditable='true'></span>", @app.document).html($insert_node)
+    wrapped_content = this.callbacks('inserting_wrapper').call this, $inputor, content, this.get_opt("suffix")
 
     if $inputor.is('textarea, input')
-      # ensure str is str.
-      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      content = '' + content + this.get_opt('suffix')
       source = $inputor.val()
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
-      text = "#{start_str}#{content}#{source.slice @query['end_pos'] || 0}"
+      text = "#{start_str}#{wrapped_content}#{source.slice @query['end_pos'] || 0}"
       $inputor.val text
-      $inputor.caret('pos', start_str.length + content.length, {iframe: @app.iframe})
+      $inputor.caret('pos', start_str.length + wrapped_content.length, {iframe: @app.iframe})
     else if range = @range
       pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
       range.setStart(range.endContainer, Math.max(pos,0))
       range.setEnd(range.endContainer, range.endOffset)
       range.deleteContents()
-      range.insertNode($insert_node[0])
+      range.insertNode $(wrapped_content, @app.document)[0]
       range.collapse(false)
       sel = @app.window.getSelection()
       sel.removeAllRanges()
@@ -160,7 +148,7 @@ class Controller
       #       to make it work batter.
       # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
       range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
-      range.pasteHTML(content_node)
+      range.pasteHTML wrapped_content
       range.collapse(false)
       range.select()
     $inputor.focus() if not $inputor.is ':focus'

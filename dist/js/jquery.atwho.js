@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.12 - 2014-07-12
+/*! jquery.atwho - v0.4.12 - 2014-07-13
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -362,28 +362,15 @@ Controller = (function() {
   };
 
   Controller.prototype.insert = function(content, $li) {
-    var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, suffix, text;
+    var $inputor, pos, range, sel, source, start_str, text, wrapped_content;
     $inputor = this.$inputor;
-    if ($inputor.attr('contentEditable') === 'true') {
-      class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
-      if ((suffix = this.get_opt('suffix')) === " ") {
-        content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
-      } else {
-        content_node = '' + content + suffix;
-      }
-      insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
-      $insert_node = $(insert_node, this.app.document).data('atwho-data-item', $li.data('item-data'));
-      if (this.app.document.selection) {
-        $insert_node = $("<span contenteditable='true'></span>", this.app.document).html($insert_node);
-      }
-    }
+    wrapped_content = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
     if ($inputor.is('textarea, input')) {
-      content = '' + content + this.get_opt('suffix');
       source = $inputor.val();
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
+      text = "" + start_str + wrapped_content + (source.slice(this.query['end_pos'] || 0));
       $inputor.val(text);
-      $inputor.caret('pos', start_str.length + content.length, {
+      $inputor.caret('pos', start_str.length + wrapped_content.length, {
         iframe: this.app.iframe
       });
     } else if (range = this.range) {
@@ -391,14 +378,14 @@ Controller = (function() {
       range.setStart(range.endContainer, Math.max(pos, 0));
       range.setEnd(range.endContainer, range.endOffset);
       range.deleteContents();
-      range.insertNode($insert_node[0]);
+      range.insertNode($(wrapped_content, this.app.document)[0]);
       range.collapse(false);
       sel = this.app.window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else if (range = this.ie8_range) {
       range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML(content_node);
+      range.pasteHTML($(wrapped_content, this.app.document)[0]);
       range.collapse(false);
       range.select();
     }
@@ -748,6 +735,25 @@ DEFAULT_CALLBACKS = {
   },
   before_insert: function(value, $li) {
     return value;
+  },
+  inserting_wrapper: function($inputor, content, suffix) {
+    var new_suffix, wrapped_content;
+    new_suffix = suffix === "" ? suffix : suffix || " ";
+    if ($inputor.is('textarea, input')) {
+      return '' + content + new_suffix;
+    } else if ($inputor.attr('contentEditable') === 'true') {
+      new_suffix = suffix === "" ? suffix : suffix || "&nbsp;";
+      if (/firefox/i.test(navigator.userAgent)) {
+        wrapped_content = "<span>" + content + new_suffix + "</span>";
+      } else {
+        suffix = "<span contenteditable='false'>" + new_suffix + "<span>";
+        wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
+      }
+      if (this.app.document.selection) {
+        wrapped_content = "<span contenteditable='true'>" + content + "</span>";
+      }
+      return wrapped_content;
+    }
   }
 };
 
@@ -757,34 +763,6 @@ Api = {
     if (c = this.controller(at)) {
       return c.model.load(data);
     }
-  },
-  getInsertedItemsWithIDs: function(at) {
-    var c, ids, items;
-    if (!(c = this.controller(at))) {
-      return [null, null];
-    }
-    if (at) {
-      at = "-" + (c.get_opt('alias') || c.at);
-    }
-    ids = [];
-    items = $.map(this.$inputor.find("span.atwho-view-flag" + (at || "")), function(item) {
-      var data;
-      data = $(item).data('atwho-data-item');
-      if (ids.indexOf(data.id) > -1) {
-        return;
-      }
-      if (data.id) {
-        ids.push = data.id;
-      }
-      return data;
-    });
-    return [ids, items];
-  },
-  getInsertedItems: function(at) {
-    return Api.getInsertedItemsWithIDs.apply(this, [at])[1];
-  },
-  getInsertedIDs: function(at) {
-    return Api.getInsertedItemsWithIDs.apply(this, [at])[0];
   },
   setIframe: function(iframe) {
     this.setIframe(iframe);
@@ -827,10 +805,10 @@ $.fn.atwho["default"] = {
   alias: void 0,
   data: null,
   tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
-  insert_tpl: "<span>${atwho-data-value}</span>",
+  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>",
   callbacks: DEFAULT_CALLBACKS,
   search_key: "name",
-  suffix: " ",
+  suffix: void 0,
   hide_without_suffix: false,
   start_with_space: true,
   highlight_first: true,
