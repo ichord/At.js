@@ -16,14 +16,10 @@ class App
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
       @iframe = iframe
-      this
     else
-      @document = @$inputor[0].ownerDocument
-      @window = @document.defaultView || @document.parentWindow
-      try
-        @iframe = @window.frameElement
-      catch error
-        # throws error in cross-domain iframes
+      @document = document
+      @window = window
+      @iframe = null
 
   controller: (at) ->
     if @alias_maps[at]
@@ -64,6 +60,8 @@ class App
         this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
         c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
+      .on 'click.atwhoInner', (e) =>
+        this.controller()?.view.hide(e)
 
   shutdown: ->
     for _, c of @controllers
@@ -120,7 +118,6 @@ class App
       when KEY_CODE.TAB, KEY_CODE.ENTER
         return if not view.visible()
         e.preventDefault()
-        view.choosing = true
         view.choose(e)
       else
         $.noop()

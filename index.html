@@ -6,7 +6,8 @@
   <link rel="stylesheet" href="dist/css/jquery.atwho.css" />
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
   <script type="text/javascript" src="dist/js/jquery.atwho.js"></script>
-  <script type="text/javascript" src="http://cdn.jsdelivr.net/caret.js/0.0.9/jquery.caret.min.js"></script>
+  <script type="text/javascript" src="http://cdn.jsdelivr.net/caret.js/0.1.0/jquery.caret.min.js"></script>
+  <!-- // <script type="text/javascript" src="bower_components/Caret.js/src/jquery.caret.js"></script> -->
   <script type="text/javascript">
   $(function(){
     var emojis = [
@@ -60,7 +61,7 @@
     ifrBody.contentEditable = true
     ifrBody.id = 'ifrBody'
     ifrBody.innerHTML = 'For <strong>WYSIWYG</strong> which using <strong>iframe</strong> such as <strong>ckeditor</strong>'
-    $(ifrBody).atwho(at_config)
+    $(ifrBody).atwho('setIframe', ifr).atwho(at_config)
   });
 
   </script>
