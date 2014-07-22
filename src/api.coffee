@@ -16,7 +16,7 @@ $.fn.atwho = (method) ->
   _args = arguments
   $('body').append($CONTAINER)
   result = null
-  this.filter('textarea, input, [contenteditable=true]').each ->
+  this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each ->
     if not app = ($this = $ this).data "atwho"
       $this.data 'atwho', (app = new App this)
     if typeof method is 'object' || !method
