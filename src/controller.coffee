@@ -154,7 +154,7 @@ class Controller
       range.collapse(false)
       range.select()
     $inputor.focus() if not $inputor.is ':focus'
-    $inputor.change()
+    this.callbacks('after_insert').call(this, $inputor, content)
 
   # Render list view
   #
