@@ -7,8 +7,10 @@ At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).
 Please read **CHANGELOG.md** for more details if you are going to update to new version.
 
 ### Demo
-
 http://ichord.github.com/At.js
+
+### Documentation
+https://github.com/ichord/At.js/wiki
 
 
 ### Features Preview
@@ -29,9 +31,6 @@ http://ichord.github.com/At.js
 * jQuery >= 1.7.0.
 * [Caret.js](https://github.com/ichord/Caret.js)
     (You can use `Component` or `Bower` to install it.)
-
-### Documentation
-https://github.com/ichord/At.js/wiki
 
 ### Integrating with your Application
 
