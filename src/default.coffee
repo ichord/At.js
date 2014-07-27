@@ -110,6 +110,14 @@ DEFAULT_CALLBACKS =
     regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
     li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
+  # What to do after inserting item's value into inputor.
+  #
+  # @param  $input  [jQuery Object] the text field such as `textarea`  
+  # @param  value   [String]  insert content
+  after_insert: ($inputor, value) ->
+    $inputor.change()
+    { input: value, value: value }
+    
   # What to do before inserting item's value into inputor.
   #
   # @param value [String] content to insert
