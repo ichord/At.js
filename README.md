@@ -4,7 +4,7 @@
 #### Notice
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).  
-Please read **CHANGELOG.md** for more details if you are going to update to new version.
+Please read [**CHANGELOG.md**](CHANGELOG.md) for more details if you are going to update to new version.
 
 ### Demo
 http://ichord.github.com/At.js
