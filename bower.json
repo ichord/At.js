@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "jquery": ">=1.7.0",
-    "Caret.js": ">= 0.0.9"
+    "Caret.js": "0.0.9"
   },
   "devDependencies": {
     "jasmine-jquery": "~2.0.2"
