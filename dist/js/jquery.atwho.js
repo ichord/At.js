@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.0 - 2014-07-14
+/*! jquery.atwho - v0.5.0 - 2014-08-16
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -225,7 +225,9 @@ Controller = (function() {
     this.pos = 0;
     this.cur_rect = null;
     this.range = null;
-    $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    if ((this.$el = $("#atwho-ground-" + this.id, $CONTAINER)).length === 0) {
+      $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    }
     this.model = new Model(this);
     this.view = new View(this);
   }
@@ -786,7 +788,7 @@ $.fn.atwho = function(method) {
   _args = arguments;
   $('body').append($CONTAINER);
   result = null;
-  this.filter('textarea, input, [contenteditable=true]').each(function() {
+  this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
     var $this, app;
     if (!(app = ($this = $(this)).data("atwho"))) {
       $this.data('atwho', (app = new App(this)));
