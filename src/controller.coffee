@@ -11,7 +11,8 @@ class Controller
     @pos      = 0
     @cur_rect = null
     @range    = null
-    $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
+    if (@$el = $("#atwho-ground-#{@id}", $CONTAINER)).length == 0
+      $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
     @model    = new Model(this)
     @view     = new View(this)
