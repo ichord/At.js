@@ -41,7 +41,7 @@ class View
     @stop_showing = yes if @context.get_opt("hide_without_suffix")
 
   reposition: (rect) ->
-    if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
+    if rect.bottom + @$el.height() - $(@context.app.window).scrollTop() > $(@context.app.window).height()
         rect.bottom = rect.top - @$el.height()
     offset = {left:rect.left, top:rect.bottom}
     @context.callbacks("before_reposition")?.call(@context, offset)
