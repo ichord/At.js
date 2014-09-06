@@ -4,17 +4,14 @@ Api =
   # @params at[String] the flag
   # @params data [Array] data to storage.
   load: (at, data) -> c.model.load data if c = this.controller(at)
-  setIframe: (iframe) -> this.setIframe(iframe); null;
+  setIframe: (iframe, standalone) -> this.setIframe(iframe, standalone); null;
   run: -> this.dispatch()
   destroy: ->
     this.shutdown()
     @$inputor.data('atwho', null)
 
-$CONTAINER = $("<div id='atwho-container'></div>")
-
 $.fn.atwho = (method) ->
   _args = arguments
-  $('body').append($CONTAINER)
   result = null
   this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each ->
     if not app = ($this = $ this).data "atwho"

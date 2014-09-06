@@ -13,7 +13,7 @@
     }
   })(function($) {
 
-var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
+var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
   __slice = [].slice;
 
 App = (function() {
@@ -22,21 +22,31 @@ App = (function() {
     this.controllers = {};
     this.alias_maps = {};
     this.$inputor = $(inputor);
-    this.iframe = null;
     this.setIframe();
     this.listen();
   }
 
-  App.prototype.setIframe = function(iframe) {
+  App.prototype.createContainer = function(doc) {
+    if ((this.$el = $("#atwho-container", doc)).length === 0) {
+      return $(doc.body).append(this.$el = $("<div id='atwho-container'></div>"));
+    }
+  };
+
+  App.prototype.setIframe = function(iframe, standalone) {
+    if (standalone == null) {
+      standalone = false;
+    }
     if (iframe) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
-      return this.iframe = iframe;
+      this.iframe = iframe;
     } else {
       this.document = document;
       this.window = window;
-      return this.iframe = null;
+      this.iframe = null;
     }
+    this.iframeStandalone = standalone;
+    return this.createContainer(this.iframeStandalone ? this.document : document);
   };
 
   App.prototype.controller = function(at) {
@@ -112,7 +122,8 @@ App = (function() {
       c.destroy();
       delete this.controllers[_];
     }
-    return this.$inputor.off('.atwhoInner');
+    this.$inputor.off('.atwhoInner');
+    return this.$el.remove();
   };
 
   App.prototype.dispatch = function() {
@@ -225,8 +236,8 @@ Controller = (function() {
     this.pos = 0;
     this.cur_rect = null;
     this.range = null;
-    if ((this.$el = $("#atwho-ground-" + this.id, $CONTAINER)).length === 0) {
-      $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
+      this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
     }
     this.model = new Model(this);
     this.view = new View(this);
@@ -315,8 +326,9 @@ Controller = (function() {
   };
 
   Controller.prototype.rect = function() {
-    var c, scale_bottom;
-    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
+    var c, caret_method, scale_bottom;
+    caret_method = this.app.iframeStandalone ? 'position' : 'offset';
+    if (!(c = this.$inputor.caret(caret_method, this.pos - 1, {
       iframe: this.app.iframe
     }))) {
       return;
@@ -544,7 +556,7 @@ View = (function() {
 
   View.prototype.reposition = function(rect) {
     var offset, _ref;
-    if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
+    if (rect.bottom + this.$el.height() - $(this.context.app.window).scrollTop() > $(this.context.app.window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
     offset = {
@@ -772,8 +784,8 @@ Api = {
       return c.model.load(data);
     }
   },
-  setIframe: function(iframe) {
-    this.setIframe(iframe);
+  setIframe: function(iframe, standalone) {
+    this.setIframe(iframe, standalone);
     return null;
   },
   run: function() {
@@ -785,12 +797,9 @@ Api = {
   }
 };
 
-$CONTAINER = $("<div id='atwho-container'></div>");
-
 $.fn.atwho = function(method) {
   var result, _args;
   _args = arguments;
-  $('body').append($CONTAINER);
   result = null;
   this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
     var $this, app;
