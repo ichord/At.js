@@ -326,15 +326,19 @@ Controller = (function() {
   };
 
   Controller.prototype.rect = function() {
-    var c, caret_method, scale_bottom;
-    caret_method = this.app.iframeStandalone ? 'position' : 'offset';
-    if (!(c = this.$inputor.caret(caret_method, this.pos - 1, {
+    var c, iframe_offset, scale_bottom;
+    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
     }))) {
       return;
     }
+    if (this.app.iframe && !this.app.iframeStandalone) {
+      iframe_offset = $(this.app.iframe).offset();
+      c.left += iframe_offset.left;
+      c.top += iframe_offset.top;
+    }
     if (this.$inputor.attr('contentEditable') === 'true') {
-      c = (this.cur_rect || (this.cur_rect = c)) || c;
+      c = this.cur_rect || (this.cur_rect = c);
     }
     scale_bottom = this.app.document.selection ? 0 : 2;
     return {

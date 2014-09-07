@@ -98,9 +98,12 @@ class Controller
   #
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
-    caret_method = if @app.iframeStandalone then 'position' else 'offset'
-    return if not c = @$inputor.caret(caret_method, @pos - 1, {iframe: @app.iframe})
-    c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
+    return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
+    if @app.iframe and not @app.iframeStandalone
+      iframe_offset = $(@app.iframe).offset()
+      c.left += iframe_offset.left
+      c.top += iframe_offset.top
+    c = @cur_rect ||= c if @$inputor.attr('contentEditable') == 'true'
     scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
