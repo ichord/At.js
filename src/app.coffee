@@ -23,8 +23,11 @@ class App
       @document = document
       @window = window
       @iframe = null
-    @iframeStandalone = standalone
-    this.createContainer if @iframeStandalone then @document else document
+    if @iframeStandalone = standalone
+      @$el?.remove()
+      this.createContainer @document
+    else 
+      this.createContainer document
 
   controller: (at) ->
     if @alias_maps[at]
