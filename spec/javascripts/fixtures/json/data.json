@@ -15,5 +15,8 @@
   "sunrise", "sunrise_over_mountains", "surfer", "sushi", "suspect",
   "sweat", "sweat_drops", "swimmer", "syringe", "tada", "tangerine",
   "taurus", "taxi", "tea", "telephone", "tennis", "tent", "thumbsdown", "+1","-1"
+  ],
+  "numerics": [
+  6, 7, 13, 5, 4, 9, 1, 15, 14, 3, 8, 12, 2, 11, 10
   ]
 }
