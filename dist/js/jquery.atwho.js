@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.0 - 2014-09-10
+/*! jquery.atwho - v0.5.0 - 2014-09-11
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -33,6 +33,7 @@ App = (function() {
   };
 
   App.prototype.setIframe = function(iframe, standalone) {
+    var _ref;
     if (standalone == null) {
       standalone = false;
     }
@@ -45,8 +46,14 @@ App = (function() {
       this.window = window;
       this.iframe = null;
     }
-    this.iframeStandalone = standalone;
-    return this.createContainer(this.iframeStandalone ? this.document : document);
+    if (this.iframeStandalone = standalone) {
+      if ((_ref = this.$el) != null) {
+        _ref.remove();
+      }
+      return this.createContainer(this.document);
+    } else {
+      return this.createContainer(document);
+    }
   };
 
   App.prototype.controller = function(at) {
@@ -716,7 +723,7 @@ DEFAULT_CALLBACKS = {
   },
   remote_filter: null,
   sorter: function(query, items, search_key) {
-    var e, item, _i, _j, _len, _len1, _results;
+    var item, _i, _len, _results;
     if (!query) {
       return items;
     }
@@ -727,10 +734,6 @@ DEFAULT_CALLBACKS = {
       if (item.atwho_order > -1) {
         _results.push(item);
       }
-    }
-    for (_j = 0, _len1 = _results.length; _j < _len1; _j++) {
-      e = _results[_j];
-      console.log(e.name);
     }
     return _results.sort(function(a, b) {
       return a.atwho_order - b.atwho_order;
