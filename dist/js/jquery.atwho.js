@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.0 - 2014-08-16
+/*! jquery.atwho - v0.5.0 - 2014-09-10
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -692,7 +692,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       item = data[_i];
-      if (~item[search_key].toLowerCase().indexOf(query.toLowerCase())) {
+      if (~new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
     }
@@ -700,17 +700,21 @@ DEFAULT_CALLBACKS = {
   },
   remote_filter: null,
   sorter: function(query, items, search_key) {
-    var item, _i, _len, _results;
+    var e, item, _i, _j, _len, _len1, _results;
     if (!query) {
       return items;
     }
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       item = items[_i];
-      item.atwho_order = item[search_key].toLowerCase().indexOf(query.toLowerCase());
+      item.atwho_order = new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
       }
+    }
+    for (_j = 0, _len1 = _results.length; _j < _len1; _j++) {
+      e = _results[_j];
+      console.log(e.name);
     }
     return _results.sort(function(a, b) {
       return a.atwho_order - b.atwho_order;
