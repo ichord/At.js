@@ -7,11 +7,14 @@ class App
     @controllers = {}
     @alias_maps = {}
     @$inputor = $(inputor)
-    @iframe = null
     this.setIframe()
     this.listen()
 
-  setIframe: (iframe) ->
+  createContainer: (doc) ->
+    if (@$el = $("#atwho-container", doc)).length == 0
+      $(doc.body).append @$el = $("<div id='atwho-container'></div>")
+
+  setIframe: (iframe, standalone=false) ->
     if iframe
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
@@ -20,6 +23,11 @@ class App
       @document = document
       @window = window
       @iframe = null
+    if @iframeStandalone = standalone
+      @$el?.remove()
+      this.createContainer @document
+    else 
+      this.createContainer document
 
   controller: (at) ->
     if @alias_maps[at]
@@ -68,6 +76,7 @@ class App
       c.destroy()
       delete @controllers[_]
     @$inputor.off '.atwhoInner'
+    @$el.remove()
 
   dispatch: ->
     $.map @controllers, (c) =>

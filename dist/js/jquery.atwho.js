@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.0 - 2014-09-10
+/*! jquery.atwho - v0.5.0 - 2014-09-11
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -13,7 +13,7 @@
     }
   })(function($) {
 
-var $CONTAINER, Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
+var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
   __slice = [].slice;
 
 App = (function() {
@@ -22,20 +22,37 @@ App = (function() {
     this.controllers = {};
     this.alias_maps = {};
     this.$inputor = $(inputor);
-    this.iframe = null;
     this.setIframe();
     this.listen();
   }
 
-  App.prototype.setIframe = function(iframe) {
+  App.prototype.createContainer = function(doc) {
+    if ((this.$el = $("#atwho-container", doc)).length === 0) {
+      return $(doc.body).append(this.$el = $("<div id='atwho-container'></div>"));
+    }
+  };
+
+  App.prototype.setIframe = function(iframe, standalone) {
+    var _ref;
+    if (standalone == null) {
+      standalone = false;
+    }
     if (iframe) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
-      return this.iframe = iframe;
+      this.iframe = iframe;
     } else {
       this.document = document;
       this.window = window;
-      return this.iframe = null;
+      this.iframe = null;
+    }
+    if (this.iframeStandalone = standalone) {
+      if ((_ref = this.$el) != null) {
+        _ref.remove();
+      }
+      return this.createContainer(this.document);
+    } else {
+      return this.createContainer(document);
     }
   };
 
@@ -112,7 +129,8 @@ App = (function() {
       c.destroy();
       delete this.controllers[_];
     }
-    return this.$inputor.off('.atwhoInner');
+    this.$inputor.off('.atwhoInner');
+    return this.$el.remove();
   };
 
   App.prototype.dispatch = function() {
@@ -225,8 +243,8 @@ Controller = (function() {
     this.pos = 0;
     this.cur_rect = null;
     this.range = null;
-    if ((this.$el = $("#atwho-ground-" + this.id, $CONTAINER)).length === 0) {
-      $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
+      this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
     }
     this.model = new Model(this);
     this.view = new View(this);
@@ -315,14 +333,19 @@ Controller = (function() {
   };
 
   Controller.prototype.rect = function() {
-    var c, scale_bottom;
+    var c, iframe_offset, scale_bottom;
     if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
     }))) {
       return;
     }
+    if (this.app.iframe && !this.app.iframeStandalone) {
+      iframe_offset = $(this.app.iframe).offset();
+      c.left += iframe_offset.left;
+      c.top += iframe_offset.top;
+    }
     if (this.$inputor.attr('contentEditable') === 'true') {
-      c = (this.cur_rect || (this.cur_rect = c)) || c;
+      c = this.cur_rect || (this.cur_rect = c);
     }
     scale_bottom = this.app.document.selection ? 0 : 2;
     return {
@@ -544,7 +567,7 @@ View = (function() {
 
   View.prototype.reposition = function(rect) {
     var offset, _ref;
-    if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
+    if (rect.bottom + this.$el.height() - $(this.context.app.window).scrollTop() > $(this.context.app.window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
     offset = {
@@ -700,7 +723,7 @@ DEFAULT_CALLBACKS = {
   },
   remote_filter: null,
   sorter: function(query, items, search_key) {
-    var e, item, _i, _j, _len, _len1, _results;
+    var item, _i, _len, _results;
     if (!query) {
       return items;
     }
@@ -711,10 +734,6 @@ DEFAULT_CALLBACKS = {
       if (item.atwho_order > -1) {
         _results.push(item);
       }
-    }
-    for (_j = 0, _len1 = _results.length; _j < _len1; _j++) {
-      e = _results[_j];
-      console.log(e.name);
     }
     return _results.sort(function(a, b) {
       return a.atwho_order - b.atwho_order;
@@ -772,8 +791,8 @@ Api = {
       return c.model.load(data);
     }
   },
-  setIframe: function(iframe) {
-    this.setIframe(iframe);
+  setIframe: function(iframe, standalone) {
+    this.setIframe(iframe, standalone);
     return null;
   },
   run: function() {
@@ -785,12 +804,9 @@ Api = {
   }
 };
 
-$CONTAINER = $("<div id='atwho-container'></div>");
-
 $.fn.atwho = function(method) {
   var result, _args;
   _args = arguments;
-  $('body').append($CONTAINER);
   result = null;
   this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
     var $this, app;

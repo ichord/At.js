@@ -11,8 +11,8 @@ class Controller
     @pos      = 0
     @cur_rect = null
     @range    = null
-    if (@$el = $("#atwho-ground-#{@id}", $CONTAINER)).length == 0
-      $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
+    if (@$el = $("#atwho-ground-#{@id}", @app.$el)).length == 0
+      @app.$el.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
     @model    = new Model(this)
     @view     = new View(this)
@@ -99,7 +99,11 @@ class Controller
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
     return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
-    c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
+    if @app.iframe and not @app.iframeStandalone
+      iframe_offset = $(@app.iframe).offset()
+      c.left += iframe_offset.left
+      c.top += iframe_offset.top
+    c = @cur_rect ||= c if @$inputor.attr('contentEditable') == 'true'
     scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
