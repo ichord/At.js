@@ -41,8 +41,11 @@ class View
     @stop_showing = yes if @context.get_opt("hide_without_suffix")
 
   reposition: (rect) ->
-    if rect.bottom + @$el.height() - $(@context.app.window).scrollTop() > $(@context.app.window).height()
+    _window = if @context.app.iframeStandalone then @context.app.window else window
+    if rect.bottom + @$el.height() - $(_window).scrollTop() > $(_window).height()
         rect.bottom = rect.top - @$el.height()
+    if rect.left > overflowOffset = $(_window).width() - @$el.width() - 5
+        rect.left = overflowOffset
     offset = {left:rect.left, top:rect.bottom}
     @context.callbacks("before_reposition")?.call(@context, offset)
     @$el.offset offset

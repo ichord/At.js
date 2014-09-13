@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.0 - 2014-09-11
+/*! jquery.atwho - v0.5.0 - 2014-09-13
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -566,9 +566,13 @@ View = (function() {
   };
 
   View.prototype.reposition = function(rect) {
-    var offset, _ref;
-    if (rect.bottom + this.$el.height() - $(this.context.app.window).scrollTop() > $(this.context.app.window).height()) {
+    var offset, overflowOffset, _ref, _window;
+    _window = this.context.app.iframeStandalone ? this.context.app.window : window;
+    if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
       rect.bottom = rect.top - this.$el.height();
+    }
+    if (rect.left > (overflowOffset = $(_window).width() - this.$el.width() - 5)) {
+      rect.left = overflowOffset;
     }
     offset = {
       left: rect.left,
