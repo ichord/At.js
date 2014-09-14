@@ -1,3 +1,9 @@
+### v0.5.1
+
+* 219de3d - fix Goes off screen / gets cropped if there isn't enough room
+* 1100c5b - No longer inherits text colour from document
+* ce60958 - on more boolean argument for `setIframe` api to work cross-document issues #199
+
 ### v0.5.0
 
 * 593893c - refactor inserting of contenteditable
