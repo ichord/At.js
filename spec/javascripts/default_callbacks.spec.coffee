@@ -26,6 +26,13 @@ describe "default callbacks", ->
     query = callbacks.matcher.call(app, "@", text)
     expect(query).toBe("Jobs")
 
+  it "should match the key word fllowing @ with specials chars", ->
+    $inputor = $("#special-chars").atwho at: "@", data: fixtures["names"]
+    text = $.trim $inputor.text()
+
+    query = callbacks.matcher.call(app, "@", text)
+    expect(query).toBe("Jérémÿ")
+
   it "can filter data", ->
     names = callbacks.before_save.call(app, fixtures["names"])
     names = callbacks.filter.call(app, "jo", names, "name")
