@@ -41,7 +41,7 @@ DEFAULT_CALLBACKS =
     # escape RegExp
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
     flag = '(?:^|\\s)' + flag if should_start_with_space
-    regexp = new RegExp flag+'([A-Za-z0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
+    regexp = new RegExp flag+'([A-Za-zÀ-ÿ0-9_\+\-]*)$|'+flag+'([^\\x00-\\xff]*)$','gi'
     match = regexp.exec subtext
     if match then match[2] || match[1] else null
 

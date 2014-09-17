@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.1 - 2014-09-14
+/*! jquery.atwho - v0.5.1 - 2014-09-16
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -706,7 +706,7 @@ DEFAULT_CALLBACKS = {
     if (should_start_with_space) {
       flag = '(?:^|\\s)' + flag;
     }
-    regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
+    regexp = new RegExp(flag + '([A-Za-zÀ-ÿ0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];

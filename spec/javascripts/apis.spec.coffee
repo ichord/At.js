@@ -18,7 +18,7 @@ describe "api", ->
 
     it "can get current data", ->
       simulateTypingIn $inputor
-      expect(controller.model.fetch().length).toBe 23
+      expect(controller.model.fetch().length).toBe 24
 
     it "can save current data", ->
       simulateTypingIn $inputor
