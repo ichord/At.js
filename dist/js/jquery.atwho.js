@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.1 - 2014-09-16
+/*! jquery.atwho - v0.5.1 - 2014-09-21
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -344,7 +344,7 @@ Controller = (function() {
       c.left += iframe_offset.left;
       c.top += iframe_offset.top;
     }
-    if (this.$inputor.attr('contentEditable') === 'true') {
+    if (this.$inputor.is('[contentEditable]')) {
       c = this.cur_rect || (this.cur_rect = c);
     }
     scale_bottom = this.app.document.selection ? 0 : 2;
@@ -356,19 +356,20 @@ Controller = (function() {
   };
 
   Controller.prototype.reset_rect = function() {
-    if (this.$inputor.attr('contentEditable') === 'true') {
+    if (this.$inputor.is('[contentEditable]')) {
       return this.cur_rect = null;
     }
   };
 
   Controller.prototype.mark_range = function() {
-    if (this.$inputor.attr('contentEditable') === 'true') {
-      if (this.app.window.getSelection) {
-        this.range = this.app.window.getSelection().getRangeAt(0);
-      }
-      if (this.app.document.selection) {
-        return this.ie8_range = this.app.document.selection.createRange();
-      }
+    var sel;
+    if (!this.$inputor.is('[contentEditable]')) {
+      return;
+    }
+    if (this.app.window.getSelection && (sel = this.app.window.getSelection()).rangeCount > 0) {
+      return this.range = sel.getRangeAt(0);
+    } else if (this.app.document.selection) {
+      return this.ie8_range = this.app.document.selection.createRange();
     }
   };
 

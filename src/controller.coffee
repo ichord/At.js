@@ -103,17 +103,19 @@ class Controller
       iframe_offset = $(@app.iframe).offset()
       c.left += iframe_offset.left
       c.top += iframe_offset.top
-    c = @cur_rect ||= c if @$inputor.attr('contentEditable') == 'true'
+    c = @cur_rect ||= c if @$inputor.is('[contentEditable]')
     scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
   reset_rect: ->
-    @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
+    @cur_rect = null if @$inputor.is('[contentEditable]')
 
   mark_range: ->
-    if @$inputor.attr('contentEditable') == 'true'
-      @range = @app.window.getSelection().getRangeAt(0) if @app.window.getSelection
-      @ie8_range = @app.document.selection.createRange() if @app.document.selection
+    return if not @$inputor.is('[contentEditable]')
+    if @app.window.getSelection and (sel = @app.window.getSelection()).rangeCount > 0
+      @range = sel.getRangeAt(0)
+    else if @app.document.selection
+      @ie8_range = @app.document.selection.createRange()
 
   insert_content_for: ($li) ->
     data_value = $li.data('value')
