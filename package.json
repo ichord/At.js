@@ -1,5 +1,5 @@
 {
-  "name": "jquery.atwho",
+  "name": "at.js",
   "author": {
     "name": "chord.luo",
     "email": "chord.luo@gmail.com"
@@ -27,5 +27,17 @@
     "grunt-contrib-copy": "~0.5.0",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-cssmin": "~0.9.0"
+  },
+  "spm": {
+    "main": "dist/js/jquery.atwho.js",
+    "dependencies": {
+      "jquery": "1.7.2",
+      "caret.js": "0.2.0"
+    },
+    "ignore": [
+      "examples",
+      "spec",
+      "src"
+    ]
   }
 }
