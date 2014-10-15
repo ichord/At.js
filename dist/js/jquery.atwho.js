@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.4.11 - 2014-04-27
+/*! jquery.atwho - v0.5.1 - 2014-10-12
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
 * homepage: http://ichord.github.com/At.js 
 * Licensed MIT
@@ -13,7 +13,7 @@
     }
   })(function($) {
 
-var $CONTAINER, Api, App, Atwho, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
+var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
   __slice = [].slice;
 
 App = (function() {
@@ -22,31 +22,59 @@ App = (function() {
     this.controllers = {};
     this.alias_maps = {};
     this.$inputor = $(inputor);
-    this.iframe = null;
     this.setIframe();
     this.listen();
   }
 
-  App.prototype.setIframe = function(iframe) {
-    var error;
+  App.prototype.createContainer = function(doc) {
+    if ((this.$el = $("#atwho-container", doc)).length === 0) {
+      return $(doc.body).append(this.$el = $("<div id='atwho-container'></div>"));
+    }
+  };
+
+  App.prototype.setIframe = function(iframe, standalone) {
+    var _ref;
+    if (standalone == null) {
+      standalone = false;
+    }
     if (iframe) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
       this.iframe = iframe;
-      return this;
     } else {
-      this.document = this.$inputor[0].ownerDocument;
-      this.window = this.document.defaultView || this.document.parentWindow;
-      try {
-        return this.iframe = this.window.frameElement;
-      } catch (_error) {
-        error = _error;
+      this.document = document;
+      this.window = window;
+      this.iframe = null;
+    }
+    if (this.iframeStandalone = standalone) {
+      if ((_ref = this.$el) != null) {
+        _ref.remove();
       }
+      return this.createContainer(this.document);
+    } else {
+      return this.createContainer(document);
     }
   };
 
   App.prototype.controller = function(at) {
-    return this.controllers[this.alias_maps[at] || at || this.current_flag];
+    var c, current, current_flag, _ref;
+    if (this.alias_maps[at]) {
+      current = this.controllers[this.alias_maps[at]];
+    } else {
+      _ref = this.controllers;
+      for (current_flag in _ref) {
+        c = _ref[current_flag];
+        if (current_flag === at) {
+          current = c;
+          break;
+        }
+      }
+    }
+    if (current) {
+      return current;
+    } else {
+      return this.controllers[this.current_flag];
+    }
   };
 
   App.prototype.set_context_for = function(at) {
@@ -76,14 +104,19 @@ App = (function() {
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
         var _ref;
-        return (_ref = _this.controller()) != null ? _ref.view.hide() : void 0;
+        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
       };
     })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(c.get_opt("display_timeout"));
+          return c.view.hide(e, c.get_opt("display_timeout"));
         }
+      };
+    })(this)).on('click.atwhoInner', (function(_this) {
+      return function(e) {
+        var _ref;
+        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
       };
     })(this));
   };
@@ -96,7 +129,8 @@ App = (function() {
       c.destroy();
       delete this.controllers[_];
     }
-    return this.$inputor.off('.atwhoInner');
+    this.$inputor.off('.atwhoInner');
+    return this.$el.remove();
   };
 
   App.prototype.dispatch = function() {
@@ -153,7 +187,7 @@ App = (function() {
     switch (e.keyCode) {
       case KEY_CODE.ESC:
         e.preventDefault();
-        view.hide();
+        view.hide(e);
         break;
       case KEY_CODE.UP:
         e.preventDefault();
@@ -183,7 +217,7 @@ App = (function() {
           return;
         }
         e.preventDefault();
-        view.choose();
+        view.choose(e);
         break;
       default:
         $.noop();
@@ -209,7 +243,9 @@ Controller = (function() {
     this.pos = 0;
     this.cur_rect = null;
     this.range = null;
-    $CONTAINER.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
+      this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    }
     this.model = new Model(this);
     this.view = new View(this);
   }
@@ -274,7 +310,9 @@ Controller = (function() {
   Controller.prototype.catch_query = function() {
     var caret_pos, content, end, query, start, subtext;
     content = this.content();
-    caret_pos = this.$inputor.caret('pos');
+    caret_pos = this.$inputor.caret('pos', {
+      iframe: this.app.iframe
+    });
     subtext = content.slice(0, caret_pos);
     query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
     if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
@@ -295,14 +333,19 @@ Controller = (function() {
   };
 
   Controller.prototype.rect = function() {
-    var c, scale_bottom;
-    if (!(c = this.$inputor.caret({
+    var c, iframe_offset, scale_bottom;
+    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
-    }).caret('offset', this.pos - 1))) {
+    }))) {
       return;
     }
-    if (this.$inputor.attr('contentEditable') === 'true') {
-      c = (this.cur_rect || (this.cur_rect = c)) || c;
+    if (this.app.iframe && !this.app.iframeStandalone) {
+      iframe_offset = $(this.app.iframe).offset();
+      c.left += iframe_offset.left;
+      c.top += iframe_offset.top;
+    }
+    if (this.$inputor.is('[contentEditable]')) {
+      c = this.cur_rect || (this.cur_rect = c);
     }
     scale_bottom = this.app.document.selection ? 0 : 2;
     return {
@@ -313,19 +356,20 @@ Controller = (function() {
   };
 
   Controller.prototype.reset_rect = function() {
-    if (this.$inputor.attr('contentEditable') === 'true') {
+    if (this.$inputor.is('[contentEditable]')) {
       return this.cur_rect = null;
     }
   };
 
   Controller.prototype.mark_range = function() {
-    if (this.$inputor.attr('contentEditable') === 'true') {
-      if (this.app.window.getSelection) {
-        this.range = this.app.window.getSelection().getRangeAt(0);
-      }
-      if (this.app.document.selection) {
-        return this.ie8_range = this.app.document.selection.createRange();
-      }
+    var sel;
+    if (!this.$inputor.is('[contentEditable]')) {
+      return;
+    }
+    if (this.app.window.getSelection && (sel = this.app.window.getSelection()).rangeCount > 0) {
+      return this.range = sel.getRangeAt(0);
+    } else if (this.app.document.selection) {
+      return this.ie8_range = this.app.document.selection.createRange();
     }
   };
 
@@ -344,37 +388,32 @@ Controller = (function() {
   };
 
   Controller.prototype.insert = function(content, $li) {
-    var $inputor, $insert_node, class_name, content_node, insert_node, pos, range, sel, source, start_str, text;
+    var $inputor, content_node, pos, range, sel, source, start_str, text, wrapped_content;
     $inputor = this.$inputor;
-    if ($inputor.attr('contentEditable') === 'true') {
-      class_name = "atwho-view-flag atwho-view-flag-" + (this.get_opt('alias') || this.at);
-      content_node = "" + content + "<span contenteditable='false'>&nbsp;<span>";
-      insert_node = "<span contenteditable='false' class='" + class_name + "'>" + content_node + "</span>";
-      $insert_node = $(insert_node, this.app.document).data('atwho-data-item', $li.data('item-data'));
-      if (this.app.document.selection) {
-        $insert_node = $("<span contenteditable='true'></span>", this.app.document).html($insert_node);
-      }
-    }
+    wrapped_content = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
     if ($inputor.is('textarea, input')) {
-      content = '' + content;
       source = $inputor.val();
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + content + " " + (source.slice(this.query['end_pos'] || 0));
+      text = "" + start_str + wrapped_content + (source.slice(this.query['end_pos'] || 0));
       $inputor.val(text);
-      $inputor.caret('pos', start_str.length + content.length + 1);
+      $inputor.caret('pos', start_str.length + wrapped_content.length, {
+        iframe: this.app.iframe
+      });
     } else if (range = this.range) {
       pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
       range.setStart(range.endContainer, Math.max(pos, 0));
       range.setEnd(range.endContainer, range.endOffset);
       range.deleteContents();
-      range.insertNode($insert_node[0]);
+      content_node = $(wrapped_content, this.app.document)[0];
+      range.insertNode(content_node);
+      range.setEndAfter(content_node);
       range.collapse(false);
       sel = this.app.window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else if (range = this.ie8_range) {
       range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML(content_node);
+      range.pasteHTML(wrapped_content);
       range.collapse(false);
       range.select();
     }
@@ -504,7 +543,7 @@ View = (function() {
       return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
-        _this.choose();
+        _this.choose(e);
         return e.preventDefault();
       };
     })(this));
@@ -514,20 +553,27 @@ View = (function() {
     return this.$el.is(":visible");
   };
 
-  View.prototype.choose = function() {
+  View.prototype.choose = function(e) {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insert_content_for($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
-      this.context.trigger("inserted", [$li]);
-      return this.hide();
+      this.context.trigger("inserted", [$li, e]);
+      this.hide(e);
+    }
+    if (this.context.get_opt("hide_without_suffix")) {
+      return this.stop_showing = true;
     }
   };
 
   View.prototype.reposition = function(rect) {
-    var offset, _ref;
-    if (rect.bottom + this.$el.height() - $(window).scrollTop() > $(window).height()) {
+    var offset, overflowOffset, _ref, _window;
+    _window = this.context.app.iframeStandalone ? this.context.app.window : window;
+    if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
       rect.bottom = rect.top - this.$el.height();
+    }
+    if (rect.left > (overflowOffset = $(_window).width() - this.$el.width() - 5)) {
+      rect.left = overflowOffset;
     }
     offset = {
       left: rect.left,
@@ -562,6 +608,10 @@ View = (function() {
 
   View.prototype.show = function() {
     var rect;
+    if (this.stop_showing) {
+      this.stop_showing = false;
+      return;
+    }
     this.context.mark_range();
     if (!this.visible()) {
       this.$el.show();
@@ -572,12 +622,15 @@ View = (function() {
     }
   };
 
-  View.prototype.hide = function(time) {
+  View.prototype.hide = function(e, time) {
     var callback;
-    if (isNaN(time && this.visible())) {
+    if (!this.visible()) {
+      return;
+    }
+    if (isNaN(time)) {
       this.context.reset_rect();
       this.$el.hide();
-      return this.context.trigger('hidden');
+      return this.context.trigger('hidden', [e]);
     } else {
       callback = (function(_this) {
         return function() {
@@ -649,12 +702,14 @@ DEFAULT_CALLBACKS = {
     return _results;
   },
   matcher: function(flag, subtext, should_start_with_space) {
-    var match, regexp;
+    var match, regexp, _a, _y;
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     if (should_start_with_space) {
       flag = '(?:^|\\s)' + flag;
     }
-    regexp = new RegExp(flag + '([A-Za-z0-9_\+\-]*)$|' + flag + '([^\\x00-\\xff]*)$', 'gi');
+    _a = decodeURI("%C3%80");
+    _y = decodeURI("%C3%BF");
+    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];
@@ -667,7 +722,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       item = data[_i];
-      if (~item[search_key].toLowerCase().indexOf(query.toLowerCase())) {
+      if (~new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
     }
@@ -682,7 +737,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       item = items[_i];
-      item.atwho_order = item[search_key].toLowerCase().indexOf(query.toLowerCase());
+      item.atwho_order = new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
       }
@@ -707,13 +762,32 @@ DEFAULT_CALLBACKS = {
     if (!query) {
       return li;
     }
-    regexp = new RegExp(">\\s*(\\w*)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
     return li.replace(regexp, function(str, $1, $2, $3) {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
   },
   before_insert: function(value, $li) {
     return value;
+  },
+  inserting_wrapper: function($inputor, content, suffix) {
+    var new_suffix, wrapped_content;
+    new_suffix = suffix === "" ? suffix : suffix || " ";
+    if ($inputor.is('textarea, input')) {
+      return '' + content + new_suffix;
+    } else if ($inputor.attr('contentEditable') === 'true') {
+      new_suffix = suffix === "" ? suffix : suffix || "&nbsp;";
+      if (/firefox/i.test(navigator.userAgent)) {
+        wrapped_content = "<span>" + content + new_suffix + "</span>";
+      } else {
+        suffix = "<span contenteditable='false'>" + new_suffix + "<span>";
+        wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
+      }
+      if (this.app.document.selection) {
+        wrapped_content = "<span contenteditable='true'>" + content + "</span>";
+      }
+      return wrapped_content;
+    }
   }
 };
 
@@ -724,36 +798,9 @@ Api = {
       return c.model.load(data);
     }
   },
-  getInsertedItemsWithIDs: function(at) {
-    var c, ids, items;
-    if (!(c = this.controller(at))) {
-      return [null, null];
-    }
-    if (at) {
-      at = "-" + (c.get_opt('alias') || c.at);
-    }
-    ids = [];
-    items = $.map(this.$inputor.find("span.atwho-view-flag" + (at || "")), function(item) {
-      var data;
-      data = $(item).data('atwho-data-item');
-      if (ids.indexOf(data.id) > -1) {
-        return;
-      }
-      if (data.id) {
-        ids.push = data.id;
-      }
-      return data;
-    });
-    return [ids, items];
-  },
-  getInsertedItems: function(at) {
-    return Api.getInsertedItemsWithIDs.apply(this, [at])[1];
-  },
-  getInsertedIDs: function(at) {
-    return Api.getInsertedItemsWithIDs.apply(this, [at])[0];
-  },
-  setIframe: function(iframe) {
-    return this.setIframe(iframe);
+  setIframe: function(iframe, standalone) {
+    this.setIframe(iframe, standalone);
+    return null;
   },
   run: function() {
     return this.dispatch();
@@ -764,33 +811,19 @@ Api = {
   }
 };
 
-Atwho = {
-  init: function(options) {
-    var $this, app;
-    app = ($this = $(this)).data("atwho");
-    if (!app) {
-      $this.data('atwho', (app = new App(this)));
-    }
-    app.reg(options.at, options);
-    return this;
-  }
-};
-
-$CONTAINER = $("<div id='atwho-container'></div>");
-
 $.fn.atwho = function(method) {
   var result, _args;
   _args = arguments;
-  $('body').append($CONTAINER);
   result = null;
-  this.filter('textarea, input, [contenteditable=true]').each(function() {
-    var app;
+  this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
+    var $this, app;
+    if (!(app = ($this = $(this)).data("atwho"))) {
+      $this.data('atwho', (app = new App(this)));
+    }
     if (typeof method === 'object' || !method) {
-      return Atwho.init.apply(this, _args);
-    } else if (Api[method]) {
-      if (app = $(this).data('atwho')) {
-        return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
-      }
+      return app.reg(method.at, method);
+    } else if (Api[method] && app) {
+      return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
     } else {
       return $.error("Method " + method + " does not exist on jQuery.caret");
     }
@@ -803,9 +836,11 @@ $.fn.atwho["default"] = {
   alias: void 0,
   data: null,
   tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
-  insert_tpl: "<span>${atwho-data-value}</span>",
+  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>",
   callbacks: DEFAULT_CALLBACKS,
   search_key: "name",
+  suffix: void 0,
+  hide_without_suffix: false,
   start_with_space: true,
   highlight_first: true,
   limit: 5,

@@ -1,3 +1,28 @@
+### v0.5.1
+
+* 219de3d - fix Goes off screen / gets cropped if there isn't enough room
+* 1100c5b - No longer inherits text colour from document
+* ce60958 - on more boolean argument for `setIframe` api to work cross-document issues #199
+
+### v0.5.0
+
+* 593893c - refactor inserting of contenteditable
+  Adding `inserting_wrapper` for customize wrapping inserting content.
+  Not to insert item as a block in Firefox. check out issue #109.
+  Removing `getInsertedItems`, `getInsertedIDs` API. You have to collect them on your own.
+* 4d3fb8f - have to set IFRAME manually
+* 1f13a16 - change space_after to suffix
+* b099ebb - fix caret position error after inserting
+* 2c47d7a - fix #178 hide view while clicking somewhere else
+
+### v0.4.12
+
+* eeafab1 - fix error: will always call hidden atwho event
+* b0f6ceb - Highlighter finds the first occurrence
+* da256db - Adds possibility of having empty prefix (at keyword) in controllers
+* b884225 - add `space_after` option
+* 65d6273 - Passes esc/tab/return keyup events through to emitted hide event
+
 ### v0.4.11
 
 * bf938db - add `delay` setting, support delay searching

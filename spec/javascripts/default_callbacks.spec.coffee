@@ -26,10 +26,22 @@ describe "default callbacks", ->
     query = callbacks.matcher.call(app, "@", text)
     expect(query).toBe("Jobs")
 
+  it "should match the key word fllowing @ with specials chars", ->
+    $inputor = $("#special-chars").atwho at: "@", data: fixtures["names"]
+    text = $.trim $inputor.text()
+
+    query = callbacks.matcher.call(app, "@", text)
+    expect(query).toBe("Jérémÿ")
+
   it "can filter data", ->
     names = callbacks.before_save.call(app, fixtures["names"])
     names = callbacks.filter.call(app, "jo", names, "name")
     expect(names).toContain name: "Joshua"
+
+  it "can filter numeric data", ->
+    numerics = callbacks.before_save.call(app, fixtures["numerics"])
+    numerics = callbacks.filter.call(app, "1", numerics, "name")
+    expect(numerics).toContain name: 10
 
   it "request data from remote by ajax if set remote_filter", ->
     remote_call = jasmine.createSpy("remote_call")
@@ -46,6 +58,11 @@ describe "default callbacks", ->
     names = callbacks.before_save.call(app, fixtures["names"])
     names = callbacks.sorter.call(app, "e", names, "name")
     expect(names[0].name).toBe 'Ethan'
+
+  it "can sort numeric data", ->
+    numerics = callbacks.before_save.call(app, fixtures["numerics"])
+    numerics = callbacks.sorter.call(app, "1", numerics, "name")
+    expect(numerics[0].name).toBe 13
 
   it "don't sort the data without a query", ->
     names = callbacks.before_save.call(app, fixtures["names"])

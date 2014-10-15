@@ -1,6 +1,6 @@
 
 module.exports = (grunt) ->
-  
+
   # Project configuration.
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
@@ -53,11 +53,11 @@ module.exports = (grunt) ->
     watch:
       coffee:
         files: ['src/*.coffee', 'spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
-        tasks: ['compile']
+        tasks: ['compile', 'uglify']
       test:
         options:
           debounceDelay: 250
-        files: ['spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
+        files: ['src/*.coffee', 'spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
         tasks: ['test']
 
     jasmine:
@@ -112,4 +112,4 @@ module.exports = (grunt) ->
 
   grunt.registerTask "server", ["compile", "jasmine:dist:build", "connect"]
   grunt.registerTask "test", ["compile", "jasmine"]
-  grunt.registerTask "default", ['test', 'uglify', 'update-version']
+  grunt.registerTask "default", ['test', 'uglify', 'update-version', 'watch:test']

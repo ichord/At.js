@@ -1,19 +1,21 @@
-**An autocompletion library to autocomplete mentions, smileys etc. just like on Github or Twitter!** [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
+**An autocompletion library to autocomplete mentions, smileys etc. just like on Github!**  
+[![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
 
 #### Notice
 
-At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).
-
-This branch has been updated to `v0.4.x`. Please read **CHANGELOG.md** for more details.
-English Documentation will keep improving. Maybe **you can do me a favor?**
+At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).  
+Please read [**CHANGELOG.md**](CHANGELOG.md) for more details if you are going to update to new version.
 
 ### Demo
-
 http://ichord.github.com/At.js
+
+### Documentation
+https://github.com/ichord/At.js/wiki
 
 
 ### Features Preview
 
+* Support IE 7+ for **textarea**.
 * Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements (NOT include IE 8)
 * Can listen to any character and not just '@'. Can set up multiple listeners for different characters with different behavior and data
 * Listener events can be bound to multiple inputors.
@@ -30,9 +32,6 @@ http://ichord.github.com/At.js
 * jQuery >= 1.7.0.
 * [Caret.js](https://github.com/ichord/Caret.js)
     (You can use `Component` or `Bower` to install it.)
-
-### Documentation
-https://github.com/ichord/At.js/wiki
 
 ### Integrating with your Application
 
@@ -56,24 +55,14 @@ $('#inputor').atwho({
 For installing using Bower you can use `jquery.atwho` and for Component please use `ichord/At.js`.
 
 #### Rails
-You can include At.js in your `Rails` application using the gem [`jquery-atwho-rails`](https://github.com/ichord/jquery-atwho-rails).
-
-
-### Version History
-
-* branch `stable-v0.3` with tag `v0.3.3`
-* branch `stable-v0.2` with tag `v0.2.x`
-* branch `stable-v0.1.x` and tag `v0.1.7`
+You can include At.js in your `Rails` application using the gem [jquery-atwho-rails](https://github.com/ichord/jquery-atwho-rails).
 
 ### Core Team Members
 
 * [@ichord](https://twitter.com/_ichord)
 
-#### PS
-Let me know if you are using **At.js**. It will motivate me to work harder.
-And if you like **At.js**, just email me and add your website [here](https://github.com/ichord/At.js/wiki/Sites)
+------
+
+Let me know if you are using **At.js**. It will motivate me to work harder.  
+And if you like **At.js**, just email me and add your website [here](https://github.com/ichord/At.js/wiki/Sites)  
 Hope you like it, Thanks! :)
-
----
-
-Project is a member of the [OSS Manifesto](http://ossmanifesto.org/).

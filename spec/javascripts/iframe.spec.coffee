@@ -9,7 +9,9 @@ describe "iframe editor", ->
     ifrBody.contentEditable = true
     ifrBody.id = 'ifrBody'
     ifrBody.innerHTML = 'Stay Foolish, Stay Hungry. @Jobs'
-    $inputor = $(ifrBody).atwho at: "@", data: ['Jobs']
+    $inputor = $(ifrBody)
+    $inputor.atwho('setIframe', ifr)
+    $inputor.atwho(at: "@", data: ['Jobs'])
     app = getAppOf $inputor
 
   it "can insert content", ->

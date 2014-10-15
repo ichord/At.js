@@ -11,7 +11,8 @@ class Controller
     @pos      = 0
     @cur_rect = null
     @range    = null
-    $CONTAINER.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
+    if (@$el = $("#atwho-ground-#{@id}", @app.$el)).length == 0
+      @app.$el.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
 
     @model    = new Model(this)
     @view     = new View(this)
@@ -77,8 +78,8 @@ class Controller
   # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
   catch_query: ->
     content = this.content()
-    caret_pos = @$inputor.caret('pos')
-    subtext = content.slice(0,caret_pos)
+    caret_pos = @$inputor.caret('pos', {iframe: @app.iframe})
+    subtext = content.slice(0, caret_pos)
 
     query = this.callbacks("matcher").call(this, @at, subtext, this.get_opt('start_with_space'))
     if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
@@ -97,18 +98,24 @@ class Controller
   #
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
-    return if not c = @$inputor.caret({iframe: @app.iframe}).caret('offset', @pos - 1)
-    c = (@cur_rect ||= c) || c if @$inputor.attr('contentEditable') == 'true'
+    return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
+    if @app.iframe and not @app.iframeStandalone
+      iframe_offset = $(@app.iframe).offset()
+      c.left += iframe_offset.left
+      c.top += iframe_offset.top
+    c = @cur_rect ||= c if @$inputor.is('[contentEditable]')
     scale_bottom = if @app.document.selection then 0 else 2
     {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
 
   reset_rect: ->
-    @cur_rect = null if @$inputor.attr('contentEditable') == 'true'
+    @cur_rect = null if @$inputor.is('[contentEditable]')
 
   mark_range: ->
-    if @$inputor.attr('contentEditable') == 'true'
-      @range = @app.window.getSelection().getRangeAt(0) if @app.window.getSelection
-      @ie8_range = @app.document.selection.createRange() if @app.document.selection
+    return if not @$inputor.is('[contentEditable]')
+    if @app.window.getSelection and (sel = @app.window.getSelection()).rangeCount > 0
+      @range = sel.getRangeAt(0)
+    else if @app.document.selection
+      @ie8_range = @app.document.selection.createRange()
 
   insert_content_for: ($li) ->
     data_value = $li.data('value')
@@ -125,29 +132,22 @@ class Controller
   insert: (content, $li) ->
     $inputor = @$inputor
 
-    if $inputor.attr('contentEditable') == 'true'
-      class_name = "atwho-view-flag atwho-view-flag-#{this.get_opt('alias') || @at}"
-      content_node = "#{content}<span contenteditable='false'>&nbsp;<span>"
-      insert_node = "<span contenteditable='false' class='#{class_name}'>#{content_node}</span>"
-      $insert_node = $(insert_node, @app.document).data('atwho-data-item', $li.data('item-data'))
-      if @app.document.selection
-        $insert_node = $("<span contenteditable='true'></span>", @app.document).html($insert_node)
+    wrapped_content = this.callbacks('inserting_wrapper').call this, $inputor, content, this.get_opt("suffix")
 
     if $inputor.is('textarea, input')
-      # ensure str is str.
-      # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-      content = '' + content
       source = $inputor.val()
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
-      text = "#{start_str}#{content} #{source.slice @query['end_pos'] || 0}"
+      text = "#{start_str}#{wrapped_content}#{source.slice @query['end_pos'] || 0}"
       $inputor.val text
-      $inputor.caret 'pos',start_str.length + content.length + 1
+      $inputor.caret('pos', start_str.length + wrapped_content.length, {iframe: @app.iframe})
     else if range = @range
       pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
       range.setStart(range.endContainer, Math.max(pos,0))
       range.setEnd(range.endContainer, range.endOffset)
       range.deleteContents()
-      range.insertNode($insert_node[0])
+      content_node = $(wrapped_content, @app.document)[0]
+      range.insertNode content_node
+      range.setEndAfter content_node
       range.collapse(false)
       sel = @app.window.getSelection()
       sel.removeAllRanges()
@@ -157,7 +157,7 @@ class Controller
       #       to make it work batter.
       # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
       range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
-      range.pasteHTML(content_node)
+      range.pasteHTML wrapped_content
       range.collapse(false)
       range.select()
     $inputor.focus() if not $inputor.is ':focus'

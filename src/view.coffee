@@ -23,7 +23,7 @@ class View
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
     .on 'click', (e) =>
-      this.choose()
+      this.choose(e)
       e.preventDefault()
 
   # Check if view is visible
@@ -32,16 +32,20 @@ class View
   visible: ->
     @$el.is(":visible")
 
-  choose: ->
+  choose: (e) ->
     if ($li = @$el.find ".cur").length
       content = @context.insert_content_for $li
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
-      @context.trigger "inserted", [$li]
-      this.hide()
+      @context.trigger "inserted", [$li, e]
+      this.hide(e)
+    @stop_showing = yes if @context.get_opt("hide_without_suffix")
 
   reposition: (rect) ->
-    if rect.bottom + @$el.height() - $(window).scrollTop() > $(window).height()
+    _window = if @context.app.iframeStandalone then @context.app.window else window
+    if rect.bottom + @$el.height() - $(_window).scrollTop() > $(_window).height()
         rect.bottom = rect.top - @$el.height()
+    if rect.left > overflowOffset = $(_window).width() - @$el.width() - 5
+        rect.left = overflowOffset
     offset = {left:rect.left, top:rect.bottom}
     @context.callbacks("before_reposition")?.call(@context, offset)
     @$el.offset offset
@@ -60,17 +64,21 @@ class View
     prev.addClass 'cur'
 
   show: ->
+    if @stop_showing
+      @stop_showing = false
+      return
     @context.mark_range()
     if not this.visible()
       @$el.show()
       @context.trigger 'shown'
     this.reposition(rect) if rect = @context.rect()
 
-  hide: (time) ->
-    if isNaN time and this.visible()
+  hide: (e, time) ->
+    return if not this.visible()
+    if isNaN(time)
       @context.reset_rect()
       @$el.hide()
-      @context.trigger 'hidden'
+      @context.trigger 'hidden', [e]
     else
       callback = => this.hide()
       clearTimeout @timeout_id
