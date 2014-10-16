@@ -6,19 +6,20 @@ module.exports = (grunt) ->
     pkg: grunt.file.readJSON 'package.json'
     name: 'jquery.atwho'
     meta:
-      banner:
-        "/*! <%= name %> - v<%= pkg.version %> - <%= grunt.template.today(\"yyyy-mm-dd\") %>\n" +
-        "* Copyright (c) <%= grunt.template.today(\"yyyy\") %> <%= pkg.author.name %> <<%=pkg.author.email%>>; \n" +
-        "* homepage: <%= pkg.homepage %> \n" +
-        "* Licensed <%= pkg.license %>\n" +
-        "*/\n\n"
+      banner: """
+        /*! <%= name %> - v<%= pkg.version %> %>
+        * Copyright (c) <%= grunt.template.today(\"yyyy\") %> <%= pkg.author.name %> <<%=pkg.author.email%>>;
+        * homepage: <%= pkg.homepage %>
+        * Licensed <%= pkg.license %>
+        */\n
+      """
 
     coffee:
       dist:
         options:
           bare: true, join: true
         files:
-          'src/build/<%= name %>.js': [
+          'dist/js/<%= name %>.js': [
             'src/app.coffee',
             'src/controller.coffee',
             'src/model.coffee',
@@ -34,6 +35,17 @@ module.exports = (grunt) ->
           },
           src: 'spec/spec_helper.coffee', dest: 'spec/build/spec_helper.js'
         ]
+    umd:
+      all:
+        src: 'dist/js/<%= name %>.js'
+        template: 'umd'
+        deps:
+          'default': ['$']
+          amd: ['jquery']
+          cjs: ['jquery']
+          global:
+            items: ['jQuery']
+            prefix: ''
 
     copy:
       css: {src: 'src/jquery.atwho.css', dest: 'dist/css/jquery.atwho.css'}
@@ -42,8 +54,7 @@ module.exports = (grunt) ->
       options:
         banner: "<%= meta.banner %>"
       dist:
-        src: ['src/wrapper_header.js', 'src/build/<%= name %>.js', 'src/wrapper_footer.js'],
-        dest: 'dist/js/<%= name %>.js'
+        src: 'dist/js/<%= name %>.js', dest: 'dist/js/<%= name %>.js'
 
     uglify:
       dist:
@@ -52,6 +63,9 @@ module.exports = (grunt) ->
       minify: {src: 'src/jquery.atwho.css', dest: 'dist/css/jquery.atwho.min.css'}
 
     watch:
+      css:
+        files: ['src/*.css']
+        tasks: ['copy']
       coffee:
         files: ['src/*.coffee', 'spec/javascripts/*.spec.coffee', 'spec/spec_helper.coffee']
         tasks: ['compile', 'uglify']
@@ -106,10 +120,11 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-cssmin'
+  grunt.loadNpmTasks 'grunt-umd'
 
   # alias
   grunt.registerTask 'update-version', 'json-replace'
-  grunt.registerTask 'compile', ['coffee', 'concat', 'copy', 'cssmin']
+  grunt.registerTask 'compile', ['coffee', 'umd', 'concat', 'copy', 'cssmin']
 
   grunt.registerTask "server", ["compile", "jasmine:dist:build", "connect"]
   grunt.registerTask "test", ["compile", "jasmine"]

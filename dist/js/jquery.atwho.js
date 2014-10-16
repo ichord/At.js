@@ -1,17 +1,23 @@
-/*! jquery.atwho - v0.5.1 - 2014-10-16
-* Copyright (c) 2014 chord.luo <chord.luo@gmail.com>; 
-* homepage: http://ichord.github.com/At.js 
+/*! jquery.atwho - v0.5.1 %>
+* Copyright (c) 2014 chord.luo <chord.luo@gmail.com>;
+* homepage: http://ichord.github.com/At.js
 * Licensed MIT
 */
-
-(function() {
-  (function(factory) {
-    if (typeof define === 'function' && define.amd) {
-      return define(['jquery'], factory);
-    } else {
-      return factory(window.jQuery);
-    }
-  })(function($) {
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(["jquery"], function ($) {
+      return (root.returnExportsGlobal = factory($));
+    });
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like enviroments that support module.exports,
+    // like Node.
+    module.exports = factory(require("jquery"));
+  } else {
+    factory(jQuery);
+  }
+}(this, function ($) {
 
 var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
   __slice = [].slice;
@@ -849,5 +855,6 @@ $.fn.atwho["default"] = {
   delay: null
 };
 
-  });
-}).call(this);
+
+
+}));
