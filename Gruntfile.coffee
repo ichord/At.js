@@ -4,9 +4,10 @@ module.exports = (grunt) ->
   # Project configuration.
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
+    name: 'jquery.atwho'
     meta:
       banner:
-        "/*! <%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today(\"yyyy-mm-dd\") %>\n" +
+        "/*! <%= name %> - v<%= pkg.version %> - <%= grunt.template.today(\"yyyy-mm-dd\") %>\n" +
         "* Copyright (c) <%= grunt.template.today(\"yyyy\") %> <%= pkg.author.name %> <<%=pkg.author.email%>>; \n" +
         "* homepage: <%= pkg.homepage %> \n" +
         "* Licensed <%= pkg.license %>\n" +
@@ -17,7 +18,7 @@ module.exports = (grunt) ->
         options:
           bare: true, join: true
         files:
-          'src/build/<%= pkg.name %>.js': [
+          'src/build/<%= name %>.js': [
             'src/app.coffee',
             'src/controller.coffee',
             'src/model.coffee',
@@ -41,12 +42,12 @@ module.exports = (grunt) ->
       options:
         banner: "<%= meta.banner %>"
       dist:
-        src: ['src/wrapper_header.js', 'src/build/<%= pkg.name %>.js', 'src/wrapper_footer.js'],
-        dest: 'dist/js/<%= pkg.name %>.js'
+        src: ['src/wrapper_header.js', 'src/build/<%= name %>.js', 'src/wrapper_footer.js'],
+        dest: 'dist/js/<%= name %>.js'
 
     uglify:
       dist:
-        src: 'dist/js/<%= pkg.name %>.js', dest: 'dist/js/<%= pkg.name %>.min.js'
+        src: 'dist/js/<%= name %>.js', dest: 'dist/js/<%= name %>.min.js'
     cssmin:
       minify: {src: 'src/jquery.atwho.css', dest: 'dist/css/jquery.atwho.min.css'}
 
@@ -62,10 +63,10 @@ module.exports = (grunt) ->
 
     jasmine:
       dist:
-        src: 'dist/js/<%= pkg.name %>.js',
+        src: 'dist/js/<%= name %>.js',
         options:
           keepRunner: true
-          styles: 'dist/css/<%= pkg.name %>.css',
+          styles: 'dist/css/<%= name %>.css',
           specs: 'spec/build/javascripts/*.spec.js',
           vendor: [
             'bower_components/jquery/dist/jquery.js',
