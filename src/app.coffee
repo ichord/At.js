@@ -69,7 +69,7 @@ class App
       .on 'blur.atwhoInner', (e) =>
         c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
       .on 'click.atwhoInner', (e) =>
-        this.controller()?.view.hide(e)
+        this.dispatch()
 
   shutdown: ->
     for _, c of @controllers

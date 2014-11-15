@@ -121,8 +121,7 @@ App = (function() {
       };
     })(this)).on('click.atwhoInner', (function(_this) {
       return function(e) {
-        var _ref;
-        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
+        return _this.dispatch();
       };
     })(this));
   };
