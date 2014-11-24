@@ -28,5 +28,17 @@
     "grunt-contrib-watch": "~0.5.3",
     "grunt-json-replace": "~0.1.2",
     "grunt-umd": "^2.0.1"
+  },
+  "spm": {
+    "main": "dist/js/jquery.atwho.js",
+    "dependencies": {
+      "jquery": "1.7.2",
+      "caret.js": "0.2.0"
+    },
+    "ignore": [
+      "examples",
+      "spec",
+      "src"
+    ]
   }
 }
