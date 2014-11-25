@@ -598,7 +598,10 @@ View = (function() {
     if (!next.length) {
       next = this.$el.find('li:first');
     }
-    return next.addClass('cur');
+    next.addClass('cur');
+    return this.$el.animate({
+      scrollTop: Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height())
+    }, 150);
   };
 
   View.prototype.prev = function() {
@@ -608,7 +611,10 @@ View = (function() {
     if (!prev.length) {
       prev = this.$el.find('li:last');
     }
-    return prev.addClass('cur');
+    prev.addClass('cur');
+    return this.$el.animate({
+      scrollTop: Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height())
+    }, 150);
   };
 
   View.prototype.show = function() {

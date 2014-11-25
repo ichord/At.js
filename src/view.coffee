@@ -56,12 +56,18 @@ class View
     next = cur.next()
     next = @$el.find('li:first') if not next.length
     next.addClass 'cur'
+    @$el.animate {
+      scrollTop: Math.max 0, cur.innerHeight() * (next.index() + 2) - @$el.height()
+      }, 150
 
   prev: ->
     cur = @$el.find('.cur').removeClass('cur')
     prev = cur.prev()
     prev = @$el.find('li:last') if not prev.length
     prev.addClass 'cur'
+    @$el.animate {
+      scrollTop: Math.max 0, cur.innerHeight() * (prev.index() + 2) - @$el.height()
+      }, 150
 
   show: ->
     if @stop_showing
