@@ -12,6 +12,10 @@ http://ichord.github.com/At.js
 ### Documentation
 https://github.com/ichord/At.js/wiki
 
+### Compatibility
+
+* `textarea` - Chrome, Safari, Firefox, IE7+ (maybe IE6)
+* `contentEditable` - Chrome, Safari, Firefox, IE10+
 
 ### Features Preview
 
