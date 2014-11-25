@@ -626,6 +626,7 @@ View = (function() {
     this.context.mark_range();
     if (!this.visible()) {
       this.$el.show();
+      this.$el.scrollTop(0);
       this.context.trigger('shown');
     }
     if (rect = this.context.rect()) {

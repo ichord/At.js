@@ -76,6 +76,7 @@ class View
     @context.mark_range()
     if not this.visible()
       @$el.show()
+      @$el.scrollTop 0
       @context.trigger 'shown'
     this.reposition(rect) if rect = @context.rect()
 
