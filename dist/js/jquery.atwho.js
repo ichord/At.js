@@ -393,15 +393,15 @@ Controller = (function() {
   };
 
   Controller.prototype.insert = function(content, $li) {
-    var $inputor, content_node, pos, range, sel, source, start_str, text, wrapped_content;
+    var $inputor, node, pos, range, sel, source, start_str, text, wrapped_contents, _i, _len, _ref;
     $inputor = this.$inputor;
-    wrapped_content = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
+    wrapped_contents = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
     if ($inputor.is('textarea, input')) {
       source = $inputor.val();
       start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + wrapped_content + (source.slice(this.query['end_pos'] || 0));
+      text = "" + start_str + wrapped_contents + (source.slice(this.query['end_pos'] || 0));
       $inputor.val(text);
-      $inputor.caret('pos', start_str.length + wrapped_content.length, {
+      $inputor.caret('pos', start_str.length + wrapped_contents.length, {
         iframe: this.app.iframe
       });
     } else if (range = this.range) {
@@ -409,16 +409,19 @@ Controller = (function() {
       range.setStart(range.endContainer, Math.max(pos, 0));
       range.setEnd(range.endContainer, range.endOffset);
       range.deleteContents();
-      content_node = $(wrapped_content, this.app.document)[0];
-      range.insertNode(content_node);
-      range.setEndAfter(content_node);
-      range.collapse(false);
+      _ref = $(wrapped_contents, this.app.document);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        node = _ref[_i];
+        range.insertNode(node);
+        range.setEndAfter(node);
+        range.collapse(false);
+      }
       sel = this.app.window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else if (range = this.ie8_range) {
       range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML(wrapped_content);
+      range.pasteHTML(wrapped_contents);
       range.collapse(false);
       range.select();
     }
@@ -792,13 +795,13 @@ DEFAULT_CALLBACKS = {
       if (/firefox/i.test(navigator.userAgent)) {
         wrapped_content = "<span>" + content + new_suffix + "</span>";
       } else {
-        suffix = "<span contenteditable='false'>" + new_suffix + "<span>";
+        suffix = "<span contenteditable='false'>" + new_suffix + "</span>";
         wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
       }
       if (this.app.document.selection) {
         wrapped_content = "<span contenteditable='true'>" + content + "</span>";
       }
-      return wrapped_content;
+      return wrapped_content + "<span></span>";
     }
   }
 };

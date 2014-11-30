@@ -146,8 +146,8 @@ DEFAULT_CALLBACKS =
       if /firefox/i.test(navigator.userAgent)
         wrapped_content = "<span>#{content}#{new_suffix}</span>"
       else
-        suffix = "<span contenteditable='false'>#{new_suffix}<span>"
+        suffix = "<span contenteditable='false'>#{new_suffix}</span>"
         wrapped_content = "<span contenteditable='false'>#{content}#{suffix}</span>"
       if @app.document.selection #ie 8
         wrapped_content = "<span contenteditable='true'>#{content}</span>"
-      wrapped_content
+      wrapped_content + "<span></span>"

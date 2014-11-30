@@ -132,23 +132,23 @@ class Controller
   insert: (content, $li) ->
     $inputor = @$inputor
 
-    wrapped_content = this.callbacks('inserting_wrapper').call this, $inputor, content, this.get_opt("suffix")
+    wrapped_contents = this.callbacks('inserting_wrapper').call this, $inputor, content, this.get_opt("suffix")
 
     if $inputor.is('textarea, input')
       source = $inputor.val()
       start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
-      text = "#{start_str}#{wrapped_content}#{source.slice @query['end_pos'] || 0}"
+      text = "#{start_str}#{wrapped_contents}#{source.slice @query['end_pos'] || 0}"
       $inputor.val text
-      $inputor.caret('pos', start_str.length + wrapped_content.length, {iframe: @app.iframe})
+      $inputor.caret('pos', start_str.length + wrapped_contents.length, {iframe: @app.iframe})
     else if range = @range
       pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
       range.setStart(range.endContainer, Math.max(pos,0))
       range.setEnd(range.endContainer, range.endOffset)
       range.deleteContents()
-      content_node = $(wrapped_content, @app.document)[0]
-      range.insertNode content_node
-      range.setEndAfter content_node
-      range.collapse(false)
+      for node in $(wrapped_contents, @app.document)
+        range.insertNode node
+        range.setEndAfter node
+        range.collapse(false)
       sel = @app.window.getSelection()
       sel.removeAllRanges()
       sel.addRange(range)
@@ -157,10 +157,10 @@ class Controller
       #       to make it work batter.
       # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
       range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
-      range.pasteHTML wrapped_content
+      range.pasteHTML wrapped_contents
       range.collapse(false)
       range.select()
-    $inputor.focus() if not $inputor.is ':focus'
+    $inputor.focus() unless $inputor.is ':focus'
     $inputor.change()
 
   # Render list view
