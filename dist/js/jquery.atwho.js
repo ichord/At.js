@@ -549,6 +549,9 @@ View = (function() {
     return $menu.on('mouseenter.atwho-view', 'li', function(e) {
       $menu.find('.cur').removeClass('cur');
       return $(e.currentTarget).addClass('cur');
+    }).on('click', 'li', function(e) {
+      $menu.find('.cur').removeClass('cur');
+      return $(e.currentTarget).addClass('cur');
     }).on('click', (function(_this) {
       return function(e) {
         _this.choose(e);
@@ -863,7 +866,6 @@ $.fn.atwho["default"] = {
   display_timeout: 300,
   delay: null
 };
-
 
 
 }));
