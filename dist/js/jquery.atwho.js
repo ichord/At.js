@@ -549,11 +549,10 @@ View = (function() {
     return $menu.on('mouseenter.atwho-view', 'li', function(e) {
       $menu.find('.cur').removeClass('cur');
       return $(e.currentTarget).addClass('cur');
-    }).on('click', 'li', function(e) {
-      $menu.find('.cur').removeClass('cur');
-      return $(e.currentTarget).addClass('cur');
-    }).on('click', (function(_this) {
+    }).on('click.atwho-view', 'li', (function(_this) {
       return function(e) {
+        $menu.find('.cur').removeClass('cur');
+        $(e.currentTarget).addClass('cur');
         _this.choose(e);
         return e.preventDefault();
       };
@@ -866,6 +865,7 @@ $.fn.atwho["default"] = {
   display_timeout: 300,
   delay: null
 };
+
 
 
 }));
