@@ -22,6 +22,9 @@ class View
     $menu.on 'mouseenter.atwho-view','li', (e) ->
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
+    .on 'click','li', (e) ->
+      $menu.find('.cur').removeClass 'cur'
+      $(e.currentTarget).addClass 'cur'
     .on 'click', (e) =>
       this.choose(e)
       e.preventDefault()
