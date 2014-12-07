@@ -305,10 +305,14 @@ Controller = (function() {
   };
 
   Controller.prototype.content = function() {
+    var range;
     if (this.$inputor.is('textarea, input')) {
       return this.$inputor.val();
     } else {
-      return this.$inputor.text();
+      if (!(range = this.mark_range())) {
+        return;
+      }
+      return range.startContainer.parentNode.textContent || "";
     }
   };
 
@@ -788,22 +792,22 @@ DEFAULT_CALLBACKS = {
     return value;
   },
   inserting_wrapper: function($inputor, content, suffix) {
-    var new_suffix, wrapped_content;
-    new_suffix = suffix === "" ? suffix : suffix || " ";
+    var wrapped_content;
+    suffix = suffix === "" ? suffix : suffix || " ";
     if ($inputor.is('textarea, input')) {
-      return '' + content + new_suffix;
+      return '' + content + suffix;
     } else if ($inputor.attr('contentEditable') === 'true') {
-      new_suffix = suffix === "" ? suffix : suffix || "&nbsp;";
+      suffix = suffix === " " ? "&nbsp;" : suffix;
       if (/firefox/i.test(navigator.userAgent)) {
-        wrapped_content = "<span>" + content + new_suffix + "</span>";
+        wrapped_content = "<span>" + content + suffix + "</span>";
       } else {
-        suffix = "<span contenteditable='false'>" + new_suffix + "</span>";
+        suffix = "<span contenteditable='false'>" + suffix + "</span>";
         wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
       }
       if (this.app.document.selection) {
         wrapped_content = "<span contenteditable='true'>" + content + "</span>";
       }
-      return wrapped_content + "<span></span>";
+      return wrapped_content;
     }
   }
 };

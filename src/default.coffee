@@ -138,15 +138,15 @@ DEFAULT_CALLBACKS =
   inserting_wrapper: ($inputor, content, suffix) ->
     # ensure str is str.
     # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-    new_suffix = if suffix == "" then suffix else suffix or " "
+    suffix = if suffix == "" then suffix else suffix or " "
     if $inputor.is('textarea, input')
-      '' + content + new_suffix
+      '' + content + suffix
     else if $inputor.attr('contentEditable') == 'true'
-      new_suffix = if suffix == "" then suffix else suffix or "&nbsp;"
+      suffix = if suffix == " " then "&nbsp;" else suffix
       if /firefox/i.test(navigator.userAgent)
-        wrapped_content = "<span>#{content}#{new_suffix}</span>"
+        wrapped_content = "<span>#{content}#{suffix}</span>"
       else
-        suffix = "<span contenteditable='false'>#{new_suffix}</span>"
+        suffix = "<span contenteditable='false'>#{suffix}</span>"
         wrapped_content = "<span contenteditable='false'>#{content}#{suffix}</span>"
       if @app.document.selection #ie 8
         wrapped_content = "<span contenteditable='true'>#{content}</span>"

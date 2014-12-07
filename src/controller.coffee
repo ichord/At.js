@@ -71,7 +71,12 @@ class Controller
     catch e
       null
 
-  content: -> if @$inputor.is('textarea, input') then @$inputor.val() else @$inputor.text()
+  content: ->
+    if @$inputor.is('textarea, input')
+      @$inputor.val()
+    else
+      return unless range = @mark_range()
+      range.startContainer.parentNode.textContent || ""
 
   # Catch query string behind the at char
   #
@@ -80,7 +85,6 @@ class Controller
     content = this.content()
     caret_pos = @$inputor.caret('pos', {iframe: @app.iframe})
     subtext = content.slice(0, caret_pos)
-
     query = this.callbacks("matcher").call(this, @at, subtext, this.get_opt('start_with_space'))
     if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
       start = caret_pos - query.length
