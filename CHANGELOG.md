@@ -1,3 +1,15 @@
+### v0.5.2
+
+* e1f6566 - fix error that doesn't display mention list on new line
+* 8fe3a54 - can insert multiple node from `inserting_wrapper`
+* 4080151 - scroll to top after showing
+* 01555f8 - scroll long dropdown list
+* 1b8999d - Add spm support
+* f2b8e9c - change name in package.json
+* b61bfdc - search on click
+* b1efd09 - Fixes error with selecting always first item on the list on iOS WebView when using https://github.com/ftlabs/fastclick
+* 7ed2890 - Allow accented characters in matcher
+
 ### v0.5.1
 
 * 219de3d - fix Goes off screen / gets cropped if there isn't enough room

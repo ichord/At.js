@@ -1,4 +1,4 @@
-/*! jquery.atwho - v0.5.1 %>
+/*! jquery.atwho - v0.5.2 %>
 * Copyright (c) 2014 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
@@ -807,7 +807,7 @@ DEFAULT_CALLBACKS = {
       if (this.app.document.selection) {
         wrapped_content = "<span contenteditable='true'>" + content + "</span>";
       }
-      return wrapped_content;
+      return wrapped_content + "<span></span>";
     }
   }
 };
