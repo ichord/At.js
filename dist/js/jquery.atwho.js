@@ -312,7 +312,7 @@ Controller = (function() {
       if (!(range = this.mark_range())) {
         return;
       }
-      return range.startContainer.parentNode.textContent || "";
+      return (range.startContainer.textContent || "").slice(0, range.startOffset);
     }
   };
 

@@ -76,7 +76,7 @@ class Controller
       @$inputor.val()
     else
       return unless range = @mark_range()
-      range.startContainer.parentNode.textContent || ""
+      (range.startContainer.textContent || "").slice 0, range.startOffset
 
   # Catch query string behind the at char
   #
