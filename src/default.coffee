@@ -129,25 +129,3 @@ DEFAULT_CALLBACKS =
   #   offset.left += 10
   #   offset.top += 10
   #   offset
-
-  # Use it to wrapper the content that will be inserted into text field.
-  #
-  # @param $inputor [jQuery Object] the text field such as `textarea`
-  # @param content [String] the content
-  # @param sufix [String] the `suffix` setting
-  inserting_wrapper: ($inputor, content, suffix) ->
-    # ensure str is str.
-    # BTW: Good way to change num into str: http://jsperf.com/number-to-string/2
-    suffix = if suffix == "" then suffix else suffix or " "
-    if $inputor.is('textarea, input')
-      '' + content + suffix
-    else if $inputor.attr('contentEditable') == 'true'
-      suffix = if suffix == " " then "&nbsp;" else suffix
-      if /firefox/i.test(navigator.userAgent)
-        wrapped_content = "<span>#{content}#{suffix}</span>"
-      else
-        suffix = "<span contenteditable='false'>#{suffix}</span>"
-        wrapped_content = "<span contenteditable='false'>#{content}#{suffix}</span>"
-      if @app.document.selection #ie 8
-        wrapped_content = "<span contenteditable='true'>#{content}</span>"
-      wrapped_content + "<span></span>"

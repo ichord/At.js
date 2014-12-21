@@ -24,7 +24,7 @@
     range = sel.getRangeAt(0)
     clonedRange = range.cloneRange()
     clonedRange.selectNodeContents($inputor[0])
-    clonedRange.setStart(range.endContainer, 31)
+    clonedRange.setStart(range.endContainer, 30)
     clonedRange.collapse(true)
     sel.removeAllRanges()
     sel.addRange(clonedRange)

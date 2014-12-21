@@ -71,56 +71,6 @@ class Controller
     catch e
       null
 
-  content: ->
-    if @$inputor.is('textarea, input')
-      @$inputor.val()
-    else
-      return unless range = @mark_range()
-      range.startContainer.parentNode.textContent || ""
-
-  # Catch query string behind the at char
-  #
-  # @return [Hash] Info of the query. Look likes this: {'text': "hello", 'head_pos': 0, 'end_pos': 0}
-  catch_query: ->
-    content = this.content()
-    caret_pos = @$inputor.caret('pos', {iframe: @app.iframe})
-    subtext = content.slice(0, caret_pos)
-    query = this.callbacks("matcher").call(this, @at, subtext, this.get_opt('start_with_space'))
-    if typeof query is "string" and query.length <= this.get_opt('max_len', 20)
-      start = caret_pos - query.length
-      end = start + query.length
-      @pos = start
-      query = {'text': query, 'head_pos': start, 'end_pos': end}
-      this.trigger "matched", [@at, query.text]
-    else
-      query = null
-      @view.hide()
-
-    @query = query
-
-  # Get offset of current at char(`flag`)
-  #
-  # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
-  rect: ->
-    return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
-    if @app.iframe and not @app.iframeStandalone
-      iframe_offset = $(@app.iframe).offset()
-      c.left += iframe_offset.left
-      c.top += iframe_offset.top
-    c = @cur_rect ||= c if @$inputor.is('[contentEditable]')
-    scale_bottom = if @app.document.selection then 0 else 2
-    {left: c.left, top: c.top, bottom: c.top + c.height + scale_bottom}
-
-  reset_rect: ->
-    @cur_rect = null if @$inputor.is('[contentEditable]')
-
-  mark_range: ->
-    return if not @$inputor.is('[contentEditable]')
-    if @app.window.getSelection and (sel = @app.window.getSelection()).rangeCount > 0
-      @range = sel.getRangeAt(0)
-    else if @app.document.selection
-      @ie8_range = @app.document.selection.createRange()
-
   insert_content_for: ($li) ->
     data_value = $li.data('value')
     tpl = this.get_opt('insert_tpl')
@@ -129,43 +79,6 @@ class Controller
 
     data = $.extend {}, $li.data('item-data'), {'atwho-data-value': data_value, 'atwho-at': @at}
     this.callbacks("tpl_eval").call(this, tpl, data)
-
-  # Insert value of `data-value` attribute of chosen item into inputor
-  #
-  # @param content [String] string to insert
-  insert: (content, $li) ->
-    $inputor = @$inputor
-
-    wrapped_contents = this.callbacks('inserting_wrapper').call this, $inputor, content, this.get_opt("suffix")
-
-    if $inputor.is('textarea, input')
-      source = $inputor.val()
-      start_str = source.slice 0, Math.max(@query.head_pos - @at.length, 0)
-      text = "#{start_str}#{wrapped_contents}#{source.slice @query['end_pos'] || 0}"
-      $inputor.val text
-      $inputor.caret('pos', start_str.length + wrapped_contents.length, {iframe: @app.iframe})
-    else if range = @range
-      pos = range.startOffset - (@query.end_pos - @query.head_pos) - @at.length
-      range.setStart(range.endContainer, Math.max(pos,0))
-      range.setEnd(range.endContainer, range.endOffset)
-      range.deleteContents()
-      for node in $(wrapped_contents, @app.document)
-        range.insertNode node
-        range.setEndAfter node
-        range.collapse(false)
-      sel = @app.window.getSelection()
-      sel.removeAllRanges()
-      sel.addRange(range)
-    else if range = @ie8_range # IE < 9
-      # NOTE: have to add this <meta http-equiv="x-ua-compatible" content="IE=Edge"/> into <header>
-      #       to make it work batter.
-      # REF:  http://stackoverflow.com/questions/15535933/ie-html1114-error-with-custom-cleditor-button?answertab=votes#tab-top
-      range.moveStart('character', @query.end_pos - @query.head_pos - @at.length)
-      range.pasteHTML wrapped_contents
-      range.collapse(false)
-      range.select()
-    $inputor.focus() unless $inputor.is ':focus'
-    $inputor.change()
 
   # Render list view
   #
@@ -176,8 +89,8 @@ class Controller
     @view.render data[0...this.get_opt('limit')]
 
   # Searching!
-  look_up: ->
-    return if not (query = this.catch_query())
+  look_up: (e) ->
+    return if not query = this.catch_query e
     _callback = (data) -> if data and data.length > 0 then this.render_view data else @view.hide()
     @model.query query.text, $.proxy(_callback, this)
     query

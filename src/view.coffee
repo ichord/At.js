@@ -75,7 +75,6 @@ class View
     if @stop_showing
       @stop_showing = false
       return
-    @context.mark_range()
     if not this.visible()
       @$el.show()
       @$el.scrollTop 0
@@ -85,7 +84,6 @@ class View
   hide: (e, time) ->
     return if not this.visible()
     if isNaN(time)
-      @context.reset_rect()
       @$el.hide()
       @context.trigger 'hidden', [e]
     else

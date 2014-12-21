@@ -19,8 +19,10 @@
   }
 }(this, function ($) {
 
-var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
-  __slice = [].slice;
+var Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
+  __slice = [].slice,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 App = (function() {
   function App(inputor) {
@@ -90,7 +92,7 @@ App = (function() {
 
   App.prototype.reg = function(flag, setting) {
     var controller, _base;
-    controller = (_base = this.controllers)[flag] || (_base[flag] = new Controller(this, flag));
+    controller = (_base = this.controllers)[flag] || (_base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
     if (setting.alias) {
       this.alias_maps[setting.alias] = flag;
     }
@@ -121,7 +123,7 @@ App = (function() {
       };
     })(this)).on('click.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.dispatch();
+        return _this.dispatch(e);
       };
     })(this));
   };
@@ -138,19 +140,19 @@ App = (function() {
     return this.$el.remove();
   };
 
-  App.prototype.dispatch = function() {
+  App.prototype.dispatch = function(e) {
     return $.map(this.controllers, (function(_this) {
       return function(c) {
         var delay;
         if (delay = c.get_opt('delay')) {
           clearTimeout(_this.delayedCallback);
           return _this.delayedCallback = setTimeout(function() {
-            if (c.look_up()) {
+            if (c.look_up(e)) {
               return _this.set_context_for(c.at);
             }
           }, delay);
         } else {
-          if (c.look_up()) {
+          if (c.look_up(e)) {
             return _this.set_context_for(c.at);
           }
         }
@@ -175,11 +177,11 @@ App = (function() {
       case KEY_CODE.P:
       case KEY_CODE.N:
         if (!e.ctrlKey) {
-          this.dispatch();
+          this.dispatch(e);
         }
         break;
       default:
-        this.dispatch();
+        this.dispatch(e);
     }
   };
 
@@ -304,21 +306,57 @@ Controller = (function() {
     }
   };
 
-  Controller.prototype.content = function() {
-    var range;
-    if (this.$inputor.is('textarea, input')) {
-      return this.$inputor.val();
-    } else {
-      if (!(range = this.mark_range())) {
-        return;
-      }
-      return range.startContainer.parentNode.textContent || "";
+  Controller.prototype.insert_content_for = function($li) {
+    var data, data_value, tpl;
+    data_value = $li.data('value');
+    tpl = this.get_opt('insert_tpl');
+    if (this.$inputor.is('textarea, input') || !tpl) {
+      return data_value;
     }
+    data = $.extend({}, $li.data('item-data'), {
+      'atwho-data-value': data_value,
+      'atwho-at': this.at
+    });
+    return this.callbacks("tpl_eval").call(this, tpl, data);
   };
 
-  Controller.prototype.catch_query = function() {
+  Controller.prototype.render_view = function(data) {
+    var search_key;
+    search_key = this.get_opt("search_key");
+    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
+    return this.view.render(data.slice(0, this.get_opt('limit')));
+  };
+
+  Controller.prototype.look_up = function(e) {
+    var query, _callback;
+    if (!(query = this.catch_query(e))) {
+      return;
+    }
+    _callback = function(data) {
+      if (data && data.length > 0) {
+        return this.render_view(data);
+      } else {
+        return this.view.hide();
+      }
+    };
+    this.model.query(query.text, $.proxy(_callback, this));
+    return query;
+  };
+
+  return Controller;
+
+})();
+
+TextareaController = (function(_super) {
+  __extends(TextareaController, _super);
+
+  function TextareaController() {
+    return TextareaController.__super__.constructor.apply(this, arguments);
+  }
+
+  TextareaController.prototype.catch_query = function() {
     var caret_pos, content, end, query, start, subtext;
-    content = this.content();
+    content = this.$inputor.val();
     caret_pos = this.$inputor.caret('pos', {
       iframe: this.app.iframe
     });
@@ -341,7 +379,7 @@ Controller = (function() {
     return this.query = query;
   };
 
-  Controller.prototype.rect = function() {
+  TextareaController.prototype.rect = function() {
     var c, iframe_offset, scale_bottom;
     if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
@@ -353,9 +391,6 @@ Controller = (function() {
       c.left += iframe_offset.left;
       c.top += iframe_offset.top;
     }
-    if (this.$inputor.is('[contentEditable]')) {
-      c = this.cur_rect || (this.cur_rect = c);
-    }
     scale_bottom = this.app.document.selection ? 0 : 2;
     return {
       left: c.left,
@@ -364,103 +399,126 @@ Controller = (function() {
     };
   };
 
-  Controller.prototype.reset_rect = function() {
-    if (this.$inputor.is('[contentEditable]')) {
-      return this.cur_rect = null;
-    }
-  };
-
-  Controller.prototype.mark_range = function() {
-    var sel;
-    if (!this.$inputor.is('[contentEditable]')) {
-      return;
-    }
-    if (this.app.window.getSelection && (sel = this.app.window.getSelection()).rangeCount > 0) {
-      return this.range = sel.getRangeAt(0);
-    } else if (this.app.document.selection) {
-      return this.ie8_range = this.app.document.selection.createRange();
-    }
-  };
-
-  Controller.prototype.insert_content_for = function($li) {
-    var data, data_value, tpl;
-    data_value = $li.data('value');
-    tpl = this.get_opt('insert_tpl');
-    if (this.$inputor.is('textarea, input') || !tpl) {
-      return data_value;
-    }
-    data = $.extend({}, $li.data('item-data'), {
-      'atwho-data-value': data_value,
-      'atwho-at': this.at
-    });
-    return this.callbacks("tpl_eval").call(this, tpl, data);
-  };
-
-  Controller.prototype.insert = function(content, $li) {
-    var $inputor, node, pos, range, sel, source, start_str, text, wrapped_contents, _i, _len, _ref;
+  TextareaController.prototype.insert = function(content, $li) {
+    var $inputor, source, start_str, suffix, text;
     $inputor = this.$inputor;
-    wrapped_contents = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
-    if ($inputor.is('textarea, input')) {
-      source = $inputor.val();
-      start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + wrapped_contents + (source.slice(this.query['end_pos'] || 0));
-      $inputor.val(text);
-      $inputor.caret('pos', start_str.length + wrapped_contents.length, {
-        iframe: this.app.iframe
-      });
-    } else if (range = this.range) {
-      pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
-      range.setStart(range.endContainer, Math.max(pos, 0));
-      range.setEnd(range.endContainer, range.endOffset);
-      range.deleteContents();
-      _ref = $(wrapped_contents, this.app.document);
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        node = _ref[_i];
-        range.insertNode(node);
-        range.setEndAfter(node);
-        range.collapse(false);
-      }
-      sel = this.app.window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    } else if (range = this.ie8_range) {
-      range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML(wrapped_contents);
-      range.collapse(false);
-      range.select();
-    }
+    source = $inputor.val();
+    start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
+    suffix = (suffix = this.get_opt('suffix')) === "" ? suffix : suffix || " ";
+    content += suffix;
+    text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
+    $inputor.val(text);
+    $inputor.caret('pos', start_str.length + content.length, {
+      iframe: this.app.iframe
+    });
     if (!$inputor.is(':focus')) {
       $inputor.focus();
     }
     return $inputor.change();
   };
 
-  Controller.prototype.render_view = function(data) {
-    var search_key;
-    search_key = this.get_opt("search_key");
-    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
-    return this.view.render(data.slice(0, this.get_opt('limit')));
+  return TextareaController;
+
+})(Controller);
+
+EditableController = (function(_super) {
+  __extends(EditableController, _super);
+
+  function EditableController() {
+    return EditableController.__super__.constructor.apply(this, arguments);
+  }
+
+  EditableController.prototype._getRange = function() {
+    var sel;
+    sel = this.app.window.getSelection();
+    if (sel.rangeCount > 0) {
+      return sel.getRangeAt(0);
+    }
   };
 
-  Controller.prototype.look_up = function() {
-    var query, _callback;
-    if (!(query = this.catch_query())) {
+  EditableController.prototype._setRangeEndAfter = function(node, range) {
+    var sel;
+    if (range == null) {
+      range = this._getRange();
+    }
+    sel = this.app.window.getSelection();
+    range.setEndAfter($(node)[0]);
+    range.collapse(false);
+    sel.removeAllRanges();
+    return sel.addRange(range);
+  };
+
+  EditableController.prototype.catch_query = function(e) {
+    var $query, content, matched, query, range, _range;
+    if (!(range = this._getRange())) {
       return;
     }
-    _callback = function(data) {
-      if (data && data.length > 0) {
-        return this.render_view(data);
+    $(range.startContainer).closest('.atwho-inserted').removeClass('atwho-inserted').addClass('atwho-query');
+    if (($query = $(".atwho-query", this.app.document)).length > 0) {
+      if (e.type === "click" && $(range.startContainer).closest('.atwho-query').length === 0) {
+        matched = null;
       } else {
-        return this.view.hide();
+        matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.get_opt('start_with_space'));
       }
-    };
-    this.model.query(query.text, $.proxy(_callback, this));
-    return query;
+    } else {
+      _range = range.cloneRange();
+      _range.setStart(range.startContainer, 0);
+      content = _range.toString();
+      matched = this.callbacks("matcher").call(this, this.at, content, this.get_opt('start_with_space'));
+      if (typeof matched === 'string') {
+        range.setStart(range.startContainer, content.lastIndexOf(this.at));
+        range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
+        this._setRangeEndAfter($query, range);
+      }
+    }
+    if (typeof matched === 'string' && matched.length <= this.get_opt('max_len', 20)) {
+      query = {
+        text: matched,
+        el: $query
+      };
+      this.trigger("matched", [this.at, query.text]);
+    } else {
+      this.view.hide();
+      query = null;
+      if ($query.text().indexOf(this.at) > -1) {
+        $query.html($query.text());
+        this._setRangeEndAfter($query.contents().first().unwrap());
+      }
+    }
+    return this.query = query;
   };
 
-  return Controller;
+  EditableController.prototype.rect = function() {
+    var iframe_offset, rect;
+    rect = this.query.el.offset();
+    if (this.app.iframe && !this.app.iframeStandalone) {
+      iframe_offset = $(this.app.iframe).offset();
+      rect.left += iframe_offset.left;
+      rect.top += iframe_offset.top;
+    }
+    rect.bottom = rect.top + this.query.el.height();
+    return rect;
+  };
 
-})();
+  EditableController.prototype.insert = function(content, $li) {
+    var range, suffix, suffixNode;
+    suffix = (suffix = this.get_opt('suffix')) ? suffix : suffix || "\u00A0";
+    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
+    if (range = this._getRange()) {
+      range.setEndAfter(this.query.el[0]);
+      range.collapse(false);
+      range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
+      this._setRangeEndAfter(suffixNode, range);
+    }
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
+    return this.$inputor.change();
+  };
+
+  return EditableController;
+
+})(Controller);
 
 Model = (function() {
   function Model(context) {
@@ -632,7 +690,6 @@ View = (function() {
       this.stop_showing = false;
       return;
     }
-    this.context.mark_range();
     if (!this.visible()) {
       this.$el.show();
       this.$el.scrollTop(0);
@@ -649,7 +706,6 @@ View = (function() {
       return;
     }
     if (isNaN(time)) {
-      this.context.reset_rect();
       this.$el.hide();
       return this.context.trigger('hidden', [e]);
     } else {
@@ -790,25 +846,6 @@ DEFAULT_CALLBACKS = {
   },
   before_insert: function(value, $li) {
     return value;
-  },
-  inserting_wrapper: function($inputor, content, suffix) {
-    var wrapped_content;
-    suffix = suffix === "" ? suffix : suffix || " ";
-    if ($inputor.is('textarea, input')) {
-      return '' + content + suffix;
-    } else if ($inputor.attr('contentEditable') === 'true') {
-      suffix = suffix === " " ? "&nbsp;" : suffix;
-      if (/firefox/i.test(navigator.userAgent)) {
-        wrapped_content = "<span>" + content + suffix + "</span>";
-      } else {
-        suffix = "<span contenteditable='false'>" + suffix + "</span>";
-        wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
-      }
-      if (this.app.document.selection) {
-        wrapped_content = "<span contenteditable='true'>" + content + "</span>";
-      }
-      return wrapped_content + "<span></span>";
-    }
   }
 };
 

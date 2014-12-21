@@ -51,7 +51,11 @@ class App
   # @param flag [String] at char (flag)
   # @param settings [Hash] the settings
   reg: (flag, setting) ->
-    controller = @controllers[flag] ||= new Controller(this, flag)
+    controller = @controllers[flag] ||=
+      if @$inputor.is '[contentEditable]'
+        new EditableController this, flag
+      else
+        new TextareaController this, flag
     # TODO: it will produce rubbish alias map, reduse this.
     @alias_maps[setting.alias] = flag if setting.alias
     controller.init setting
@@ -69,7 +73,7 @@ class App
       .on 'blur.atwhoInner', (e) =>
         c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
       .on 'click.atwhoInner', (e) =>
-        this.dispatch()
+        this.dispatch e
 
   shutdown: ->
     for _, c of @controllers
@@ -78,15 +82,15 @@ class App
     @$inputor.off '.atwhoInner'
     @$el.remove()
 
-  dispatch: ->
+  dispatch: (e) ->
     $.map @controllers, (c) =>
       if delay = c.get_opt('delay')
         clearTimeout @delayedCallback
         @delayedCallback = setTimeout(=>
-          this.set_context_for c.at if c.look_up()
+          this.set_context_for c.at if c.look_up e
         , delay)
       else
-        this.set_context_for c.at if c.look_up()
+        this.set_context_for c.at if c.look_up e
 
   on_keyup: (e) ->
     switch e.keyCode
@@ -96,9 +100,9 @@ class App
       when KEY_CODE.DOWN, KEY_CODE.UP, KEY_CODE.CTRL
         $.noop()
       when KEY_CODE.P, KEY_CODE.N
-        this.dispatch() if not e.ctrlKey
+        this.dispatch e if not e.ctrlKey
       else
-        this.dispatch()
+        this.dispatch e
     # coffeescript will return everywhere!!
     return
 

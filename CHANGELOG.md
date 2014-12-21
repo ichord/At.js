@@ -1,3 +1,17 @@
+### v1.0.0
+
+features:
+
+* standardlize options
+* new api: `append` for appending data at runtime.
+* remove `inserting_wrapper`
+
+codes:
+
+* use `@` instead of `this`
+* use camel style for variable
+* split a editable controller just for contentediable element
+
 ### v0.5.2
 
 * e1f6566 - fix error that doesn't display mention list on new line
