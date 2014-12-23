@@ -129,3 +129,6 @@ DEFAULT_CALLBACKS =
   #   offset.left += 10
   #   offset.top += 10
   #   offset
+  before_reposition: (offset) -> offset
+
+  after_match_failed: (at, el) ->

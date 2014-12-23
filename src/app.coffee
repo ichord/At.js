@@ -3,9 +3,9 @@ class App
 
   # @param inputor [HTML DOM Object] `input` or `textarea`
   constructor: (inputor) ->
-    @current_flag = null
+    @currentFlag = null
     @controllers = {}
-    @alias_maps = {}
+    @aliasMaps = {}
     @$inputor = $(inputor)
     this.setIframe()
     this.listen()
@@ -30,18 +30,18 @@ class App
       this.createContainer document
 
   controller: (at) ->
-    if @alias_maps[at]
-      current = @controllers[@alias_maps[at]]
+    if @aliasMaps[at]
+      current = @controllers[@aliasMaps[at]]
     else
-      for current_flag, c of @controllers
-        if current_flag is at
+      for currentFlag, c of @controllers
+        if currentFlag is at
           current = c
           break
 
-    if current then current else @controllers[@current_flag]
+    if current then current else @controllers[@currentFlag]
 
-  set_context_for: (at) ->
-    @current_flag = at
+  setContextFor: (at) ->
+    @currentFlag = at
     this
 
   # At.js can register multiple at char (flag) to every inputor such as "@" and ":"
@@ -57,7 +57,7 @@ class App
       else
         new TextareaController this, flag
     # TODO: it will produce rubbish alias map, reduse this.
-    @alias_maps[setting.alias] = flag if setting.alias
+    @aliasMaps[setting.alias] = flag if setting.alias
     controller.init setting
     this
 
@@ -65,13 +65,13 @@ class App
   listen: ->
     @$inputor
       .on 'keyup.atwhoInner', (e) =>
-        this.on_keyup(e)
+        this.onKeyup(e)
       .on 'keydown.atwhoInner', (e) =>
-        this.on_keydown(e)
+        this.onKeydown(e)
       .on 'scroll.atwhoInner', (e) =>
         this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
-        c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
+        c.view.hide(e,c.getOpt("display_timeout")) if c = this.controller()
       .on 'click.atwhoInner', (e) =>
         this.dispatch e
 
@@ -84,15 +84,15 @@ class App
 
   dispatch: (e) ->
     $.map @controllers, (c) =>
-      if delay = c.get_opt('delay')
+      if delay = c.getOpt('delay')
         clearTimeout @delayedCallback
         @delayedCallback = setTimeout(=>
-          this.set_context_for c.at if c.look_up e
+          this.setContextFor c.at if c.lookUp e
         , delay)
       else
-        this.set_context_for c.at if c.look_up e
+        this.setContextFor c.at if c.lookUp e
 
-  on_keyup: (e) ->
+  onKeyup: (e) ->
     switch e.keyCode
       when KEY_CODE.ESC
         e.preventDefault()
@@ -106,7 +106,7 @@ class App
     # coffeescript will return everywhere!!
     return
 
-  on_keydown: (e) ->
+  onKeydown: (e) ->
     # return if not (view = this.controller().view).visible()
     view = this.controller()?.view
     return if not (view and view.visible())

@@ -19,13 +19,13 @@ class Model
   # @param callback [Function] for receiving data
   query: (query, callback) ->
     data = this.fetch()
-    search_key = @context.get_opt("search_key")
+    search_key = @context.getOpt("search_key")
     data = @context.callbacks('filter').call(@context, query, data, search_key) || []
-    _remote_filter = @context.callbacks('remote_filter')
-    if data.length > 0 or (!_remote_filter and data.length == 0)
+    _remoteFilter = @context.callbacks('remote_filter')
+    if data.length > 0 or (!_remoteFilter and data.length == 0)
       callback data
     else
-      _remote_filter.call(@context, query, callback)
+      _remoteFilter.call(@context, query, callback)
 
   # get or set current data which would be shown on the list view.
   #

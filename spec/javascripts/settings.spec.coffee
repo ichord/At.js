@@ -19,9 +19,9 @@ describe "settings", ->
     $.fn.atwho.default.callbacks.filter = func
     $.fn.atwho.default.limit = 8
     $inputor = $("<input/>").atwho at: "@"
-    controller = $inputor.data('atwho').set_context_for("@").controller()
+    controller = $inputor.data('atwho').setContextFor("@").controller()
     expect(controller.callbacks("filter")).toBe func
-    expect(controller.get_opt("limit")).toBe 8
+    expect(controller.getOpt("limit")).toBe 8
     $.extend $.fn.atwho.default.callbacks, old
 
   it "setting empty at", ->
@@ -65,7 +65,7 @@ describe "settings", ->
       at: "$"
       data: fixtures["names"]
 
-    controller = $inputor.data('atwho').set_context_for("$").controller()
+    controller = $inputor.data('atwho').setContextFor("$").controller()
     simulateTypingIn $inputor, "$"
     expect(controller.view.visible()).toBe true
 
@@ -75,7 +75,7 @@ describe "settings", ->
       data: fixtures["names"]
       start_with_space: no
 
-    controller = $inputor.data('atwho').set_context_for("@").controller()
+    controller = $inputor.data('atwho').setContextFor("@").controller()
     simulateTypingIn $inputor
     expect(controller.view.visible()).toBe true
 

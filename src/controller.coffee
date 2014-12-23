@@ -9,7 +9,6 @@ class Controller
     @setting  = null
     @query    = null
     @pos      = 0
-    @cur_rect = null
     @range    = null
     if (@$el = $("#atwho-ground-#{@id}", @app.$el)).length == 0
       @app.$el.append @$el = $("<div id='atwho-ground-#{@id}'></div>")
@@ -28,11 +27,11 @@ class Controller
     @view.destroy()
     @$el.remove()
 
-  call_default: (func_name, args...) ->
+  callDefault: (funcName, args...) ->
     try
-      DEFAULT_CALLBACKS[func_name].apply this, args
+      DEFAULT_CALLBACKS[funcName].apply this, args
     catch error
-      $.error "#{error} Or maybe At.js doesn't have function #{func_name}"
+      $.error "#{error} Or maybe At.js doesn't have function #{funcName}"
 
   # Delegate custom `jQueryEvent` to the inputor
   # This function will add `atwho` as namespace to every jQuery event
@@ -48,16 +47,16 @@ class Controller
   # @param data [Array] data to callback
   trigger: (name, data=[]) ->
     data.push this
-    alias = this.get_opt('alias')
-    event_name = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
-    @$inputor.trigger event_name, data
+    alias = this.getOpt('alias')
+    eventName = if alias then "#{name}-#{alias}.atwho" else "#{name}.atwho"
+    @$inputor.trigger eventName, data
 
   # Get callback either in settings which was set by plugin user or in default callbacks list.
   #
-  # @param func_name [String] callback's name
+  # @param funcName [String] callback's name
   # @return [Function] The callback.
-  callbacks: (func_name)->
-    this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name]
+  callbacks: (funcName)->
+    this.getOpt("callbacks")[funcName] || DEFAULT_CALLBACKS[funcName]
 
   # Because different registered at chars have different settings.
   # so we should give their own for them.
@@ -65,15 +64,15 @@ class Controller
   # @param at [String] setting's at name
   # @param default_value [?] return this if nothing is returned from current settings.
   # @return [?] setting's value
-  get_opt: (at, default_value) ->
+  getOpt: (at, default_value) ->
     try
       @setting[at]
     catch e
       null
 
-  insert_content_for: ($li) ->
+  insertContentFor: ($li) ->
     data_value = $li.data('value')
-    tpl = this.get_opt('insert_tpl')
+    tpl = this.getOpt('insert_tpl')
     if @$inputor.is('textarea, input') or not tpl
       return data_value
 
@@ -83,14 +82,14 @@ class Controller
   # Render list view
   #
   # @param data [Array] The data
-  render_view: (data) ->
-    search_key = this.get_opt("search_key")
+  renderView: (data) ->
+    search_key = this.getOpt("search_key")
     data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , search_key)
-    @view.render data[0...this.get_opt('limit')]
+    @view.render data[0...this.getOpt('limit')]
 
   # Searching!
-  look_up: (e) ->
-    return if not query = this.catch_query e
-    _callback = (data) -> if data and data.length > 0 then this.render_view data else @view.hide()
+  lookUp: (e) ->
+    return if not query = this.catchQuery e
+    _callback = (data) -> if data and data.length > 0 then this.renderView data else @view.hide()
     @model.query query.text, $.proxy(_callback, this)
     query

@@ -5,19 +5,19 @@ class View
   # @param controller [Object] The Controller.
   constructor: (@context) ->
     @$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>")
-    @timeout_id = null
+    @timeoutID = null
     # create HTML DOM of list view if it does not exist
     @context.$el.append(@$el)
-    this.bind_event()
+    this.bindEvent()
 
   init: ->
-    id = @context.get_opt("alias") || @context.at.charCodeAt(0)
+    id = @context.getOpt("alias") || @context.at.charCodeAt(0)
     @$el.attr('id': "at-view-#{id}")
 
   destroy: ->
     @$el.remove()
 
-  bind_event: ->
+  bindEvent: ->
     $menu = @$el.find('ul')
     $menu.on 'mouseenter.atwho-view','li', (e) ->
       $menu.find('.cur').removeClass 'cur'
@@ -36,11 +36,11 @@ class View
 
   choose: (e) ->
     if ($li = @$el.find ".cur").length
-      content = @context.insert_content_for $li
+      content = @context.insertContentFor $li
       @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
-    @stop_showing = yes if @context.get_opt("hide_without_suffix")
+    @stopShowing = yes if @context.getOpt("hide_without_suffix")
 
   reposition: (rect) ->
     _window = if @context.app.iframeStandalone then @context.app.window else window
@@ -72,8 +72,8 @@ class View
       }, 150
 
   show: ->
-    if @stop_showing
-      @stop_showing = false
+    if @stopShowing
+      @stopShowing = false
       return
     if not this.visible()
       @$el.show()
@@ -88,8 +88,8 @@ class View
       @context.trigger 'hidden', [e]
     else
       callback = => this.hide()
-      clearTimeout @timeout_id
-      @timeout_id = setTimeout callback, time
+      clearTimeout @timeoutID
+      @timeoutID = setTimeout callback, time
 
   # render list view
   render: (list) ->
@@ -99,7 +99,7 @@ class View
 
     @$el.find('ul').empty()
     $ul = @$el.find('ul')
-    tpl = @context.get_opt('tpl')
+    tpl = @context.getOpt('tpl')
 
     for item in list
       item = $.extend {}, item, {'atwho-at': @context.at}
@@ -109,4 +109,4 @@ class View
       $ul.append $li
 
     this.show()
-    $ul.find("li:first").addClass "cur" if @context.get_opt('highlight_first')
+    $ul.find("li:first").addClass "cur" if @context.getOpt('highlight_first')

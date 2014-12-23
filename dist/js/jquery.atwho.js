@@ -26,9 +26,9 @@ var Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model
 
 App = (function() {
   function App(inputor) {
-    this.current_flag = null;
+    this.currentFlag = null;
     this.controllers = {};
-    this.alias_maps = {};
+    this.aliasMaps = {};
     this.$inputor = $(inputor);
     this.setIframe();
     this.listen();
@@ -65,14 +65,14 @@ App = (function() {
   };
 
   App.prototype.controller = function(at) {
-    var c, current, current_flag, _ref;
-    if (this.alias_maps[at]) {
-      current = this.controllers[this.alias_maps[at]];
+    var c, current, currentFlag, _ref;
+    if (this.aliasMaps[at]) {
+      current = this.controllers[this.aliasMaps[at]];
     } else {
       _ref = this.controllers;
-      for (current_flag in _ref) {
-        c = _ref[current_flag];
-        if (current_flag === at) {
+      for (currentFlag in _ref) {
+        c = _ref[currentFlag];
+        if (currentFlag === at) {
           current = c;
           break;
         }
@@ -81,12 +81,12 @@ App = (function() {
     if (current) {
       return current;
     } else {
-      return this.controllers[this.current_flag];
+      return this.controllers[this.currentFlag];
     }
   };
 
-  App.prototype.set_context_for = function(at) {
-    this.current_flag = at;
+  App.prototype.setContextFor = function(at) {
+    this.currentFlag = at;
     return this;
   };
 
@@ -94,7 +94,7 @@ App = (function() {
     var controller, _base;
     controller = (_base = this.controllers)[flag] || (_base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
     if (setting.alias) {
-      this.alias_maps[setting.alias] = flag;
+      this.aliasMaps[setting.alias] = flag;
     }
     controller.init(setting);
     return this;
@@ -103,11 +103,11 @@ App = (function() {
   App.prototype.listen = function() {
     return this.$inputor.on('keyup.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.on_keyup(e);
+        return _this.onKeyup(e);
       };
     })(this)).on('keydown.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.on_keydown(e);
+        return _this.onKeydown(e);
       };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
@@ -118,7 +118,7 @@ App = (function() {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(e, c.get_opt("display_timeout"));
+          return c.view.hide(e, c.getOpt("display_timeout"));
         }
       };
     })(this)).on('click.atwhoInner', (function(_this) {
@@ -144,23 +144,23 @@ App = (function() {
     return $.map(this.controllers, (function(_this) {
       return function(c) {
         var delay;
-        if (delay = c.get_opt('delay')) {
+        if (delay = c.getOpt('delay')) {
           clearTimeout(_this.delayedCallback);
           return _this.delayedCallback = setTimeout(function() {
-            if (c.look_up(e)) {
-              return _this.set_context_for(c.at);
+            if (c.lookUp(e)) {
+              return _this.setContextFor(c.at);
             }
           }, delay);
         } else {
-          if (c.look_up(e)) {
-            return _this.set_context_for(c.at);
+          if (c.lookUp(e)) {
+            return _this.setContextFor(c.at);
           }
         }
       };
     })(this));
   };
 
-  App.prototype.on_keyup = function(e) {
+  App.prototype.onKeyup = function(e) {
     var _ref;
     switch (e.keyCode) {
       case KEY_CODE.ESC:
@@ -185,7 +185,7 @@ App = (function() {
     }
   };
 
-  App.prototype.on_keydown = function(e) {
+  App.prototype.onKeydown = function(e) {
     var view, _ref;
     view = (_ref = this.controller()) != null ? _ref.view : void 0;
     if (!(view && view.visible())) {
@@ -248,7 +248,6 @@ Controller = (function() {
     this.setting = null;
     this.query = null;
     this.pos = 0;
-    this.cur_rect = null;
     this.range = null;
     if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
       this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
@@ -270,33 +269,33 @@ Controller = (function() {
     return this.$el.remove();
   };
 
-  Controller.prototype.call_default = function() {
-    var args, error, func_name;
-    func_name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+  Controller.prototype.callDefault = function() {
+    var args, error, funcName;
+    funcName = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
     try {
-      return DEFAULT_CALLBACKS[func_name].apply(this, args);
+      return DEFAULT_CALLBACKS[funcName].apply(this, args);
     } catch (_error) {
       error = _error;
-      return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
+      return $.error("" + error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
 
   Controller.prototype.trigger = function(name, data) {
-    var alias, event_name;
+    var alias, eventName;
     if (data == null) {
       data = [];
     }
     data.push(this);
-    alias = this.get_opt('alias');
-    event_name = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
-    return this.$inputor.trigger(event_name, data);
+    alias = this.getOpt('alias');
+    eventName = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
+    return this.$inputor.trigger(eventName, data);
   };
 
-  Controller.prototype.callbacks = function(func_name) {
-    return this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name];
+  Controller.prototype.callbacks = function(funcName) {
+    return this.getOpt("callbacks")[funcName] || DEFAULT_CALLBACKS[funcName];
   };
 
-  Controller.prototype.get_opt = function(at, default_value) {
+  Controller.prototype.getOpt = function(at, default_value) {
     var e;
     try {
       return this.setting[at];
@@ -306,10 +305,10 @@ Controller = (function() {
     }
   };
 
-  Controller.prototype.insert_content_for = function($li) {
+  Controller.prototype.insertContentFor = function($li) {
     var data, data_value, tpl;
     data_value = $li.data('value');
-    tpl = this.get_opt('insert_tpl');
+    tpl = this.getOpt('insert_tpl');
     if (this.$inputor.is('textarea, input') || !tpl) {
       return data_value;
     }
@@ -320,21 +319,21 @@ Controller = (function() {
     return this.callbacks("tpl_eval").call(this, tpl, data);
   };
 
-  Controller.prototype.render_view = function(data) {
+  Controller.prototype.renderView = function(data) {
     var search_key;
-    search_key = this.get_opt("search_key");
+    search_key = this.getOpt("search_key");
     data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
-    return this.view.render(data.slice(0, this.get_opt('limit')));
+    return this.view.render(data.slice(0, this.getOpt('limit')));
   };
 
-  Controller.prototype.look_up = function(e) {
+  Controller.prototype.lookUp = function(e) {
     var query, _callback;
-    if (!(query = this.catch_query(e))) {
+    if (!(query = this.catchQuery(e))) {
       return;
     }
     _callback = function(data) {
       if (data && data.length > 0) {
-        return this.render_view(data);
+        return this.renderView(data);
       } else {
         return this.view.hide();
       }
@@ -354,22 +353,22 @@ TextareaController = (function(_super) {
     return TextareaController.__super__.constructor.apply(this, arguments);
   }
 
-  TextareaController.prototype.catch_query = function() {
-    var caret_pos, content, end, query, start, subtext;
+  TextareaController.prototype.catchQuery = function() {
+    var caretPos, content, end, query, start, subtext;
     content = this.$inputor.val();
-    caret_pos = this.$inputor.caret('pos', {
+    caretPos = this.$inputor.caret('pos', {
       iframe: this.app.iframe
     });
-    subtext = content.slice(0, caret_pos);
-    query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
-    if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
-      start = caret_pos - query.length;
+    subtext = content.slice(0, caretPos);
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('start_with_space'));
+    if (typeof query === "string" && query.length <= this.getOpt('max_len', 20)) {
+      start = caretPos - query.length;
       end = start + query.length;
       this.pos = start;
       query = {
         'text': query,
-        'head_pos': start,
-        'end_pos': end
+        'headPos': start,
+        'endPos': end
       };
       this.trigger("matched", [this.at, query.text]);
     } else {
@@ -380,35 +379,35 @@ TextareaController = (function(_super) {
   };
 
   TextareaController.prototype.rect = function() {
-    var c, iframe_offset, scale_bottom;
+    var c, iframeOffset, scaleBottom;
     if (!(c = this.$inputor.caret('offset', this.pos - 1, {
       iframe: this.app.iframe
     }))) {
       return;
     }
     if (this.app.iframe && !this.app.iframeStandalone) {
-      iframe_offset = $(this.app.iframe).offset();
-      c.left += iframe_offset.left;
-      c.top += iframe_offset.top;
+      iframeOffset = $(this.app.iframe).offset();
+      c.left += iframeOffset.left;
+      c.top += iframeOffset.top;
     }
-    scale_bottom = this.app.document.selection ? 0 : 2;
+    scaleBottom = this.app.document.selection ? 0 : 2;
     return {
       left: c.left,
       top: c.top,
-      bottom: c.top + c.height + scale_bottom
+      bottom: c.top + c.height + scaleBottom
     };
   };
 
   TextareaController.prototype.insert = function(content, $li) {
-    var $inputor, source, start_str, suffix, text;
+    var $inputor, source, startStr, suffix, text;
     $inputor = this.$inputor;
     source = $inputor.val();
-    start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-    suffix = (suffix = this.get_opt('suffix')) === "" ? suffix : suffix || " ";
+    startStr = source.slice(0, Math.max(this.query.headPos - this.at.length, 0));
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || " ";
     content += suffix;
-    text = "" + start_str + content + (source.slice(this.query['end_pos'] || 0));
+    text = "" + startStr + content + (source.slice(this.query['endPos'] || 0));
     $inputor.val(text);
-    $inputor.caret('pos', start_str.length + content.length, {
+    $inputor.caret('pos', startStr.length + content.length, {
       iframe: this.app.iframe
     });
     if (!$inputor.is(':focus')) {
@@ -448,30 +447,26 @@ EditableController = (function(_super) {
     return sel.addRange(range);
   };
 
-  EditableController.prototype.catch_query = function(e) {
+  EditableController.prototype.catchQuery = function(e) {
     var $query, content, matched, query, range, _range;
     if (!(range = this._getRange())) {
       return;
     }
     $(range.startContainer).closest('.atwho-inserted').removeClass('atwho-inserted').addClass('atwho-query');
-    if (($query = $(".atwho-query", this.app.document)).length > 0) {
-      if (e.type === "click" && $(range.startContainer).closest('.atwho-query').length === 0) {
-        matched = null;
-      } else {
-        matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.get_opt('start_with_space'));
-      }
+    if (($query = $(".atwho-query", this.app.document)).length > 0 && !(e.type === "click" && $(range.startContainer).closest('.atwho-query').length === 0)) {
+      matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.getOpt('start_with_space'));
     } else {
       _range = range.cloneRange();
       _range.setStart(range.startContainer, 0);
       content = _range.toString();
-      matched = this.callbacks("matcher").call(this, this.at, content, this.get_opt('start_with_space'));
+      matched = this.callbacks("matcher").call(this, this.at, content, this.getOpt('start_with_space'));
       if (typeof matched === 'string') {
         range.setStart(range.startContainer, content.lastIndexOf(this.at));
         range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
         this._setRangeEndAfter($query, range);
       }
     }
-    if (typeof matched === 'string' && matched.length <= this.get_opt('max_len', 20)) {
+    if (typeof matched === 'string' && matched.length <= this.getOpt('max_len', 20)) {
       query = {
         text: matched,
         el: $query
@@ -489,12 +484,12 @@ EditableController = (function(_super) {
   };
 
   EditableController.prototype.rect = function() {
-    var iframe_offset, rect;
+    var iframeOffset, rect;
     rect = this.query.el.offset();
     if (this.app.iframe && !this.app.iframeStandalone) {
-      iframe_offset = $(this.app.iframe).offset();
-      rect.left += iframe_offset.left;
-      rect.top += iframe_offset.top;
+      iframeOffset = $(this.app.iframe).offset();
+      rect.left += iframeOffset.left;
+      rect.top += iframeOffset.top;
     }
     rect.bottom = rect.top + this.query.el.height();
     return rect;
@@ -502,7 +497,7 @@ EditableController = (function(_super) {
 
   EditableController.prototype.insert = function(content, $li) {
     var range, suffix, suffixNode;
-    suffix = (suffix = this.get_opt('suffix')) ? suffix : suffix || "\u00A0";
+    suffix = (suffix = this.getOpt('suffix')) ? suffix : suffix || "\u00A0";
     this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
     if (range = this._getRange()) {
       range.setEndAfter(this.query.el[0]);
@@ -536,15 +531,15 @@ Model = (function() {
   };
 
   Model.prototype.query = function(query, callback) {
-    var data, search_key, _remote_filter;
+    var data, search_key, _remoteFilter;
     data = this.fetch();
-    search_key = this.context.get_opt("search_key");
+    search_key = this.context.getOpt("search_key");
     data = this.context.callbacks('filter').call(this.context, query, data, search_key) || [];
-    _remote_filter = this.context.callbacks('remote_filter');
-    if (data.length > 0 || (!_remote_filter && data.length === 0)) {
+    _remoteFilter = this.context.callbacks('remote_filter');
+    if (data.length > 0 || (!_remoteFilter && data.length === 0)) {
       return callback(data);
     } else {
-      return _remote_filter.call(this.context, query, callback);
+      return _remoteFilter.call(this.context, query, callback);
     }
   };
 
@@ -588,14 +583,14 @@ View = (function() {
   function View(context) {
     this.context = context;
     this.$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>");
-    this.timeout_id = null;
+    this.timeoutID = null;
     this.context.$el.append(this.$el);
-    this.bind_event();
+    this.bindEvent();
   }
 
   View.prototype.init = function() {
     var id;
-    id = this.context.get_opt("alias") || this.context.at.charCodeAt(0);
+    id = this.context.getOpt("alias") || this.context.at.charCodeAt(0);
     return this.$el.attr({
       'id': "at-view-" + id
     });
@@ -605,7 +600,7 @@ View = (function() {
     return this.$el.remove();
   };
 
-  View.prototype.bind_event = function() {
+  View.prototype.bindEvent = function() {
     var $menu;
     $menu = this.$el.find('ul');
     return $menu.on('mouseenter.atwho-view', 'li', function(e) {
@@ -628,13 +623,13 @@ View = (function() {
   View.prototype.choose = function(e) {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
-      content = this.context.insert_content_for($li);
+      content = this.context.insertContentFor($li);
       this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);
     }
-    if (this.context.get_opt("hide_without_suffix")) {
-      return this.stop_showing = true;
+    if (this.context.getOpt("hide_without_suffix")) {
+      return this.stopShowing = true;
     }
   };
 
@@ -686,8 +681,8 @@ View = (function() {
 
   View.prototype.show = function() {
     var rect;
-    if (this.stop_showing) {
-      this.stop_showing = false;
+    if (this.stopShowing) {
+      this.stopShowing = false;
       return;
     }
     if (!this.visible()) {
@@ -714,8 +709,8 @@ View = (function() {
           return _this.hide();
         };
       })(this);
-      clearTimeout(this.timeout_id);
-      return this.timeout_id = setTimeout(callback, time);
+      clearTimeout(this.timeoutID);
+      return this.timeoutID = setTimeout(callback, time);
     }
   };
 
@@ -727,7 +722,7 @@ View = (function() {
     }
     this.$el.find('ul').empty();
     $ul = this.$el.find('ul');
-    tpl = this.context.get_opt('tpl');
+    tpl = this.context.getOpt('tpl');
     for (_i = 0, _len = list.length; _i < _len; _i++) {
       item = list[_i];
       item = $.extend({}, item, {
@@ -739,7 +734,7 @@ View = (function() {
       $ul.append($li);
     }
     this.show();
-    if (this.context.get_opt('highlight_first')) {
+    if (this.context.getOpt('highlight_first')) {
       return $ul.find("li:first").addClass("cur");
     }
   };
@@ -846,7 +841,11 @@ DEFAULT_CALLBACKS = {
   },
   before_insert: function(value, $li) {
     return value;
-  }
+  },
+  before_reposition: function(offset) {
+    return offset;
+  },
+  after_match_failed: function(at, el) {}
 };
 
 Api = {
