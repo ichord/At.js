@@ -7,6 +7,11 @@ KEY_CODE =
   CTRL: 17
   P: 80
   N: 78
+  LEFT: 37
+  UP:38
+  RIGHT: 39
+  DOWN:40
+  BACKSPACE: 8
 
 # Functions set for handling and rendering the data.
 # Others developers can override these methods to tweak At.js such as matcher.

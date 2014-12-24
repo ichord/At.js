@@ -430,35 +430,103 @@ EditableController = (function(_super) {
     }
   };
 
-  EditableController.prototype._setRangeEndAfter = function(node, range) {
+  EditableController.prototype._setRange = function(position, node, range) {
+    if (range == null) {
+      range = this._getRange();
+    }
+    if (!range) {
+      return;
+    }
+    node = $(node)[0];
+    if (position === 'after') {
+      range.setEndAfter(node);
+      range.setStartAfter(node);
+    } else {
+      range.setEndBefore(node);
+      range.setStartBefore(node);
+    }
+    range.collapse(false);
+    return this._clearRange(range);
+  };
+
+  EditableController.prototype._clearRange = function(range) {
     var sel;
     if (range == null) {
       range = this._getRange();
     }
     sel = this.app.window.getSelection();
-    range.setEndAfter($(node)[0]);
-    range.collapse(false);
     sel.removeAllRanges();
     return sel.addRange(range);
   };
 
+  EditableController.prototype._movingEvent = function(e) {
+    var _ref;
+    return e.type === 'click' || ((_ref = e.which) === KEY_CODE.RIGHT || _ref === KEY_CODE.LEFT || _ref === KEY_CODE.UP || _ref === KEY_CODE.DOWN);
+  };
+
+  EditableController.prototype._unwrap = function(node) {
+    var next;
+    node = $(node).unwrap().get(0);
+    if ((next = node.nextSibling) && next.nodeValue) {
+      node.nodeValue += next.nodeValue;
+      $(next).remove();
+    }
+    return node;
+  };
+
   EditableController.prototype.catchQuery = function(e) {
-    var $query, content, matched, query, range, _range;
+    var $inserted, $query, index, inserted, lastNode, matched, offset, query, range, _range;
     if (!(range = this._getRange())) {
       return;
     }
-    $(range.startContainer).closest('.atwho-inserted').removeClass('atwho-inserted').addClass('atwho-query');
-    if (($query = $(".atwho-query", this.app.document)).length > 0 && !(e.type === "click" && $(range.startContainer).closest('.atwho-query').length === 0)) {
-      matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.getOpt('startWithSpace'));
-    } else {
-      _range = range.cloneRange();
-      _range.setStart(range.startContainer, 0);
-      content = _range.toString();
-      matched = this.callbacks("matcher").call(this, this.at, content, this.getOpt('startWithSpace'));
-      if (typeof matched === 'string') {
-        range.setStart(range.startContainer, content.lastIndexOf(this.at));
-        range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
-        this._setRangeEndAfter($query, range);
+    if (e.which === KEY_CODE.ENTER) {
+      ($query = $(range.startContainer).closest('.atwho-query')).contents().unwrap();
+      if ($query.is(':empty')) {
+        $query.remove();
+      }
+      ($query = $(".atwho-query", this.app.document)).text($query.text()).contents().last().unwrap();
+      this._clearRange();
+      return;
+    }
+    if (/firefox/i.test(navigator.userAgent)) {
+      if ($(range.startContainer).is(this.$inputor)) {
+        this._clearRange();
+        return;
+      }
+      if (e.which === KEY_CODE.BACKSPACE && range.startContainer.nodeType === document.ELEMENT_NODE && (offset = range.startOffset - 1) >= 0) {
+        _range = range.cloneRange();
+        _range.setStart(range.startContainer, offset);
+        if ($(_range.cloneContents()).contents().last().is('.atwho-inserted')) {
+          inserted = $(range.startContainer).contents().get(offset);
+          this._setRange("after", $(inserted).contents().last());
+        }
+      } else if (e.which === KEY_CODE.LEFT && range.startContainer.nodeType === document.TEXT_NODE) {
+        $inserted = $(range.startContainer.previousSibling);
+        if ($inserted.is('.atwho-inserted') && range.startOffset === 0) {
+          this._setRange('after', $inserted.contents().last());
+        }
+      }
+    }
+    $(range.startContainer).closest('.atwho-inserted').addClass('atwho-query').siblings().removeClass('atwho-query');
+    if (($query = $(".atwho-query", this.app.document)).length > 0 && $query.is(':empty') && $query.text().length === 0) {
+      $query.remove();
+    }
+    if (!this._movingEvent(e)) {
+      $query.removeClass('atwho-inserted');
+    }
+    _range = range.cloneRange();
+    _range.setStart(range.startContainer, 0);
+    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
+    if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
+      range.setStart(range.startContainer, index);
+      range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
+      lastNode = $query.contents().last().get(0);
+      if (/firefox/i.test(navigator.userAgent)) {
+        range.setStart(lastNode, lastNode.length);
+        range.setEnd(lastNode, lastNode.length);
+        this._clearRange(range);
+      } else {
+        this._setRange('after', lastNode, range);
       }
     }
     if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20)) {
@@ -470,10 +538,11 @@ EditableController = (function(_super) {
     } else {
       this.view.hide();
       query = null;
-      if ($query.text().indexOf(this.at) > -1) {
-        $query.html($query.text());
-        if ($query.text().indexOf(this.at) > -1 && false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
-          this._setRangeEndAfter($query.html($query.text()).contents().unwrap());
+      if ($query.text().indexOf(this.at) >= 0) {
+        if (this._movingEvent(e) && $query.hasClass('atwho-inserted')) {
+          $query.removeClass('atwho-query');
+        } else if (false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
+          this._setRange("after", this._unwrap($query.text($query.text()).contents().first()));
         }
       }
     }
@@ -481,12 +550,12 @@ EditableController = (function(_super) {
   };
 
   EditableController.prototype.rect = function() {
-    var iframeOffset, rect;
+    var $iframe, iframeOffset, rect;
     rect = this.query.el.offset();
     if (this.app.iframe && !this.app.iframeStandalone) {
-      iframeOffset = $(this.app.iframe).offset();
-      rect.left += iframeOffset.left;
-      rect.top += iframeOffset.top;
+      iframeOffset = ($iframe = $(this.app.iframe)).offset();
+      rect.left += iframeOffset.left - this.$inputor.scrollLeft();
+      rect.top += iframeOffset.top - this.$inputor.scrollTop();
     }
     rect.bottom = rect.top + this.query.el.height();
     return rect;
@@ -500,7 +569,7 @@ EditableController = (function(_super) {
       range.setEndAfter(this.query.el[0]);
       range.collapse(false);
       range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
-      this._setRangeEndAfter(suffixNode, range);
+      this._setRange('after', suffixNode, range);
     }
     if (!this.$inputor.is(':focus')) {
       this.$inputor.focus();
@@ -748,7 +817,12 @@ KEY_CODE = {
   ENTER: 13,
   CTRL: 17,
   P: 80,
-  N: 78
+  N: 78,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  BACKSPACE: 8
 };
 
 DEFAULT_CALLBACKS = {

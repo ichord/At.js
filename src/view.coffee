@@ -45,9 +45,9 @@ class View
   reposition: (rect) ->
     _window = if @context.app.iframeStandalone then @context.app.window else window
     if rect.bottom + @$el.height() - $(_window).scrollTop() > $(_window).height()
-        rect.bottom = rect.top - @$el.height()
+      rect.bottom = rect.top - @$el.height()
     if rect.left > overflowOffset = $(_window).width() - @$el.width() - 5
-        rect.left = overflowOffset
+      rect.left = overflowOffset
     offset = {left:rect.left, top:rect.bottom}
     @context.callbacks("beforeReposition")?.call(@context, offset)
     @$el.offset offset
