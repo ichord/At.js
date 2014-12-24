@@ -16,6 +16,9 @@ describe "default callbacks", ->
     text = $.trim $inputor.text()
     callbacks = $.fn.atwho.default.callbacks
     app = $inputor.data("atwho")
+    
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   it "refactor the data before save", ->
     items = callbacks.beforeSave.call(app, fixtures["names"])

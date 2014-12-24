@@ -8,6 +8,8 @@ describe "events", ->
     loadFixtures "inputors.html"
     $inputor = $("#inputor").atwho at: "@", data: fixtures["names"]
     app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
 	describe "inner", ->
 	  controller = null

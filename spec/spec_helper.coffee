@@ -21,13 +21,12 @@
   if $inputor.attr('contentEditable') == 'true' && oWindow.getSelection
     $inputor.focus()
     sel = oWindow.getSelection()
-    range = sel.getRangeAt(0)
-    clonedRange = range.cloneRange()
-    clonedRange.selectNodeContents($inputor[0])
-    clonedRange.setStart(range.endContainer, pos)
-    clonedRange.collapse(true)
+    range = oDocument.createRange()
+    range.setStart $inputor.contents().get(0), pos
+    range.setEnd $inputor.contents().get(0), pos
+    range.collapse false
     sel.removeAllRanges()
-    sel.addRange(clonedRange)
+    sel.addRange(range)
   else
     $inputor.caret('pos', pos)
   $inputor.trigger("keyup")

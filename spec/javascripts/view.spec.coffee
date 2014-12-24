@@ -9,6 +9,8 @@ describe "views", ->
     $inputor = $ "#inputor"
       .atwho at: "@", data: fixtures["names"]
     app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   describe "issues", ->
     controller = null

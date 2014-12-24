@@ -11,6 +11,8 @@ describe "settings", ->
     app = getAppOf $inputor
     controller = app.controller()
     callbacks = $.fn.atwho.default.callbacks
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   it "update common settings", ->
     func = () ->

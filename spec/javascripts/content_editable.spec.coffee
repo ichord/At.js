@@ -6,6 +6,8 @@ describe "content editable", ->
 		loadFixtures "inputors.html"
 		$inputor = $("#editable").atwho(at: "@", data: ["Jobs"])
 		app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
 	it "can insert content", ->
 		triggerAtwhoAt $inputor
