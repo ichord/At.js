@@ -28,7 +28,7 @@ $.fn.atwho.default =
   at: undefined
   alias: undefined
   data: null
-  tpl: "<li>${name}</li>"
+  displayTpl: "<li>${name}</li>"
   insertTpl: "${atwho-at}${name}"
   callbacks: DEFAULT_CALLBACKS
   searchKey: "name"

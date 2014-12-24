@@ -99,7 +99,7 @@ class View
 
     @$el.find('ul').empty()
     $ul = @$el.find('ul')
-    tpl = @context.getOpt('tpl')
+    tpl = @context.getOpt('displayTpl')
 
     for item in list
       item = $.extend {}, item, {'atwho-at': @context.at}

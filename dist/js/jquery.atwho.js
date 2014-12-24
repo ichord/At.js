@@ -719,7 +719,7 @@ View = (function() {
     }
     this.$el.find('ul').empty();
     $ul = this.$el.find('ul');
-    tpl = this.context.getOpt('tpl');
+    tpl = this.context.getOpt('displayTpl');
     for (_i = 0, _len = list.length; _i < _len; _i++) {
       item = list[_i];
       item = $.extend({}, item, {
@@ -889,7 +889,7 @@ $.fn.atwho["default"] = {
   at: void 0,
   alias: void 0,
   data: null,
-  tpl: "<li>${name}</li>",
+  displayTpl: "<li>${name}</li>",
   insertTpl: "${atwho-at}${name}",
   callbacks: DEFAULT_CALLBACKS,
   searchKey: "name",
