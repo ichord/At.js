@@ -71,12 +71,8 @@ class Controller
       null
 
   insertContentFor: ($li) ->
-    data_value = $li.data('value')
     tpl = this.getOpt('insert_tpl')
-    if @$inputor.is('textarea, input') or not tpl
-      return data_value
-
-    data = $.extend {}, $li.data('item-data'), {'atwho-data-value': data_value, 'atwho-at': @at}
+    data = $.extend {}, $li.data('item-data'), {'atwho-at': @at}
     this.callbacks("tpl_eval").call(this, tpl, data)
 
   # Render list view

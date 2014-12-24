@@ -28,8 +28,8 @@ $.fn.atwho.default =
   at: undefined
   alias: undefined
   data: null
-  tpl: "<li data-value='${atwho-at}${name}'>${name}</li>"
-  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>"
+  tpl: "<li>${name}</li>"
+  insert_tpl: "${atwho-at}${name}"
   callbacks: DEFAULT_CALLBACKS
   search_key: "name"
   suffix: undefined

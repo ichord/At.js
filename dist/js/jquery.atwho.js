@@ -306,14 +306,9 @@ Controller = (function() {
   };
 
   Controller.prototype.insertContentFor = function($li) {
-    var data, data_value, tpl;
-    data_value = $li.data('value');
+    var data, tpl;
     tpl = this.getOpt('insert_tpl');
-    if (this.$inputor.is('textarea, input') || !tpl) {
-      return data_value;
-    }
     data = $.extend({}, $li.data('item-data'), {
-      'atwho-data-value': data_value,
       'atwho-at': this.at
     });
     return this.callbacks("tpl_eval").call(this, tpl, data);
@@ -894,8 +889,8 @@ $.fn.atwho["default"] = {
   at: void 0,
   alias: void 0,
   data: null,
-  tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
-  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>",
+  tpl: "<li>${name}</li>",
+  insert_tpl: "${atwho-at}${name}",
   callbacks: DEFAULT_CALLBACKS,
   search_key: "name",
   suffix: void 0,
