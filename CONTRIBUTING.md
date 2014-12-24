@@ -3,7 +3,6 @@
 ### Code style
 
 **Two** space indent
-naming rules: use underscores to separate name (It's a leagcy style problems, so just use it continuelly).
 
 ### Modifying the code
 First, ensure that you have the latest [Node.js](http://nodejs.org/) and [npm](http://npmjs.org/) installed.
