@@ -1,16 +1,42 @@
 ### v1.0.0
 
-features:
+**The naming convention are using camel case**.  
+It means that every callback and setting's name are switched from underscope_naming to CamelNaming.
+Sorry about this.
 
-* standardlize options
-* new api: `append` for appending data at runtime.
-* remove `inserting_wrapper`
+Future version's naming will follow the rules of http://semver.org constantly.
 
-codes:
+#### Options:
 
-* use `@` instead of `this`
-* use camel style for variable
-* split a editable controller just for contentediable element
+* Replaced `tpl` with `displayTpl`: display template of dropdown menu items.
+  In previous versions, At.js will fetch the value of `data-value` to insert; It stops doing it.  
+  Please use the `insertTpl` option to manage the content to insert instead.  
+  The default value is `"<li>${name}</li>"`
+* The `insertTpl` option will be used in *textarea* as well.
+  The default value is `"${atwho-at}${name}"`
+
+#### Callbacks:
+
+* Added `afterMatchFailed` callback to *contentEditable*
+  It will be invoked after fail to match any query and stopping matching.  
+  Open *examples/hashtas.html* to examine how it work.  
+* Removed `inserting_wrapper` callback to *contentEditable*
+
+#### Internal changes:
+
+* refactor the `Controller`
+  Introduced `EditableController` class to control actions of `contenteditable` element.  
+  Introduced `TextareaController` class to control actions of `textarea` element.  
+  Both of them are inherit from the `Controller` class.
+
+* Refactored contentEditable mode
+  Inserted content are wrapped in a span: `<span class=".atwho-inserted"/>`  
+  Querying content are wrapped in a span: `<span class=".atwho-query"/>`
+
+* Bring back auto-discovery to iframe.
+* Fix wrong offset in iframe
+* Replaced `iframeStandalone` with `iframeAdRoot`
+* All processed events are preventing default and stopping propagation. 
 
 ### v0.5.2
 
