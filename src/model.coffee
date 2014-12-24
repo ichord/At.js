@@ -19,9 +19,9 @@ class Model
   # @param callback [Function] for receiving data
   query: (query, callback) ->
     data = this.fetch()
-    search_key = @context.getOpt("search_key")
-    data = @context.callbacks('filter').call(@context, query, data, search_key) || []
-    _remoteFilter = @context.callbacks('remote_filter')
+    searchKey = @context.getOpt("searchKey")
+    data = @context.callbacks('filter').call(@context, query, data, searchKey) || []
+    _remoteFilter = @context.callbacks('remoteFilter')
     if data.length > 0 or (!_remoteFilter and data.length == 0)
       callback data
     else
@@ -38,7 +38,7 @@ class Model
   #
   # @param data [Array] data to save
   save: (data) ->
-    @storage.data @at, @context.callbacks("before_save").call(@context, data || [])
+    @storage.data @at, @context.callbacks("beforeSave").call(@context, data || [])
 
   # load data. It wouldn't load for a second time if it has been loaded.
   #

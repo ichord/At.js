@@ -20,19 +20,19 @@ class EditableController extends Controller
     # matching the `at`
     if ($query = $ ".atwho-query", @app.document).length > 0 \
       and not (e.type is "click" and $(range.startContainer).closest('.atwho-query').length is 0)
-        matched = @callbacks("matcher").call(this, @at, $query.text(), @getOpt 'start_with_space')
+        matched = @callbacks("matcher").call(this, @at, $query.text(), @getOpt 'startWithSpace')
     else
       _range = range.cloneRange()
       _range.setStart range.startContainer, 0
       content = _range.toString()
-      matched = @callbacks("matcher").call(this, @at, content, @getOpt 'start_with_space')
+      matched = @callbacks("matcher").call(this, @at, content, @getOpt 'startWithSpace')
       if typeof matched is 'string'
         range.setStart range.startContainer, content.lastIndexOf @at
         range.surroundContents ($query = $ "<span class='atwho-query'/>", @app.document)[0]
         @_setRangeEndAfter $query, range
 
     # handle the matched result
-    if typeof matched is 'string' and matched.length <= @getOpt 'max_len', 20
+    if typeof matched is 'string' and matched.length <= @getOpt 'maxLen', 20
       query = text: matched, el: $query
       @trigger "matched", [@at, query.text]
     else
@@ -40,7 +40,7 @@ class EditableController extends Controller
       query = null
       if $query.text().indexOf(@at) > -1
         $query.html $query.text()
-        if $query.text().indexOf(@at) > -1 and false != @callbacks('after_match_failed').call this, @at, $query
+        if $query.text().indexOf(@at) > -1 and false != @callbacks('afterMatchFailed').call this, @at, $query
           @_setRangeEndAfter $query.html($query.text()).contents().unwrap()
     @query = query
 

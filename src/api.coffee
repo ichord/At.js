@@ -29,14 +29,14 @@ $.fn.atwho.default =
   alias: undefined
   data: null
   tpl: "<li>${name}</li>"
-  insert_tpl: "${atwho-at}${name}"
+  insertTpl: "${atwho-at}${name}"
   callbacks: DEFAULT_CALLBACKS
-  search_key: "name"
+  searchKey: "name"
   suffix: undefined
-  hide_without_suffix: no
-  start_with_space: yes
-  highlight_first: yes
+  hideWithoutSuffix: no
+  startWithSpace: yes
+  highlightFirst: yes
   limit: 5
-  max_len: 20
-  display_timeout: 300
+  maxLen: 20
+  displayTimeout: 300
   delay: null

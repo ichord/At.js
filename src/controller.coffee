@@ -71,16 +71,16 @@ class Controller
       null
 
   insertContentFor: ($li) ->
-    tpl = this.getOpt('insert_tpl')
+    tpl = this.getOpt('insertTpl')
     data = $.extend {}, $li.data('item-data'), {'atwho-at': @at}
-    this.callbacks("tpl_eval").call(this, tpl, data)
+    this.callbacks("tplEval").call(this, tpl, data)
 
   # Render list view
   #
   # @param data [Array] The data
   renderView: (data) ->
-    search_key = this.getOpt("search_key")
-    data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , search_key)
+    searchKey = this.getOpt("searchKey")
+    data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , searchKey)
     @view.render data[0...this.getOpt('limit')]
 
   # Searching!

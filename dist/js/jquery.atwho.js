@@ -118,7 +118,7 @@ App = (function() {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(e, c.getOpt("display_timeout"));
+          return c.view.hide(e, c.getOpt("displayTimeout"));
         }
       };
     })(this)).on('click.atwhoInner', (function(_this) {
@@ -307,17 +307,17 @@ Controller = (function() {
 
   Controller.prototype.insertContentFor = function($li) {
     var data, tpl;
-    tpl = this.getOpt('insert_tpl');
+    tpl = this.getOpt('insertTpl');
     data = $.extend({}, $li.data('item-data'), {
       'atwho-at': this.at
     });
-    return this.callbacks("tpl_eval").call(this, tpl, data);
+    return this.callbacks("tplEval").call(this, tpl, data);
   };
 
   Controller.prototype.renderView = function(data) {
-    var search_key;
-    search_key = this.getOpt("search_key");
-    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
+    var searchKey;
+    searchKey = this.getOpt("searchKey");
+    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), searchKey);
     return this.view.render(data.slice(0, this.getOpt('limit')));
   };
 
@@ -355,8 +355,8 @@ TextareaController = (function(_super) {
       iframe: this.app.iframe
     });
     subtext = content.slice(0, caretPos);
-    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('start_with_space'));
-    if (typeof query === "string" && query.length <= this.getOpt('max_len', 20)) {
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
+    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20)) {
       start = caretPos - query.length;
       end = start + query.length;
       this.pos = start;
@@ -449,19 +449,19 @@ EditableController = (function(_super) {
     }
     $(range.startContainer).closest('.atwho-inserted').removeClass('atwho-inserted').addClass('atwho-query');
     if (($query = $(".atwho-query", this.app.document)).length > 0 && !(e.type === "click" && $(range.startContainer).closest('.atwho-query').length === 0)) {
-      matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.getOpt('start_with_space'));
+      matched = this.callbacks("matcher").call(this, this.at, $query.text(), this.getOpt('startWithSpace'));
     } else {
       _range = range.cloneRange();
       _range.setStart(range.startContainer, 0);
       content = _range.toString();
-      matched = this.callbacks("matcher").call(this, this.at, content, this.getOpt('start_with_space'));
+      matched = this.callbacks("matcher").call(this, this.at, content, this.getOpt('startWithSpace'));
       if (typeof matched === 'string') {
         range.setStart(range.startContainer, content.lastIndexOf(this.at));
         range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
         this._setRangeEndAfter($query, range);
       }
     }
-    if (typeof matched === 'string' && matched.length <= this.getOpt('max_len', 20)) {
+    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20)) {
       query = {
         text: matched,
         el: $query
@@ -472,7 +472,7 @@ EditableController = (function(_super) {
       query = null;
       if ($query.text().indexOf(this.at) > -1) {
         $query.html($query.text());
-        if ($query.text().indexOf(this.at) > -1 && false !== this.callbacks('after_match_failed').call(this, this.at, $query)) {
+        if ($query.text().indexOf(this.at) > -1 && false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
           this._setRangeEndAfter($query.html($query.text()).contents().unwrap());
         }
       }
@@ -528,11 +528,11 @@ Model = (function() {
   };
 
   Model.prototype.query = function(query, callback) {
-    var data, search_key, _remoteFilter;
+    var data, searchKey, _remoteFilter;
     data = this.fetch();
-    search_key = this.context.getOpt("search_key");
-    data = this.context.callbacks('filter').call(this.context, query, data, search_key) || [];
-    _remoteFilter = this.context.callbacks('remote_filter');
+    searchKey = this.context.getOpt("searchKey");
+    data = this.context.callbacks('filter').call(this.context, query, data, searchKey) || [];
+    _remoteFilter = this.context.callbacks('remoteFilter');
     if (data.length > 0 || (!_remoteFilter && data.length === 0)) {
       return callback(data);
     } else {
@@ -545,7 +545,7 @@ Model = (function() {
   };
 
   Model.prototype.save = function(data) {
-    return this.storage.data(this.at, this.context.callbacks("before_save").call(this.context, data || []));
+    return this.storage.data(this.at, this.context.callbacks("beforeSave").call(this.context, data || []));
   };
 
   Model.prototype.load = function(data) {
@@ -621,11 +621,11 @@ View = (function() {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insertContentFor($li);
-      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
+      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);
     }
-    if (this.context.getOpt("hide_without_suffix")) {
+    if (this.context.getOpt("hideWithoutSuffix")) {
       return this.stopShowing = true;
     }
   };
@@ -643,7 +643,7 @@ View = (function() {
       left: rect.left,
       top: rect.bottom
     };
-    if ((_ref = this.context.callbacks("before_reposition")) != null) {
+    if ((_ref = this.context.callbacks("beforeReposition")) != null) {
       _ref.call(this.context, offset);
     }
     this.$el.offset(offset);
@@ -725,13 +725,13 @@ View = (function() {
       item = $.extend({}, item, {
         'atwho-at': this.context.at
       });
-      li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
+      li = this.context.callbacks("tplEval").call(this.context, tpl, item);
       $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
       $li.data("item-data", item);
       $ul.append($li);
     }
     this.show();
-    if (this.context.getOpt('highlight_first')) {
+    if (this.context.getOpt('highlightFirst')) {
       return $ul.find("li:first").addClass("cur");
     }
   };
@@ -752,7 +752,7 @@ KEY_CODE = {
 };
 
 DEFAULT_CALLBACKS = {
-  before_save: function(data) {
+  beforeSave: function(data) {
     var item, _i, _len, _results;
     if (!$.isArray(data)) {
       return data;
@@ -770,10 +770,10 @@ DEFAULT_CALLBACKS = {
     }
     return _results;
   },
-  matcher: function(flag, subtext, should_start_with_space) {
+  matcher: function(flag, subtext, should_startWithSpace) {
     var match, regexp, _a, _y;
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    if (should_start_with_space) {
+    if (should_startWithSpace) {
       flag = '(?:^|\\s)' + flag;
     }
     _a = decodeURI("%C3%80");
@@ -786,19 +786,19 @@ DEFAULT_CALLBACKS = {
       return null;
     }
   },
-  filter: function(query, data, search_key) {
+  filter: function(query, data, searchKey) {
     var item, _i, _len, _results;
     _results = [];
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       item = data[_i];
-      if (~new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase())) {
+      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
     }
     return _results;
   },
-  remote_filter: null,
-  sorter: function(query, items, search_key) {
+  remoteFilter: null,
+  sorter: function(query, items, searchKey) {
     var item, _i, _len, _results;
     if (!query) {
       return items;
@@ -806,7 +806,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       item = items[_i];
-      item.atwho_order = new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase());
+      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
       }
@@ -815,7 +815,7 @@ DEFAULT_CALLBACKS = {
       return a.atwho_order - b.atwho_order;
     });
   },
-  tpl_eval: function(tpl, map) {
+  tplEval: function(tpl, map) {
     var error;
     try {
       return tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
@@ -836,13 +836,13 @@ DEFAULT_CALLBACKS = {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
   },
-  before_insert: function(value, $li) {
+  beforeInsert: function(value, $li) {
     return value;
   },
-  before_reposition: function(offset) {
+  beforeReposition: function(offset) {
     return offset;
   },
-  after_match_failed: function(at, el) {}
+  afterMatchFailed: function(at, el) {}
 };
 
 Api = {
@@ -890,16 +890,16 @@ $.fn.atwho["default"] = {
   alias: void 0,
   data: null,
   tpl: "<li>${name}</li>",
-  insert_tpl: "${atwho-at}${name}",
+  insertTpl: "${atwho-at}${name}",
   callbacks: DEFAULT_CALLBACKS,
-  search_key: "name",
+  searchKey: "name",
   suffix: void 0,
-  hide_without_suffix: false,
-  start_with_space: true,
-  highlight_first: true,
+  hideWithoutSuffix: false,
+  startWithSpace: true,
+  highlightFirst: true,
   limit: 5,
-  max_len: 20,
-  display_timeout: 300,
+  maxLen: 20,
+  displayTimeout: 300,
   delay: null
 };
 

@@ -37,10 +37,10 @@ class View
   choose: (e) ->
     if ($li = @$el.find ".cur").length
       content = @context.insertContentFor $li
-      @context.insert @context.callbacks("before_insert").call(@context, content, $li), $li
+      @context.insert @context.callbacks("beforeInsert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
-    @stopShowing = yes if @context.getOpt("hide_without_suffix")
+    @stopShowing = yes if @context.getOpt("hideWithoutSuffix")
 
   reposition: (rect) ->
     _window = if @context.app.iframeStandalone then @context.app.window else window
@@ -49,7 +49,7 @@ class View
     if rect.left > overflowOffset = $(_window).width() - @$el.width() - 5
         rect.left = overflowOffset
     offset = {left:rect.left, top:rect.bottom}
-    @context.callbacks("before_reposition")?.call(@context, offset)
+    @context.callbacks("beforeReposition")?.call(@context, offset)
     @$el.offset offset
     @context.trigger "reposition", [offset]
 
@@ -103,10 +103,10 @@ class View
 
     for item in list
       item = $.extend {}, item, {'atwho-at': @context.at}
-      li = @context.callbacks("tpl_eval").call(@context, tpl, item)
+      li = @context.callbacks("tplEval").call(@context, tpl, item)
       $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
       $li.data("item-data", item)
       $ul.append $li
 
     this.show()
-    $ul.find("li:first").addClass "cur" if @context.getOpt('highlight_first')
+    $ul.find("li:first").addClass "cur" if @context.getOpt('highlightFirst')

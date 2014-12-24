@@ -49,7 +49,7 @@ describe "settings", ->
     jasmine.clock().install()
     $inputor.atwho
       at: "@"
-      display_timeout: 500
+      displayTimeout: 500
 
     simulateTypingIn $inputor
     $inputor.trigger "blur"
@@ -73,7 +73,7 @@ describe "settings", ->
     $inputor = $('#inputor3').atwho
       at: "@"
       data: fixtures["names"]
-      start_with_space: no
+      startWithSpace: no
 
     controller = $inputor.data('atwho').setContextFor("@").controller()
     simulateTypingIn $inputor
@@ -84,14 +84,14 @@ describe "settings", ->
     expect(controller.view.$el.find('ul li:first')).toHaveClass('cur')
     $inputor.atwho
       at: '@'
-      highlight_first: false
+      highlightFirst: false
     simulateTypingIn $inputor
     expect(controller.view.$el.find('ul li:first')).not.toHaveClass('cur')
 
-  it 'query out of max_len', ->
+  it 'query out of maxLen', ->
     $inputor.atwho
       at: '@'
-      max_len: 0
+      maxLen: 0
     simulateTypingIn $inputor
     expect(controller.query).toBe null
 
