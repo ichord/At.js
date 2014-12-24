@@ -477,7 +477,9 @@ EditableController = (function(_super) {
       query = null;
       if ($query.text().indexOf(this.at) > -1) {
         $query.html($query.text());
-        this._setRangeEndAfter($query.contents().first().unwrap());
+        if ($query.text().indexOf(this.at) > -1 && false !== this.callbacks('after_match_failed').call(this, this.at, $query)) {
+          this._setRangeEndAfter($query.html($query.text()).contents().unwrap());
+        }
       }
     }
     return this.query = query;

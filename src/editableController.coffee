@@ -40,7 +40,8 @@ class EditableController extends Controller
       query = null
       if $query.text().indexOf(@at) > -1
         $query.html $query.text()
-        @_setRangeEndAfter $query.contents().first().unwrap()
+        if $query.text().indexOf(@at) > -1 and false != @callbacks('after_match_failed').call this, @at, $query
+          @_setRangeEndAfter $query.html($query.text()).contents().unwrap()
     @query = query
 
   # Get offset of current at char(`flag`)

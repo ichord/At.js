@@ -18,7 +18,7 @@
       data: tags,
       limit: 200,
       callbacks: {
-        afterMatchFailed: function(at, el) {
+        after_match_failed: function(at, el) {
           if (at == '#') {
             tags.push(el.text().trim().slice(1));
             this.model.save(tags);
