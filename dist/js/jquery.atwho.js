@@ -30,7 +30,7 @@ App = (function() {
     this.controllers = {};
     this.aliasMaps = {};
     this.$inputor = $(inputor);
-    this.setIframe();
+    this.setupRootElement();
     this.listen();
   }
 
@@ -40,8 +40,8 @@ App = (function() {
     }
   };
 
-  App.prototype.setIframe = function(iframe, standalone) {
-    var _ref;
+  App.prototype.setupRootElement = function(iframe, standalone) {
+    var error, _ref;
     if (standalone == null) {
       standalone = false;
     }
@@ -50,9 +50,15 @@ App = (function() {
       this.document = iframe.contentDocument || this.window.document;
       this.iframe = iframe;
     } else {
-      this.document = document;
-      this.window = window;
-      this.iframe = null;
+      this.document = this.$inputor[0].ownerDocument;
+      this.window = this.document.defaultView || this.document.parentWindow;
+      try {
+        this.iframe = this.window.frameElement;
+      } catch (_error) {
+        error = _error;
+        this.iframe = null;
+        throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
+      }
     }
     if (this.iframeStandalone = standalone) {
       if ((_ref = this.$el) != null) {
@@ -927,7 +933,7 @@ Api = {
     }
   },
   setIframe: function(iframe, standalone) {
-    this.setIframe(iframe, standalone);
+    this.setupRootElement(iframe, standalone);
     return null;
   },
   run: function() {

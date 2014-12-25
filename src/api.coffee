@@ -4,7 +4,7 @@ Api =
   # @params at[String] the flag
   # @params data [Array] data to storage.
   load: (at, data) -> c.model.load data if c = this.controller(at)
-  setIframe: (iframe, standalone) -> this.setIframe(iframe, standalone); null;
+  setIframe: (iframe, standalone) -> this.setupRootElement(iframe, standalone); null;
   run: -> this.dispatch()
   destroy: ->
     this.shutdown()

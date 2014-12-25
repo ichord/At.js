@@ -7,22 +7,30 @@ class App
     @controllers = {}
     @aliasMaps = {}
     @$inputor = $(inputor)
-    this.setIframe()
+    this.setupRootElement()
     this.listen()
 
   createContainer: (doc) ->
     if (@$el = $("#atwho-container", doc)).length == 0
       $(doc.body).append @$el = $("<div id='atwho-container'></div>")
 
-  setIframe: (iframe, standalone=false) ->
+  setupRootElement: (iframe, standalone=false) ->
     if iframe
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
       @iframe = iframe
     else
-      @document = document
-      @window = window
-      @iframe = null
+      @document = @$inputor[0].ownerDocument
+      @window = @document.defaultView || @document.parentWindow
+      try
+        @iframe = @window.frameElement
+      catch error
+        @iframe = null
+        throw new Error """
+          iframe auto-discovery is failed.
+          Please use `serIframe` to set the target iframe manually.
+        """
+        # throws error in cross-domain iframes
     if @iframeStandalone = standalone
       @$el?.remove()
       this.createContainer @document
