@@ -932,6 +932,10 @@ Api = {
       return c.model.load(data);
     }
   },
+  isSelecting: function() {
+    var _ref;
+    return (_ref = this.controller()) != null ? _ref.view.visiable() : void 0;
+  },
   setIframe: function(iframe, standalone) {
     this.setupRootElement(iframe, standalone);
     return null;
