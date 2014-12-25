@@ -43,7 +43,7 @@ class View
     @stopShowing = yes if @context.getOpt("hideWithoutSuffix")
 
   reposition: (rect) ->
-    _window = if @context.app.iframeStandalone then @context.app.window else window
+    _window = if @context.app.iframeAsRoot then @context.app.window else window
     if rect.bottom + @$el.height() - $(_window).scrollTop() > $(_window).height()
       rect.bottom = rect.top - @$el.height()
     if rect.left > overflowOffset = $(_window).width() - @$el.width() - 5

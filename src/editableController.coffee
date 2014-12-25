@@ -113,7 +113,7 @@ class EditableController extends Controller
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
     rect = @query.el.offset()
-    if @app.iframe and not @app.iframeStandalone
+    if @app.iframe and not @app.iframeAsRoot
       iframeOffset = ($iframe = $ @app.iframe).offset()
       rect.left += iframeOffset.left - @$inputor.scrollLeft()
       rect.top += iframeOffset.top - @$inputor.scrollTop()

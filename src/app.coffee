@@ -14,7 +14,7 @@ class App
     if (@$el = $("#atwho-container", doc)).length == 0
       $(doc.body).append @$el = $("<div id='atwho-container'></div>")
 
-  setupRootElement: (iframe, standalone=false) ->
+  setupRootElement: (iframe, asRoot=false) ->
     if iframe
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
@@ -31,7 +31,7 @@ class App
           Please use `serIframe` to set the target iframe manually.
         """
         # throws error in cross-domain iframes
-    if @iframeStandalone = standalone
+    if @iframeAsRoot = asRoot
       @$el?.remove()
       this.createContainer @document
     else 

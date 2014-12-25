@@ -40,10 +40,10 @@ App = (function() {
     }
   };
 
-  App.prototype.setupRootElement = function(iframe, standalone) {
+  App.prototype.setupRootElement = function(iframe, asRoot) {
     var error, _ref;
-    if (standalone == null) {
-      standalone = false;
+    if (asRoot == null) {
+      asRoot = false;
     }
     if (iframe) {
       this.window = iframe.contentWindow;
@@ -60,7 +60,7 @@ App = (function() {
         throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
       }
     }
-    if (this.iframeStandalone = standalone) {
+    if (this.iframeAsRoot = asRoot) {
       if ((_ref = this.$el) != null) {
         _ref.remove();
       }
@@ -386,7 +386,7 @@ TextareaController = (function(_super) {
     }))) {
       return;
     }
-    if (this.app.iframe && !this.app.iframeStandalone) {
+    if (this.app.iframe && !this.app.iframeAsRoot) {
       iframeOffset = $(this.app.iframe).offset();
       c.left += iframeOffset.left;
       c.top += iframeOffset.top;
@@ -558,7 +558,7 @@ EditableController = (function(_super) {
   EditableController.prototype.rect = function() {
     var $iframe, iframeOffset, rect;
     rect = this.query.el.offset();
-    if (this.app.iframe && !this.app.iframeStandalone) {
+    if (this.app.iframe && !this.app.iframeAsRoot) {
       iframeOffset = ($iframe = $(this.app.iframe)).offset();
       rect.left += iframeOffset.left - this.$inputor.scrollLeft();
       rect.top += iframeOffset.top - this.$inputor.scrollTop();
@@ -707,7 +707,7 @@ View = (function() {
 
   View.prototype.reposition = function(rect) {
     var offset, overflowOffset, _ref, _window;
-    _window = this.context.app.iframeStandalone ? this.context.app.window : window;
+    _window = this.context.app.iframeAsRoot ? this.context.app.window : window;
     if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
@@ -936,8 +936,8 @@ Api = {
     var _ref;
     return (_ref = this.controller()) != null ? _ref.view.visiable() : void 0;
   },
-  setIframe: function(iframe, standalone) {
-    this.setupRootElement(iframe, standalone);
+  setIframe: function(iframe, asRoot) {
+    this.setupRootElement(iframe, asRoot);
     return null;
   },
   run: function() {

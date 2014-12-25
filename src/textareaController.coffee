@@ -24,7 +24,7 @@ class TextareaController extends Controller
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
     return if not c = @$inputor.caret('offset', @pos - 1, {iframe: @app.iframe})
-    if @app.iframe and not @app.iframeStandalone
+    if @app.iframe and not @app.iframeAsRoot
       iframeOffset = $(@app.iframe).offset()
       c.left += iframeOffset.left
       c.top += iframeOffset.top
