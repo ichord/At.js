@@ -15,12 +15,12 @@ https://github.com/ichord/At.js/wiki
 ### Compatibility
 
 * `textarea` - Chrome, Safari, Firefox, IE7+ (maybe IE6)
-* `contentEditable` - Chrome, Safari, Firefox, IE10+
+* `contentEditable` - Chrome, Safari, Firefox, IE9+
 
 ### Features Preview
 
 * Support IE 7+ for **textarea**.
-* Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements (NOT include IE 8)
+* Supports HTML5  [**contentEditable**](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Content_Editable) elements (NOT including IE 8)
 * Can listen to any character and not just '@'. Can set up multiple listeners for different characters with different behavior and data
 * Listener events can be bound to multiple inputors.
 * Format returned data using templates
