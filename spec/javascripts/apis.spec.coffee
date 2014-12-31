@@ -7,6 +7,8 @@ describe "api", ->
     loadFixtures("inputors.html")
     $inputor = $("#inputor").atwho at: "@", data: fixtures["names"]
     app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   describe "inner", ->
 
@@ -40,7 +42,7 @@ describe "api", ->
         status: 200
         responseText: JSON.stringify(response_data)
 
-      expect(controller.get_opt("data")).toBe "/atwho.json"
+      expect(controller.getOpt("data")).toBe "/atwho.json"
       expect(controller.model.fetch().length).toBe 3
 
 
@@ -66,7 +68,7 @@ describe "api", ->
       expect(controller.model.fetch().length).toBe data.length
 
     it "can run it handly", ->
-      app.set_context_for null
+      app.setContextFor null
       $inputor.caret('pos', 31)
       $inputor.atwho "run"
 

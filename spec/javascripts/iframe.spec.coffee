@@ -5,7 +5,10 @@ describe "iframe editor", ->
 	beforeEach ->
     loadFixtures "inputors.html"
     ifr = $('#iframeInput')[0]
-    ifrBody = ifr.contentDocument.body
+    doc = ifr.contentDocument || iframe.contentWindow.document
+    if (ifrBody = doc.body) is null # IE
+      doc.write "<body></body>"
+      ifrBody = doc.body
     ifrBody.contentEditable = true
     ifrBody.id = 'ifrBody'
     ifrBody.innerHTML = 'Stay Foolish, Stay Hungry. @Jobs'
@@ -13,6 +16,8 @@ describe "iframe editor", ->
     $inputor.atwho('setIframe', ifr)
     $inputor.atwho(at: "@", data: ['Jobs'])
     app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   it "can insert content", ->
     triggerAtwhoAt $inputor

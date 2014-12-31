@@ -1,5 +1,5 @@
-/*! jquery.atwho - v0.5.2 %>
-* Copyright (c) 2014 chord.luo <chord.luo@gmail.com>;
+/*! jquery.atwho - v1.0.0 %>
+* Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
 */
@@ -19,16 +19,18 @@
   }
 }(this, function ($) {
 
-var Api, App, Controller, DEFAULT_CALLBACKS, KEY_CODE, Model, View,
-  __slice = [].slice;
+var Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
+  __slice = [].slice,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 App = (function() {
   function App(inputor) {
-    this.current_flag = null;
+    this.currentFlag = null;
     this.controllers = {};
-    this.alias_maps = {};
+    this.aliasMaps = {};
     this.$inputor = $(inputor);
-    this.setIframe();
+    this.setupRootElement();
     this.listen();
   }
 
@@ -38,21 +40,27 @@ App = (function() {
     }
   };
 
-  App.prototype.setIframe = function(iframe, standalone) {
-    var _ref;
-    if (standalone == null) {
-      standalone = false;
+  App.prototype.setupRootElement = function(iframe, asRoot) {
+    var error, _ref;
+    if (asRoot == null) {
+      asRoot = false;
     }
     if (iframe) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
       this.iframe = iframe;
     } else {
-      this.document = document;
-      this.window = window;
-      this.iframe = null;
+      this.document = this.$inputor[0].ownerDocument;
+      this.window = this.document.defaultView || this.document.parentWindow;
+      try {
+        this.iframe = this.window.frameElement;
+      } catch (_error) {
+        error = _error;
+        this.iframe = null;
+        throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
+      }
     }
-    if (this.iframeStandalone = standalone) {
+    if (this.iframeAsRoot = asRoot) {
       if ((_ref = this.$el) != null) {
         _ref.remove();
       }
@@ -63,14 +71,14 @@ App = (function() {
   };
 
   App.prototype.controller = function(at) {
-    var c, current, current_flag, _ref;
-    if (this.alias_maps[at]) {
-      current = this.controllers[this.alias_maps[at]];
+    var c, current, currentFlag, _ref;
+    if (this.aliasMaps[at]) {
+      current = this.controllers[this.aliasMaps[at]];
     } else {
       _ref = this.controllers;
-      for (current_flag in _ref) {
-        c = _ref[current_flag];
-        if (current_flag === at) {
+      for (currentFlag in _ref) {
+        c = _ref[currentFlag];
+        if (currentFlag === at) {
           current = c;
           break;
         }
@@ -79,20 +87,20 @@ App = (function() {
     if (current) {
       return current;
     } else {
-      return this.controllers[this.current_flag];
+      return this.controllers[this.currentFlag];
     }
   };
 
-  App.prototype.set_context_for = function(at) {
-    this.current_flag = at;
+  App.prototype.setContextFor = function(at) {
+    this.currentFlag = at;
     return this;
   };
 
   App.prototype.reg = function(flag, setting) {
     var controller, _base;
-    controller = (_base = this.controllers)[flag] || (_base[flag] = new Controller(this, flag));
+    controller = (_base = this.controllers)[flag] || (_base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
     if (setting.alias) {
-      this.alias_maps[setting.alias] = flag;
+      this.aliasMaps[setting.alias] = flag;
     }
     controller.init(setting);
     return this;
@@ -101,11 +109,11 @@ App = (function() {
   App.prototype.listen = function() {
     return this.$inputor.on('keyup.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.on_keyup(e);
+        return _this.onKeyup(e);
       };
     })(this)).on('keydown.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.on_keydown(e);
+        return _this.onKeydown(e);
       };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
@@ -116,12 +124,12 @@ App = (function() {
       return function(e) {
         var c;
         if (c = _this.controller()) {
-          return c.view.hide(e, c.get_opt("display_timeout"));
+          return c.view.hide(e, c.getOpt("displayTimeout"));
         }
       };
     })(this)).on('click.atwhoInner', (function(_this) {
       return function(e) {
-        return _this.dispatch();
+        return _this.dispatch(e);
       };
     })(this));
   };
@@ -138,27 +146,27 @@ App = (function() {
     return this.$el.remove();
   };
 
-  App.prototype.dispatch = function() {
+  App.prototype.dispatch = function(e) {
     return $.map(this.controllers, (function(_this) {
       return function(c) {
         var delay;
-        if (delay = c.get_opt('delay')) {
+        if (delay = c.getOpt('delay')) {
           clearTimeout(_this.delayedCallback);
           return _this.delayedCallback = setTimeout(function() {
-            if (c.look_up()) {
-              return _this.set_context_for(c.at);
+            if (c.lookUp(e)) {
+              return _this.setContextFor(c.at);
             }
           }, delay);
         } else {
-          if (c.look_up()) {
-            return _this.set_context_for(c.at);
+          if (c.lookUp(e)) {
+            return _this.setContextFor(c.at);
           }
         }
       };
     })(this));
   };
 
-  App.prototype.on_keyup = function(e) {
+  App.prototype.onKeyup = function(e) {
     var _ref;
     switch (e.keyCode) {
       case KEY_CODE.ESC:
@@ -175,15 +183,15 @@ App = (function() {
       case KEY_CODE.P:
       case KEY_CODE.N:
         if (!e.ctrlKey) {
-          this.dispatch();
+          this.dispatch(e);
         }
         break;
       default:
-        this.dispatch();
+        this.dispatch(e);
     }
   };
 
-  App.prototype.on_keydown = function(e) {
+  App.prototype.onKeydown = function(e) {
     var view, _ref;
     view = (_ref = this.controller()) != null ? _ref.view : void 0;
     if (!(view && view.visible())) {
@@ -246,7 +254,6 @@ Controller = (function() {
     this.setting = null;
     this.query = null;
     this.pos = 0;
-    this.cur_rect = null;
     this.range = null;
     if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
       this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
@@ -268,33 +275,33 @@ Controller = (function() {
     return this.$el.remove();
   };
 
-  Controller.prototype.call_default = function() {
-    var args, error, func_name;
-    func_name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+  Controller.prototype.callDefault = function() {
+    var args, error, funcName;
+    funcName = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
     try {
-      return DEFAULT_CALLBACKS[func_name].apply(this, args);
+      return DEFAULT_CALLBACKS[funcName].apply(this, args);
     } catch (_error) {
       error = _error;
-      return $.error("" + error + " Or maybe At.js doesn't have function " + func_name);
+      return $.error("" + error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
 
   Controller.prototype.trigger = function(name, data) {
-    var alias, event_name;
+    var alias, eventName;
     if (data == null) {
       data = [];
     }
     data.push(this);
-    alias = this.get_opt('alias');
-    event_name = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
-    return this.$inputor.trigger(event_name, data);
+    alias = this.getOpt('alias');
+    eventName = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
+    return this.$inputor.trigger(eventName, data);
   };
 
-  Controller.prototype.callbacks = function(func_name) {
-    return this.get_opt("callbacks")[func_name] || DEFAULT_CALLBACKS[func_name];
+  Controller.prototype.callbacks = function(funcName) {
+    return this.getOpt("callbacks")[funcName] || DEFAULT_CALLBACKS[funcName];
   };
 
-  Controller.prototype.get_opt = function(at, default_value) {
+  Controller.prototype.getOpt = function(at, default_value) {
     var e;
     try {
       return this.setting[at];
@@ -304,152 +311,30 @@ Controller = (function() {
     }
   };
 
-  Controller.prototype.content = function() {
-    var range;
-    if (this.$inputor.is('textarea, input')) {
-      return this.$inputor.val();
-    } else {
-      if (!(range = this.mark_range())) {
-        return;
-      }
-      return (range.startContainer.textContent || "").slice(0, range.startOffset);
-    }
-  };
-
-  Controller.prototype.catch_query = function() {
-    var caret_pos, content, end, query, start, subtext;
-    content = this.content();
-    caret_pos = this.$inputor.caret('pos', {
-      iframe: this.app.iframe
-    });
-    subtext = content.slice(0, caret_pos);
-    query = this.callbacks("matcher").call(this, this.at, subtext, this.get_opt('start_with_space'));
-    if (typeof query === "string" && query.length <= this.get_opt('max_len', 20)) {
-      start = caret_pos - query.length;
-      end = start + query.length;
-      this.pos = start;
-      query = {
-        'text': query,
-        'head_pos': start,
-        'end_pos': end
-      };
-      this.trigger("matched", [this.at, query.text]);
-    } else {
-      query = null;
-      this.view.hide();
-    }
-    return this.query = query;
-  };
-
-  Controller.prototype.rect = function() {
-    var c, iframe_offset, scale_bottom;
-    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
-      iframe: this.app.iframe
-    }))) {
-      return;
-    }
-    if (this.app.iframe && !this.app.iframeStandalone) {
-      iframe_offset = $(this.app.iframe).offset();
-      c.left += iframe_offset.left;
-      c.top += iframe_offset.top;
-    }
-    if (this.$inputor.is('[contentEditable]')) {
-      c = this.cur_rect || (this.cur_rect = c);
-    }
-    scale_bottom = this.app.document.selection ? 0 : 2;
-    return {
-      left: c.left,
-      top: c.top,
-      bottom: c.top + c.height + scale_bottom
-    };
-  };
-
-  Controller.prototype.reset_rect = function() {
-    if (this.$inputor.is('[contentEditable]')) {
-      return this.cur_rect = null;
-    }
-  };
-
-  Controller.prototype.mark_range = function() {
-    var sel;
-    if (!this.$inputor.is('[contentEditable]')) {
-      return;
-    }
-    if (this.app.window.getSelection && (sel = this.app.window.getSelection()).rangeCount > 0) {
-      return this.range = sel.getRangeAt(0);
-    } else if (this.app.document.selection) {
-      return this.ie8_range = this.app.document.selection.createRange();
-    }
-  };
-
-  Controller.prototype.insert_content_for = function($li) {
-    var data, data_value, tpl;
-    data_value = $li.data('value');
-    tpl = this.get_opt('insert_tpl');
-    if (this.$inputor.is('textarea, input') || !tpl) {
-      return data_value;
-    }
+  Controller.prototype.insertContentFor = function($li) {
+    var data, tpl;
+    tpl = this.getOpt('insertTpl');
     data = $.extend({}, $li.data('item-data'), {
-      'atwho-data-value': data_value,
       'atwho-at': this.at
     });
-    return this.callbacks("tpl_eval").call(this, tpl, data);
+    return this.callbacks("tplEval").call(this, tpl, data);
   };
 
-  Controller.prototype.insert = function(content, $li) {
-    var $inputor, node, pos, range, sel, source, start_str, text, wrapped_contents, _i, _len, _ref;
-    $inputor = this.$inputor;
-    wrapped_contents = this.callbacks('inserting_wrapper').call(this, $inputor, content, this.get_opt("suffix"));
-    if ($inputor.is('textarea, input')) {
-      source = $inputor.val();
-      start_str = source.slice(0, Math.max(this.query.head_pos - this.at.length, 0));
-      text = "" + start_str + wrapped_contents + (source.slice(this.query['end_pos'] || 0));
-      $inputor.val(text);
-      $inputor.caret('pos', start_str.length + wrapped_contents.length, {
-        iframe: this.app.iframe
-      });
-    } else if (range = this.range) {
-      pos = range.startOffset - (this.query.end_pos - this.query.head_pos) - this.at.length;
-      range.setStart(range.endContainer, Math.max(pos, 0));
-      range.setEnd(range.endContainer, range.endOffset);
-      range.deleteContents();
-      _ref = $(wrapped_contents, this.app.document);
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        node = _ref[_i];
-        range.insertNode(node);
-        range.setEndAfter(node);
-        range.collapse(false);
-      }
-      sel = this.app.window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    } else if (range = this.ie8_range) {
-      range.moveStart('character', this.query.end_pos - this.query.head_pos - this.at.length);
-      range.pasteHTML(wrapped_contents);
-      range.collapse(false);
-      range.select();
-    }
-    if (!$inputor.is(':focus')) {
-      $inputor.focus();
-    }
-    return $inputor.change();
+  Controller.prototype.renderView = function(data) {
+    var searchKey;
+    searchKey = this.getOpt("searchKey");
+    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), searchKey);
+    return this.view.render(data.slice(0, this.getOpt('limit')));
   };
 
-  Controller.prototype.render_view = function(data) {
-    var search_key;
-    search_key = this.get_opt("search_key");
-    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), search_key);
-    return this.view.render(data.slice(0, this.get_opt('limit')));
-  };
-
-  Controller.prototype.look_up = function() {
+  Controller.prototype.lookUp = function(e) {
     var query, _callback;
-    if (!(query = this.catch_query())) {
+    if (!(query = this.catchQuery(e))) {
       return;
     }
     _callback = function(data) {
       if (data && data.length > 0) {
-        return this.render_view(data);
+        return this.renderView(data);
       } else {
         return this.view.hide();
       }
@@ -461,6 +346,246 @@ Controller = (function() {
   return Controller;
 
 })();
+
+TextareaController = (function(_super) {
+  __extends(TextareaController, _super);
+
+  function TextareaController() {
+    return TextareaController.__super__.constructor.apply(this, arguments);
+  }
+
+  TextareaController.prototype.catchQuery = function() {
+    var caretPos, content, end, query, start, subtext;
+    content = this.$inputor.val();
+    caretPos = this.$inputor.caret('pos', {
+      iframe: this.app.iframe
+    });
+    subtext = content.slice(0, caretPos);
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
+    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20)) {
+      start = caretPos - query.length;
+      end = start + query.length;
+      this.pos = start;
+      query = {
+        'text': query,
+        'headPos': start,
+        'endPos': end
+      };
+      this.trigger("matched", [this.at, query.text]);
+    } else {
+      query = null;
+      this.view.hide();
+    }
+    return this.query = query;
+  };
+
+  TextareaController.prototype.rect = function() {
+    var c, iframeOffset, scaleBottom;
+    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
+      iframe: this.app.iframe
+    }))) {
+      return;
+    }
+    if (this.app.iframe && !this.app.iframeAsRoot) {
+      iframeOffset = $(this.app.iframe).offset();
+      c.left += iframeOffset.left;
+      c.top += iframeOffset.top;
+    }
+    scaleBottom = this.app.document.selection ? 0 : 2;
+    return {
+      left: c.left,
+      top: c.top,
+      bottom: c.top + c.height + scaleBottom
+    };
+  };
+
+  TextareaController.prototype.insert = function(content, $li) {
+    var $inputor, source, startStr, suffix, text;
+    $inputor = this.$inputor;
+    source = $inputor.val();
+    startStr = source.slice(0, Math.max(this.query.headPos - this.at.length, 0));
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || " ";
+    content += suffix;
+    text = "" + startStr + content + (source.slice(this.query['endPos'] || 0));
+    $inputor.val(text);
+    $inputor.caret('pos', startStr.length + content.length, {
+      iframe: this.app.iframe
+    });
+    if (!$inputor.is(':focus')) {
+      $inputor.focus();
+    }
+    return $inputor.change();
+  };
+
+  return TextareaController;
+
+})(Controller);
+
+EditableController = (function(_super) {
+  __extends(EditableController, _super);
+
+  function EditableController() {
+    return EditableController.__super__.constructor.apply(this, arguments);
+  }
+
+  EditableController.prototype._getRange = function() {
+    var sel;
+    sel = this.app.window.getSelection();
+    if (sel.rangeCount > 0) {
+      return sel.getRangeAt(0);
+    }
+  };
+
+  EditableController.prototype._setRange = function(position, node, range) {
+    if (range == null) {
+      range = this._getRange();
+    }
+    if (!range) {
+      return;
+    }
+    node = $(node)[0];
+    if (position === 'after') {
+      range.setEndAfter(node);
+      range.setStartAfter(node);
+    } else {
+      range.setEndBefore(node);
+      range.setStartBefore(node);
+    }
+    range.collapse(false);
+    return this._clearRange(range);
+  };
+
+  EditableController.prototype._clearRange = function(range) {
+    var sel;
+    if (range == null) {
+      range = this._getRange();
+    }
+    sel = this.app.window.getSelection();
+    sel.removeAllRanges();
+    return sel.addRange(range);
+  };
+
+  EditableController.prototype._movingEvent = function(e) {
+    var _ref;
+    return e.type === 'click' || ((_ref = e.which) === KEY_CODE.RIGHT || _ref === KEY_CODE.LEFT || _ref === KEY_CODE.UP || _ref === KEY_CODE.DOWN);
+  };
+
+  EditableController.prototype._unwrap = function(node) {
+    var next;
+    node = $(node).unwrap().get(0);
+    if ((next = node.nextSibling) && next.nodeValue) {
+      node.nodeValue += next.nodeValue;
+      $(next).remove();
+    }
+    return node;
+  };
+
+  EditableController.prototype.catchQuery = function(e) {
+    var $inserted, $query, index, inserted, lastNode, matched, offset, query, range, _range;
+    if (!(range = this._getRange())) {
+      return;
+    }
+    if (e.which === KEY_CODE.ENTER) {
+      ($query = $(range.startContainer).closest('.atwho-query')).contents().unwrap();
+      if ($query.is(':empty')) {
+        $query.remove();
+      }
+      ($query = $(".atwho-query", this.app.document)).text($query.text()).contents().last().unwrap();
+      this._clearRange();
+      return;
+    }
+    if (/firefox/i.test(navigator.userAgent)) {
+      if ($(range.startContainer).is(this.$inputor)) {
+        this._clearRange();
+        return;
+      }
+      if (e.which === KEY_CODE.BACKSPACE && range.startContainer.nodeType === document.ELEMENT_NODE && (offset = range.startOffset - 1) >= 0) {
+        _range = range.cloneRange();
+        _range.setStart(range.startContainer, offset);
+        if ($(_range.cloneContents()).contents().last().is('.atwho-inserted')) {
+          inserted = $(range.startContainer).contents().get(offset);
+          this._setRange("after", $(inserted).contents().last());
+        }
+      } else if (e.which === KEY_CODE.LEFT && range.startContainer.nodeType === document.TEXT_NODE) {
+        $inserted = $(range.startContainer.previousSibling);
+        if ($inserted.is('.atwho-inserted') && range.startOffset === 0) {
+          this._setRange('after', $inserted.contents().last());
+        }
+      }
+    }
+    $(range.startContainer).closest('.atwho-inserted').addClass('atwho-query').siblings().removeClass('atwho-query');
+    if (($query = $(".atwho-query", this.app.document)).length > 0 && $query.is(':empty') && $query.text().length === 0) {
+      $query.remove();
+    }
+    if (!this._movingEvent(e)) {
+      $query.removeClass('atwho-inserted');
+    }
+    _range = range.cloneRange();
+    _range.setStart(range.startContainer, 0);
+    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
+    if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
+      range.setStart(range.startContainer, index);
+      range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
+      lastNode = $query.contents().last().get(0);
+      if (/firefox/i.test(navigator.userAgent)) {
+        range.setStart(lastNode, lastNode.length);
+        range.setEnd(lastNode, lastNode.length);
+        this._clearRange(range);
+      } else {
+        this._setRange('after', lastNode, range);
+      }
+    }
+    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20)) {
+      query = {
+        text: matched,
+        el: $query
+      };
+      this.trigger("matched", [this.at, query.text]);
+    } else {
+      this.view.hide();
+      query = null;
+      if ($query.text().indexOf(this.at) >= 0) {
+        if (this._movingEvent(e) && $query.hasClass('atwho-inserted')) {
+          $query.removeClass('atwho-query');
+        } else if (false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
+          this._setRange("after", this._unwrap($query.text($query.text()).contents().first()));
+        }
+      }
+    }
+    return this.query = query;
+  };
+
+  EditableController.prototype.rect = function() {
+    var $iframe, iframeOffset, rect;
+    rect = this.query.el.offset();
+    if (this.app.iframe && !this.app.iframeAsRoot) {
+      iframeOffset = ($iframe = $(this.app.iframe)).offset();
+      rect.left += iframeOffset.left - this.$inputor.scrollLeft();
+      rect.top += iframeOffset.top - this.$inputor.scrollTop();
+    }
+    rect.bottom = rect.top + this.query.el.height();
+    return rect;
+  };
+
+  EditableController.prototype.insert = function(content, $li) {
+    var range, suffix, suffixNode;
+    suffix = (suffix = this.getOpt('suffix')) ? suffix : suffix || "\u00A0";
+    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
+    if (range = this._getRange()) {
+      range.setEndAfter(this.query.el[0]);
+      range.collapse(false);
+      range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
+      this._setRange('after', suffixNode, range);
+    }
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
+    return this.$inputor.change();
+  };
+
+  return EditableController;
+
+})(Controller);
 
 Model = (function() {
   function Model(context) {
@@ -478,15 +603,15 @@ Model = (function() {
   };
 
   Model.prototype.query = function(query, callback) {
-    var data, search_key, _remote_filter;
+    var data, searchKey, _remoteFilter;
     data = this.fetch();
-    search_key = this.context.get_opt("search_key");
-    data = this.context.callbacks('filter').call(this.context, query, data, search_key) || [];
-    _remote_filter = this.context.callbacks('remote_filter');
-    if (data.length > 0 || (!_remote_filter && data.length === 0)) {
+    searchKey = this.context.getOpt("searchKey");
+    data = this.context.callbacks('filter').call(this.context, query, data, searchKey) || [];
+    _remoteFilter = this.context.callbacks('remoteFilter');
+    if (data.length > 0 || (!_remoteFilter && data.length === 0)) {
       return callback(data);
     } else {
-      return _remote_filter.call(this.context, query, callback);
+      return _remoteFilter.call(this.context, query, callback);
     }
   };
 
@@ -495,7 +620,7 @@ Model = (function() {
   };
 
   Model.prototype.save = function(data) {
-    return this.storage.data(this.at, this.context.callbacks("before_save").call(this.context, data || []));
+    return this.storage.data(this.at, this.context.callbacks("beforeSave").call(this.context, data || []));
   };
 
   Model.prototype.load = function(data) {
@@ -530,14 +655,14 @@ View = (function() {
   function View(context) {
     this.context = context;
     this.$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>");
-    this.timeout_id = null;
+    this.timeoutID = null;
     this.context.$el.append(this.$el);
-    this.bind_event();
+    this.bindEvent();
   }
 
   View.prototype.init = function() {
     var id;
-    id = this.context.get_opt("alias") || this.context.at.charCodeAt(0);
+    id = this.context.getOpt("alias") || this.context.at.charCodeAt(0);
     return this.$el.attr({
       'id': "at-view-" + id
     });
@@ -547,7 +672,7 @@ View = (function() {
     return this.$el.remove();
   };
 
-  View.prototype.bind_event = function() {
+  View.prototype.bindEvent = function() {
     var $menu;
     $menu = this.$el.find('ul');
     return $menu.on('mouseenter.atwho-view', 'li', function(e) {
@@ -570,19 +695,19 @@ View = (function() {
   View.prototype.choose = function(e) {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
-      content = this.context.insert_content_for($li);
-      this.context.insert(this.context.callbacks("before_insert").call(this.context, content, $li), $li);
+      content = this.context.insertContentFor($li);
+      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);
     }
-    if (this.context.get_opt("hide_without_suffix")) {
-      return this.stop_showing = true;
+    if (this.context.getOpt("hideWithoutSuffix")) {
+      return this.stopShowing = true;
     }
   };
 
   View.prototype.reposition = function(rect) {
     var offset, overflowOffset, _ref, _window;
-    _window = this.context.app.iframeStandalone ? this.context.app.window : window;
+    _window = this.context.app.iframeAsRoot ? this.context.app.window : window;
     if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
       rect.bottom = rect.top - this.$el.height();
     }
@@ -593,7 +718,7 @@ View = (function() {
       left: rect.left,
       top: rect.bottom
     };
-    if ((_ref = this.context.callbacks("before_reposition")) != null) {
+    if ((_ref = this.context.callbacks("beforeReposition")) != null) {
       _ref.call(this.context, offset);
     }
     this.$el.offset(offset);
@@ -628,11 +753,10 @@ View = (function() {
 
   View.prototype.show = function() {
     var rect;
-    if (this.stop_showing) {
-      this.stop_showing = false;
+    if (this.stopShowing) {
+      this.stopShowing = false;
       return;
     }
-    this.context.mark_range();
     if (!this.visible()) {
       this.$el.show();
       this.$el.scrollTop(0);
@@ -649,7 +773,6 @@ View = (function() {
       return;
     }
     if (isNaN(time)) {
-      this.context.reset_rect();
       this.$el.hide();
       return this.context.trigger('hidden', [e]);
     } else {
@@ -658,8 +781,8 @@ View = (function() {
           return _this.hide();
         };
       })(this);
-      clearTimeout(this.timeout_id);
-      return this.timeout_id = setTimeout(callback, time);
+      clearTimeout(this.timeoutID);
+      return this.timeoutID = setTimeout(callback, time);
     }
   };
 
@@ -671,19 +794,19 @@ View = (function() {
     }
     this.$el.find('ul').empty();
     $ul = this.$el.find('ul');
-    tpl = this.context.get_opt('tpl');
+    tpl = this.context.getOpt('displayTpl');
     for (_i = 0, _len = list.length; _i < _len; _i++) {
       item = list[_i];
       item = $.extend({}, item, {
         'atwho-at': this.context.at
       });
-      li = this.context.callbacks("tpl_eval").call(this.context, tpl, item);
+      li = this.context.callbacks("tplEval").call(this.context, tpl, item);
       $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
       $li.data("item-data", item);
       $ul.append($li);
     }
     this.show();
-    if (this.context.get_opt('highlight_first')) {
+    if (this.context.getOpt('highlightFirst')) {
       return $ul.find("li:first").addClass("cur");
     }
   };
@@ -700,11 +823,16 @@ KEY_CODE = {
   ENTER: 13,
   CTRL: 17,
   P: 80,
-  N: 78
+  N: 78,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  BACKSPACE: 8
 };
 
 DEFAULT_CALLBACKS = {
-  before_save: function(data) {
+  beforeSave: function(data) {
     var item, _i, _len, _results;
     if (!$.isArray(data)) {
       return data;
@@ -722,10 +850,10 @@ DEFAULT_CALLBACKS = {
     }
     return _results;
   },
-  matcher: function(flag, subtext, should_start_with_space) {
+  matcher: function(flag, subtext, should_startWithSpace) {
     var match, regexp, _a, _y;
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    if (should_start_with_space) {
+    if (should_startWithSpace) {
       flag = '(?:^|\\s)' + flag;
     }
     _a = decodeURI("%C3%80");
@@ -738,19 +866,19 @@ DEFAULT_CALLBACKS = {
       return null;
     }
   },
-  filter: function(query, data, search_key) {
+  filter: function(query, data, searchKey) {
     var item, _i, _len, _results;
     _results = [];
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       item = data[_i];
-      if (~new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase())) {
+      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
     }
     return _results;
   },
-  remote_filter: null,
-  sorter: function(query, items, search_key) {
+  remoteFilter: null,
+  sorter: function(query, items, searchKey) {
     var item, _i, _len, _results;
     if (!query) {
       return items;
@@ -758,7 +886,7 @@ DEFAULT_CALLBACKS = {
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       item = items[_i];
-      item.atwho_order = new String(item[search_key]).toLowerCase().indexOf(query.toLowerCase());
+      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
       }
@@ -767,7 +895,7 @@ DEFAULT_CALLBACKS = {
       return a.atwho_order - b.atwho_order;
     });
   },
-  tpl_eval: function(tpl, map) {
+  tplEval: function(tpl, map) {
     var error;
     try {
       return tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
@@ -788,28 +916,13 @@ DEFAULT_CALLBACKS = {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
   },
-  before_insert: function(value, $li) {
+  beforeInsert: function(value, $li) {
     return value;
   },
-  inserting_wrapper: function($inputor, content, suffix) {
-    var wrapped_content;
-    suffix = suffix === "" ? suffix : suffix || " ";
-    if ($inputor.is('textarea, input')) {
-      return '' + content + suffix;
-    } else if ($inputor.attr('contentEditable') === 'true') {
-      suffix = suffix === " " ? "&nbsp;" : suffix;
-      if (/firefox/i.test(navigator.userAgent)) {
-        wrapped_content = "<span>" + content + suffix + "</span>";
-      } else {
-        suffix = "<span contenteditable='false'>" + suffix + "</span>";
-        wrapped_content = "<span contenteditable='false'>" + content + suffix + "</span>";
-      }
-      if (this.app.document.selection) {
-        wrapped_content = "<span contenteditable='true'>" + content + "</span>";
-      }
-      return wrapped_content + "<span></span>";
-    }
-  }
+  beforeReposition: function(offset) {
+    return offset;
+  },
+  afterMatchFailed: function(at, el) {}
 };
 
 Api = {
@@ -819,8 +932,12 @@ Api = {
       return c.model.load(data);
     }
   },
-  setIframe: function(iframe, standalone) {
-    this.setIframe(iframe, standalone);
+  isSelecting: function() {
+    var _ref;
+    return (_ref = this.controller()) != null ? _ref.view.visiable() : void 0;
+  },
+  setIframe: function(iframe, asRoot) {
+    this.setupRootElement(iframe, asRoot);
     return null;
   },
   run: function() {
@@ -856,17 +973,17 @@ $.fn.atwho["default"] = {
   at: void 0,
   alias: void 0,
   data: null,
-  tpl: "<li data-value='${atwho-at}${name}'>${name}</li>",
-  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>",
+  displayTpl: "<li>${name}</li>",
+  insertTpl: "${atwho-at}${name}",
   callbacks: DEFAULT_CALLBACKS,
-  search_key: "name",
+  searchKey: "name",
   suffix: void 0,
-  hide_without_suffix: false,
-  start_with_space: true,
-  highlight_first: true,
+  hideWithoutSuffix: false,
+  startWithSpace: true,
+  highlightFirst: true,
   limit: 5,
-  max_len: 20,
-  display_timeout: 300,
+  maxLen: 20,
+  displayTimeout: 300,
   delay: null
 };
 

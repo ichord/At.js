@@ -8,6 +8,8 @@ describe "events", ->
     loadFixtures "inputors.html"
     $inputor = $("#inputor").atwho at: "@", data: fixtures["names"]
     app = getAppOf $inputor
+  afterEach ->
+    $inputor.atwho 'destroy'
 
 	describe "inner", ->
 	  controller = null
@@ -24,17 +26,17 @@ describe "events", ->
 	    expect(controller.view.visible()).toBe(false)
 
 	  it "trigger tab", ->
-	    spyOn(callbacks, "before_insert").and.callThrough()
+	    spyOn(callbacks, "beforeInsert").and.callThrough()
 	    tab_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.TAB)
 	    $inputor.trigger(tab_event)
 	    expect(controller.view.visible()).toBe(false)
-	    expect(callbacks.before_insert).toHaveBeenCalled()
+	    expect(callbacks.beforeInsert).toHaveBeenCalled()
 
 	  it "trigger enter", ->
-	    spyOn(callbacks, "before_insert").and.callThrough()
+	    spyOn(callbacks, "beforeInsert").and.callThrough()
 	    enter_event = $.Event("keydown.atwhoInner", keyCode: KEY_CODE.ENTER)
 	    $inputor.trigger(enter_event)
-	    expect(callbacks.before_insert).toHaveBeenCalled()
+	    expect(callbacks.beforeInsert).toHaveBeenCalled()
 
 	  it "trigger up", ->
 	    spyOn(controller.view, "prev").and.callThrough()

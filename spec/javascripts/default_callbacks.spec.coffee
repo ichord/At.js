@@ -16,9 +16,12 @@ describe "default callbacks", ->
     text = $.trim $inputor.text()
     callbacks = $.fn.atwho.default.callbacks
     app = $inputor.data("atwho")
+    
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   it "refactor the data before save", ->
-    items = callbacks.before_save.call(app, fixtures["names"])
+    items = callbacks.beforeSave.call(app, fixtures["names"])
     expect(items).toContain({"name":"Jacob"})
     expect(items).toContain({"name":"Isabella"})
 
@@ -34,38 +37,38 @@ describe "default callbacks", ->
     expect(query).toBe("Jérémÿ")
 
   it "can filter data", ->
-    names = callbacks.before_save.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app, fixtures["names"])
     names = callbacks.filter.call(app, "jo", names, "name")
     expect(names).toContain name: "Joshua"
 
   it "can filter numeric data", ->
-    numerics = callbacks.before_save.call(app, fixtures["numerics"])
+    numerics = callbacks.beforeSave.call(app, fixtures["numerics"])
     numerics = callbacks.filter.call(app, "1", numerics, "name")
     expect(numerics).toContain name: 10
 
-  it "request data from remote by ajax if set remote_filter", ->
+  it "request data from remote by ajax if set remoteFilter", ->
     remote_call = jasmine.createSpy("remote_call")
     $inputor.atwho
       at: "@"
       data: null,
       callbacks:
-        remote_filter: remote_call
+        remoteFilter: remote_call
 
     simulateTypingIn $inputor
     expect(remote_call).toHaveBeenCalled()
 
   it "can sort the data", ->
-    names = callbacks.before_save.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app, fixtures["names"])
     names = callbacks.sorter.call(app, "e", names, "name")
     expect(names[0].name).toBe 'Ethan'
 
   it "can sort numeric data", ->
-    numerics = callbacks.before_save.call(app, fixtures["numerics"])
+    numerics = callbacks.beforeSave.call(app, fixtures["numerics"])
     numerics = callbacks.sorter.call(app, "1", numerics, "name")
     expect(numerics[0].name).toBe 13
 
   it "don't sort the data without a query", ->
-    names = callbacks.before_save.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app, fixtures["names"])
     names = callbacks.sorter.call(app, "", names, "name")
     expect(names[0]).toEqual({ name : 'Jacob' })
 
@@ -74,7 +77,7 @@ describe "default callbacks", ->
     tpl = '<li data-value="${name}">${nick}</li>'
     html = '<li data-value="username">nick_name</li>'
 
-    result = callbacks.tpl_eval.call(app, tpl, map)
+    result = callbacks.tplEval.call(app, tpl, map)
     expect(result).toBe(html)
 
   it "can highlight the query", ->
@@ -84,18 +87,18 @@ describe "default callbacks", ->
     expect(highlighted).toBe(result)
 
   it "can insert the text which be choosed", ->
-    spyOn(callbacks, "before_insert").and.callThrough()
+    spyOn(callbacks, "beforeInsert").and.callThrough()
 
     triggerAtwhoAt $inputor
-    expect(callbacks.before_insert).toHaveBeenCalled()
+    expect(callbacks.beforeInsert).toHaveBeenCalled()
 
   it "can adjust offset before reposition", ->
-    before_reposition = jasmine.createSpy("before_reposition")
+    beforeReposition = jasmine.createSpy("beforeReposition")
     $inputor.atwho
       at: "@"
       data: null,
       callbacks:
-        remote_filter: before_reposition
+        remoteFilter: beforeReposition
 
     simulateTypingIn $inputor
-    expect(before_reposition).toHaveBeenCalled()
+    expect(beforeReposition).toHaveBeenCalled()

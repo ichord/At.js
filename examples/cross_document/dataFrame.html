@@ -17,8 +17,7 @@
       var at_config = {
         at: "@",
         data: names,
-        tpl: "<li data-value='@${name}'>${name} <small>${email}</small></li>",
-        show_the_at: true
+        displayTpl: "<li>${name} <small>${email}</small></li>"
       }
       $(viewFrame.document.body)
         .atwho('setIframe', viewFrame.frameElement, true)

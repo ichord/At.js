@@ -11,6 +11,8 @@ describe "settings", ->
     app = getAppOf $inputor
     controller = app.controller()
     callbacks = $.fn.atwho.default.callbacks
+  afterEach ->
+    $inputor.atwho 'destroy'
 
   it "update common settings", ->
     func = () ->
@@ -19,9 +21,9 @@ describe "settings", ->
     $.fn.atwho.default.callbacks.filter = func
     $.fn.atwho.default.limit = 8
     $inputor = $("<input/>").atwho at: "@"
-    controller = $inputor.data('atwho').set_context_for("@").controller()
+    controller = $inputor.data('atwho').setContextFor("@").controller()
     expect(controller.callbacks("filter")).toBe func
-    expect(controller.get_opt("limit")).toBe 8
+    expect(controller.getOpt("limit")).toBe 8
     $.extend $.fn.atwho.default.callbacks, old
 
   it "setting empty at", ->
@@ -49,7 +51,7 @@ describe "settings", ->
     jasmine.clock().install()
     $inputor.atwho
       at: "@"
-      display_timeout: 500
+      displayTimeout: 500
 
     simulateTypingIn $inputor
     $inputor.trigger "blur"
@@ -65,7 +67,7 @@ describe "settings", ->
       at: "$"
       data: fixtures["names"]
 
-    controller = $inputor.data('atwho').set_context_for("$").controller()
+    controller = $inputor.data('atwho').setContextFor("$").controller()
     simulateTypingIn $inputor, "$"
     expect(controller.view.visible()).toBe true
 
@@ -73,9 +75,9 @@ describe "settings", ->
     $inputor = $('#inputor3').atwho
       at: "@"
       data: fixtures["names"]
-      start_with_space: no
+      startWithSpace: no
 
-    controller = $inputor.data('atwho').set_context_for("@").controller()
+    controller = $inputor.data('atwho').setContextFor("@").controller()
     simulateTypingIn $inputor
     expect(controller.view.visible()).toBe true
 
@@ -84,14 +86,14 @@ describe "settings", ->
     expect(controller.view.$el.find('ul li:first')).toHaveClass('cur')
     $inputor.atwho
       at: '@'
-      highlight_first: false
+      highlightFirst: false
     simulateTypingIn $inputor
     expect(controller.view.$el.find('ul li:first')).not.toHaveClass('cur')
 
-  it 'query out of max_len', ->
+  it 'query out of maxLen', ->
     $inputor.atwho
       at: '@'
-      max_len: 0
+      maxLen: 0
     simulateTypingIn $inputor
     expect(controller.query).toBe null
 

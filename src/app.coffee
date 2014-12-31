@@ -3,45 +3,53 @@ class App
 
   # @param inputor [HTML DOM Object] `input` or `textarea`
   constructor: (inputor) ->
-    @current_flag = null
+    @currentFlag = null
     @controllers = {}
-    @alias_maps = {}
+    @aliasMaps = {}
     @$inputor = $(inputor)
-    this.setIframe()
+    this.setupRootElement()
     this.listen()
 
   createContainer: (doc) ->
     if (@$el = $("#atwho-container", doc)).length == 0
       $(doc.body).append @$el = $("<div id='atwho-container'></div>")
 
-  setIframe: (iframe, standalone=false) ->
+  setupRootElement: (iframe, asRoot=false) ->
     if iframe
       @window = iframe.contentWindow
       @document = iframe.contentDocument || @window.document
       @iframe = iframe
     else
-      @document = document
-      @window = window
-      @iframe = null
-    if @iframeStandalone = standalone
+      @document = @$inputor[0].ownerDocument
+      @window = @document.defaultView || @document.parentWindow
+      try
+        @iframe = @window.frameElement
+      catch error
+        @iframe = null
+        throw new Error """
+          iframe auto-discovery is failed.
+          Please use `serIframe` to set the target iframe manually.
+        """
+        # throws error in cross-domain iframes
+    if @iframeAsRoot = asRoot
       @$el?.remove()
       this.createContainer @document
     else 
       this.createContainer document
 
   controller: (at) ->
-    if @alias_maps[at]
-      current = @controllers[@alias_maps[at]]
+    if @aliasMaps[at]
+      current = @controllers[@aliasMaps[at]]
     else
-      for current_flag, c of @controllers
-        if current_flag is at
+      for currentFlag, c of @controllers
+        if currentFlag is at
           current = c
           break
 
-    if current then current else @controllers[@current_flag]
+    if current then current else @controllers[@currentFlag]
 
-  set_context_for: (at) ->
-    @current_flag = at
+  setContextFor: (at) ->
+    @currentFlag = at
     this
 
   # At.js can register multiple at char (flag) to every inputor such as "@" and ":"
@@ -51,9 +59,13 @@ class App
   # @param flag [String] at char (flag)
   # @param settings [Hash] the settings
   reg: (flag, setting) ->
-    controller = @controllers[flag] ||= new Controller(this, flag)
+    controller = @controllers[flag] ||=
+      if @$inputor.is '[contentEditable]'
+        new EditableController this, flag
+      else
+        new TextareaController this, flag
     # TODO: it will produce rubbish alias map, reduse this.
-    @alias_maps[setting.alias] = flag if setting.alias
+    @aliasMaps[setting.alias] = flag if setting.alias
     controller.init setting
     this
 
@@ -61,15 +73,15 @@ class App
   listen: ->
     @$inputor
       .on 'keyup.atwhoInner', (e) =>
-        this.on_keyup(e)
+        this.onKeyup(e)
       .on 'keydown.atwhoInner', (e) =>
-        this.on_keydown(e)
+        this.onKeydown(e)
       .on 'scroll.atwhoInner', (e) =>
         this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
-        c.view.hide(e,c.get_opt("display_timeout")) if c = this.controller()
+        c.view.hide(e,c.getOpt("displayTimeout")) if c = this.controller()
       .on 'click.atwhoInner', (e) =>
-        this.dispatch()
+        this.dispatch e
 
   shutdown: ->
     for _, c of @controllers
@@ -78,17 +90,17 @@ class App
     @$inputor.off '.atwhoInner'
     @$el.remove()
 
-  dispatch: ->
+  dispatch: (e) ->
     $.map @controllers, (c) =>
-      if delay = c.get_opt('delay')
+      if delay = c.getOpt('delay')
         clearTimeout @delayedCallback
         @delayedCallback = setTimeout(=>
-          this.set_context_for c.at if c.look_up()
+          this.setContextFor c.at if c.lookUp e
         , delay)
       else
-        this.set_context_for c.at if c.look_up()
+        this.setContextFor c.at if c.lookUp e
 
-  on_keyup: (e) ->
+  onKeyup: (e) ->
     switch e.keyCode
       when KEY_CODE.ESC
         e.preventDefault()
@@ -96,13 +108,13 @@ class App
       when KEY_CODE.DOWN, KEY_CODE.UP, KEY_CODE.CTRL
         $.noop()
       when KEY_CODE.P, KEY_CODE.N
-        this.dispatch() if not e.ctrlKey
+        this.dispatch e if not e.ctrlKey
       else
-        this.dispatch()
+        this.dispatch e
     # coffeescript will return everywhere!!
     return
 
-  on_keydown: (e) ->
+  onKeydown: (e) ->
     # return if not (view = this.controller().view).visible()
     view = this.controller()?.view
     return if not (view and view.visible())

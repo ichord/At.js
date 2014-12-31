@@ -14,23 +14,21 @@
   simulateTypingIn $inputor
   simulateChoose $inputor
 
-@simulateTypingIn = ($inputor, flag) ->
-  $inputor.data("atwho").set_context_for flag || "@"
+@simulateTypingIn = ($inputor, flag, pos=31) ->
+  $inputor.data("atwho").setContextFor flag || "@"
   oDocument = $inputor[0].ownerDocument
   oWindow = oDocument.defaultView || oDocument.parentWindow
   if $inputor.attr('contentEditable') == 'true' && oWindow.getSelection
     $inputor.focus()
     sel = oWindow.getSelection()
-    range = sel.getRangeAt(0)
-    clonedRange = range.cloneRange()
-    clonedRange.selectNodeContents($inputor[0])
-    clonedRange.setStart(range.endContainer, 31)
-    clonedRange.collapse(true)
+    range = oDocument.createRange()
+    range.setStart $inputor.contents().get(0), pos
+    range.setEnd $inputor.contents().get(0), pos
+    range.collapse false
     sel.removeAllRanges()
-    sel.addRange(clonedRange)
+    sel.addRange(range)
   else
-    $inputor.caret('pos', 31)
-
+    $inputor.caret('pos', pos)
   $inputor.trigger("keyup")
 
 @simulateChoose = ($inputor) ->
@@ -38,4 +36,4 @@
   $inputor.trigger(e)
 
 @getAppOf = ($inputor, at = "@") ->
-  $inputor.data('atwho').set_context_for(at)
+  $inputor.data('atwho').setContextFor(at)

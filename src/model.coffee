@@ -19,13 +19,13 @@ class Model
   # @param callback [Function] for receiving data
   query: (query, callback) ->
     data = this.fetch()
-    search_key = @context.get_opt("search_key")
-    data = @context.callbacks('filter').call(@context, query, data, search_key) || []
-    _remote_filter = @context.callbacks('remote_filter')
-    if data.length > 0 or (!_remote_filter and data.length == 0)
+    searchKey = @context.getOpt("searchKey")
+    data = @context.callbacks('filter').call(@context, query, data, searchKey) || []
+    _remoteFilter = @context.callbacks('remoteFilter')
+    if data.length > 0 or (!_remoteFilter and data.length == 0)
       callback data
     else
-      _remote_filter.call(@context, query, callback)
+      _remoteFilter.call(@context, query, callback)
 
   # get or set current data which would be shown on the list view.
   #
@@ -38,7 +38,7 @@ class Model
   #
   # @param data [Array] data to save
   save: (data) ->
-    @storage.data @at, @context.callbacks("before_save").call(@context, data || [])
+    @storage.data @at, @context.callbacks("beforeSave").call(@context, data || [])
 
   # load data. It wouldn't load for a second time if it has been loaded.
   #

@@ -22,6 +22,8 @@ module.exports = (grunt) ->
           'dist/js/<%= name %>.js': [
             'src/app.coffee',
             'src/controller.coffee',
+            'src/textareaController.coffee',
+            'src/editableController.coffee',
             'src/model.coffee',
             'src/view.coffee',
             'src/default.coffee',

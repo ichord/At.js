@@ -4,7 +4,8 @@ Api =
   # @params at[String] the flag
   # @params data [Array] data to storage.
   load: (at, data) -> c.model.load data if c = this.controller(at)
-  setIframe: (iframe, standalone) -> this.setIframe(iframe, standalone); null;
+  isSelecting: () -> this.controller()?.view.visiable()
+  setIframe: (iframe, asRoot) -> this.setupRootElement(iframe, asRoot); null;
   run: -> this.dispatch()
   destroy: ->
     this.shutdown()
@@ -28,15 +29,15 @@ $.fn.atwho.default =
   at: undefined
   alias: undefined
   data: null
-  tpl: "<li data-value='${atwho-at}${name}'>${name}</li>"
-  insert_tpl: "<span id='${id}'>${atwho-data-value}</span>"
+  displayTpl: "<li>${name}</li>"
+  insertTpl: "${atwho-at}${name}"
   callbacks: DEFAULT_CALLBACKS
-  search_key: "name"
+  searchKey: "name"
   suffix: undefined
-  hide_without_suffix: no
-  start_with_space: yes
-  highlight_first: yes
+  hideWithoutSuffix: no
+  startWithSpace: yes
+  highlightFirst: yes
   limit: 5
-  max_len: 20
-  display_timeout: 300
+  maxLen: 20
+  displayTimeout: 300
   delay: null
