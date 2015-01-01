@@ -20,15 +20,12 @@
       selector: "#editor",
       init_instance_callback: function(editor) {
         $(editor.contentDocument.activeElement).atwho({at: "@", data: names});
-<<<<<<< HEAD
       },
       setup: function(editor) {
         editor.on('keydown', function(e) {
           if(e.keyCode == 13 && $(editor.contentDocument.activeElement).atwho('isSelecting'))
             return false
         })
-=======
->>>>>>> bb04373... update examples
       }
     });
 
