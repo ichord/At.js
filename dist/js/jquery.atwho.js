@@ -327,6 +327,25 @@ Controller = (function() {
     return this.view.render(data.slice(0, this.getOpt('limit')));
   };
 
+  Controller.arrayToDefaultHash = function(data) {
+    var item, _i, _len, _results;
+    if (!$.isArray(data)) {
+      return data;
+    }
+    _results = [];
+    for (_i = 0, _len = data.length; _i < _len; _i++) {
+      item = data[_i];
+      if ($.isPlainObject(item)) {
+        _results.push(item);
+      } else {
+        _results.push({
+          name: item
+        });
+      }
+    }
+    return _results;
+  };
+
   Controller.prototype.lookUp = function(e) {
     var query, _callback;
     if (!(query = this.catchQuery(e))) {
@@ -334,7 +353,7 @@ Controller = (function() {
     }
     _callback = function(data) {
       if (data && data.length > 0) {
-        return this.renderView(data);
+        return this.renderView(this.constructor.arrayToDefaultHash(data));
       } else {
         return this.view.hide();
       }
@@ -833,22 +852,7 @@ KEY_CODE = {
 
 DEFAULT_CALLBACKS = {
   beforeSave: function(data) {
-    var item, _i, _len, _results;
-    if (!$.isArray(data)) {
-      return data;
-    }
-    _results = [];
-    for (_i = 0, _len = data.length; _i < _len; _i++) {
-      item = data[_i];
-      if ($.isPlainObject(item)) {
-        _results.push(item);
-      } else {
-        _results.push({
-          name: item
-        });
-      }
-    }
-    return _results;
+    return Controller.arrayToDefaultHash(data);
   },
   matcher: function(flag, subtext, should_startWithSpace) {
     var match, regexp, _a, _y;
@@ -934,7 +938,7 @@ Api = {
   },
   isSelecting: function() {
     var _ref;
-    return (_ref = this.controller()) != null ? _ref.view.visiable() : void 0;
+    return (_ref = this.controller()) != null ? _ref.view.visible() : void 0;
   },
   setIframe: function(iframe, asRoot) {
     this.setupRootElement(iframe, asRoot);

@@ -21,7 +21,7 @@ describe "default callbacks", ->
     $inputor.atwho 'destroy'
 
   it "refactor the data before save", ->
-    items = callbacks.beforeSave.call(app, fixtures["names"])
+    items = callbacks.beforeSave.call(app.controller(), fixtures["names"])
     expect(items).toContain({"name":"Jacob"})
     expect(items).toContain({"name":"Isabella"})
 
@@ -37,12 +37,12 @@ describe "default callbacks", ->
     expect(query).toBe("Jérémÿ")
 
   it "can filter data", ->
-    names = callbacks.beforeSave.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app.controller(), fixtures["names"])
     names = callbacks.filter.call(app, "jo", names, "name")
     expect(names).toContain name: "Joshua"
 
   it "can filter numeric data", ->
-    numerics = callbacks.beforeSave.call(app, fixtures["numerics"])
+    numerics = callbacks.beforeSave.call(app.controller(), fixtures["numerics"])
     numerics = callbacks.filter.call(app, "1", numerics, "name")
     expect(numerics).toContain name: 10
 
@@ -58,17 +58,17 @@ describe "default callbacks", ->
     expect(remote_call).toHaveBeenCalled()
 
   it "can sort the data", ->
-    names = callbacks.beforeSave.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app.controller(), fixtures["names"])
     names = callbacks.sorter.call(app, "e", names, "name")
     expect(names[0].name).toBe 'Ethan'
 
   it "can sort numeric data", ->
-    numerics = callbacks.beforeSave.call(app, fixtures["numerics"])
+    numerics = callbacks.beforeSave.call(app.controller(), fixtures["numerics"])
     numerics = callbacks.sorter.call(app, "1", numerics, "name")
     expect(numerics[0].name).toBe 13
 
   it "don't sort the data without a query", ->
-    names = callbacks.beforeSave.call(app, fixtures["names"])
+    names = callbacks.beforeSave.call(app.controller(), fixtures["names"])
     names = callbacks.sorter.call(app, "", names, "name")
     expect(names[0]).toEqual({ name : 'Jacob' })
 
@@ -88,17 +88,10 @@ describe "default callbacks", ->
 
   it "can insert the text which be choosed", ->
     spyOn(callbacks, "beforeInsert").and.callThrough()
-
     triggerAtwhoAt $inputor
     expect(callbacks.beforeInsert).toHaveBeenCalled()
 
   it "can adjust offset before reposition", ->
-    beforeReposition = jasmine.createSpy("beforeReposition")
-    $inputor.atwho
-      at: "@"
-      data: null,
-      callbacks:
-        remoteFilter: beforeReposition
-
-    simulateTypingIn $inputor
-    expect(beforeReposition).toHaveBeenCalled()
+    spyOn(callbacks, "beforeReposition").and.callThrough()
+    triggerAtwhoAt $inputor
+    expect(callbacks.beforeReposition).toHaveBeenCalled()

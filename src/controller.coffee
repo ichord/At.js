@@ -83,9 +83,18 @@ class Controller
     data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , searchKey)
     @view.render data[0...this.getOpt('limit')]
 
+  @arrayToDefaultHash: (data) ->
+    return data if not $.isArray data
+    for item in data
+      if $.isPlainObject item then item else name:item
+
   # Searching!
   lookUp: (e) ->
     return if not query = this.catchQuery e
-    _callback = (data) -> if data and data.length > 0 then this.renderView data else @view.hide()
+    _callback = (data) ->
+      if data and data.length > 0
+        this.renderView @constructor.arrayToDefaultHash data
+      else
+        @view.hide()
     @model.query query.text, $.proxy(_callback, this)
     query

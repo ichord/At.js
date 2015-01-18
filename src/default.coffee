@@ -21,19 +21,17 @@ KEY_CODE =
 #
 # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
 #
-# [beforeSave, matcher, filter, remoteFilter, sorter, tpl_evl, highlighter, beforeInsert]
+# [beforeSave, matcher, filter, remoteFilter, sorter, tplEvl, highlighter, beforeInsert, afterMatchFailed]
 #
 DEFAULT_CALLBACKS =
 
   # It would be called to restructure the data before At.js invokes `Model#save` to save data
-  # In default, At.js will convert it to a Hash Array.
+  # By default, At.js will convert it to a Hash Array.
   #
   # @param data [Array] data to refacotor.
   # @return [Array] Data after refactor.
   beforeSave: (data) ->
-    return data if not $.isArray data
-    for item in data
-      if $.isPlainObject item then item else name:item
+    Controller.arrayToDefaultHash data
 
   # It would be called to match the `flag`.
   # It will match at start of line or after whitespace
