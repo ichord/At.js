@@ -6,7 +6,7 @@
   },
   "homepage": "http://ichord.github.com/At.js",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "node": ">= 0.6.0"
   },
@@ -32,8 +32,8 @@
   "spm": {
     "main": "dist/js/jquery.atwho.js",
     "dependencies": {
-      "jquery": "1.7.2",
-      "caret.js": "0.2.0"
+      "jquery": ">=1.7.2",
+      "caret.js": "~0.2.2"
     },
     "ignore": [
       "examples",
