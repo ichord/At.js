@@ -11,8 +11,9 @@ class App
     this.listen()
 
   createContainer: (doc) ->
-    if (@$el = $("#atwho-container", doc)).length == 0
-      $(doc.body).append @$el = $("<div id='atwho-container'></div>")
+    @$el?.remove()
+    $ doc.body
+      .append @$el = $ "<div class='atwho-container'></div>"
 
   setupRootElement: (iframe, asRoot=false) ->
     if iframe
@@ -31,11 +32,7 @@ class App
           Please use `serIframe` to set the target iframe manually.
         """
         # throws error in cross-domain iframes
-    if @iframeAsRoot = asRoot
-      @$el?.remove()
-      this.createContainer @document
-    else 
-      this.createContainer document
+    this.createContainer if @iframeAsRoot = asRoot then @document else document
 
   controller: (at) ->
     if @aliasMaps[at]

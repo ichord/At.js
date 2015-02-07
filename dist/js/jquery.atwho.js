@@ -35,13 +35,15 @@ App = (function() {
   }
 
   App.prototype.createContainer = function(doc) {
-    if ((this.$el = $("#atwho-container", doc)).length === 0) {
-      return $(doc.body).append(this.$el = $("<div id='atwho-container'></div>"));
+    var _ref;
+    if ((_ref = this.$el) != null) {
+      _ref.remove();
     }
+    return $(doc.body).append(this.$el = $("<div class='atwho-container'></div>"));
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error, _ref;
+    var error;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -60,14 +62,7 @@ App = (function() {
         throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
       }
     }
-    if (this.iframeAsRoot = asRoot) {
-      if ((_ref = this.$el) != null) {
-        _ref.remove();
-      }
-      return this.createContainer(this.document);
-    } else {
-      return this.createContainer(document);
-    }
+    return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
   };
 
   App.prototype.controller = function(at) {
