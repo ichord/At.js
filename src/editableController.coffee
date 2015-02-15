@@ -98,15 +98,16 @@ class EditableController extends Controller
     if typeof matched is 'string' and matched.length <= @getOpt 'maxLen', 20
       query = text: matched, el: $query
       @trigger "matched", [@at, query.text]
+      @query = query
     else
       @view.hide()
-      query = null
+      @query = el: $query
       if $query.text().indexOf(this.at) >= 0
         if @_movingEvent(e) and $query.hasClass 'atwho-inserted'
           $query.removeClass('atwho-query')
         else if false != @callbacks('afterMatchFailed').call this, @at, $query
           @_setRange "after", @_unwrap $query.text($query.text()).contents().first()
-    @query = query
+      null
 
   # Get offset of current at char(`flag`)
   #

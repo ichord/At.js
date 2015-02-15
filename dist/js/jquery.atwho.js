@@ -555,9 +555,12 @@ EditableController = (function(_super) {
         el: $query
       };
       this.trigger("matched", [this.at, query.text]);
+      return this.query = query;
     } else {
       this.view.hide();
-      query = null;
+      this.query = {
+        el: $query
+      };
       if ($query.text().indexOf(this.at) >= 0) {
         if (this._movingEvent(e) && $query.hasClass('atwho-inserted')) {
           $query.removeClass('atwho-query');
@@ -565,8 +568,8 @@ EditableController = (function(_super) {
           this._setRange("after", this._unwrap($query.text($query.text()).contents().first()));
         }
       }
+      return null;
     }
-    return this.query = query;
   };
 
   EditableController.prototype.rect = function() {
@@ -857,7 +860,7 @@ DEFAULT_CALLBACKS = {
     }
     _a = decodeURI("%C3%80");
     _y = decodeURI("%C3%BF");
-    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];
