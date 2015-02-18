@@ -5,13 +5,13 @@
 */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module.
-    define(["jquery"], function ($) {
-      return (root.returnExportsGlobal = factory($));
+    // AMD. Register as an anonymous module unless amdModuleId is set
+    define(["jquery"], function (jquery) {
+      return (factory(jquery));
     });
   } else if (typeof exports === 'object') {
     // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like enviroments that support module.exports,
+    // only CommonJS-like environments that support module.exports,
     // like Node.
     module.exports = factory(require("jquery"));
   } else {
@@ -221,7 +221,11 @@ App = (function() {
         break;
       case KEY_CODE.TAB:
       case KEY_CODE.ENTER:
+      case KEY_CODE.SPACE:
         if (!view.visible()) {
+          return;
+        }
+        if (!this.controller().getOpt('spaceSelectsMatch') && e.keyCode === KEY_CODE.SPACE) {
           return;
         }
         e.preventDefault();
@@ -845,7 +849,8 @@ KEY_CODE = {
   UP: 38,
   RIGHT: 39,
   DOWN: 40,
-  BACKSPACE: 8
+  BACKSPACE: 8,
+  SPACE: 32
 };
 
 DEFAULT_CALLBACKS = {
@@ -986,9 +991,9 @@ $.fn.atwho["default"] = {
   limit: 5,
   maxLen: 20,
   displayTimeout: 300,
-  delay: null
+  delay: null,
+  spaceSelectsMatch: false
 };
-
 
 
 }));
