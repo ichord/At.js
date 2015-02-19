@@ -41,3 +41,4 @@ $.fn.atwho.default =
   maxLen: 20
   displayTimeout: 300
   delay: null
+  spaceSelectsMatch: no
