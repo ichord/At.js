@@ -5,19 +5,19 @@
 */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
+    // AMD. Register as an anonymous module.
     define(["jquery"], function (jquery) {
-      return (factory(jquery));
+      return (root.returnExportsGlobal = factory(jquery));
     });
   } else if (typeof exports === 'object') {
     // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
+    // only CommonJS-like enviroments that support module.exports,
     // like Node.
     module.exports = factory(require("jquery"));
   } else {
     factory(jQuery);
   }
-}(this, function ($) {
+}(this, function (jquery) {
 
 var Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
   __slice = [].slice,
@@ -102,7 +102,19 @@ App = (function() {
   };
 
   App.prototype.listen = function() {
-    return this.$inputor.on('keyup.atwhoInner', (function(_this) {
+    return this.$inputor.on('compositionstart', (function(_this) {
+      return function(e) {
+        var _ref;
+        if ((_ref = _this.controller()) != null) {
+          _ref.view.hide();
+        }
+        return _this.isComposing = true;
+      };
+    })(this)).on('compositionend', (function(_this) {
+      return function(e) {
+        return _this.isComposing = false;
+      };
+    })(this)).on('keyup.atwhoInner', (function(_this) {
       return function(e) {
         return _this.onKeyup(e);
       };
@@ -500,6 +512,9 @@ EditableController = (function(_super) {
 
   EditableController.prototype.catchQuery = function(e) {
     var $inserted, $query, index, inserted, lastNode, matched, offset, query, range, _range;
+    if (this.app.isComposing) {
+      return;
+    }
     if (!(range = this._getRange())) {
       return;
     }
@@ -865,7 +880,7 @@ DEFAULT_CALLBACKS = {
     }
     _a = decodeURI("%C3%80");
     _y = decodeURI("%C3%BF");
-    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];
@@ -994,6 +1009,7 @@ $.fn.atwho["default"] = {
   delay: null,
   spaceSelectsMatch: false
 };
+
 
 
 }));

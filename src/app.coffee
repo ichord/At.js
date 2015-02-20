@@ -69,6 +69,11 @@ class App
   # binding jQuery events of `inputor`'s
   listen: ->
     @$inputor
+      .on 'compositionstart', (e) =>
+        this.controller()?.view.hide()
+        @isComposing = true
+      .on 'compositionend', (e) =>
+        @isComposing = false
       .on 'keyup.atwhoInner', (e) =>
         this.onKeyup(e)
       .on 'keydown.atwhoInner', (e) =>

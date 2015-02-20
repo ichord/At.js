@@ -42,7 +42,7 @@ module.exports = (grunt) ->
         src: 'dist/js/<%= name %>.js'
         template: 'umd'
         deps:
-          'default': ['$']
+          'default': ['jquery']
           amd: ['jquery']
           cjs: ['jquery']
           global:

@@ -32,6 +32,7 @@ class EditableController extends Controller
     node
 
   catchQuery: (e) ->
+    return if @app.isComposing
     return unless range = @_getRange()
 
     if e.which == KEY_CODE.ENTER
