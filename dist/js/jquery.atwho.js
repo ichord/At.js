@@ -558,7 +558,8 @@ EditableController = (function(_super) {
     matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
     if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
       range.setStart(range.startContainer, index);
-      range.surroundContents(($query = $("<span class='atwho-query'/>", this.app.document))[0]);
+      $query = $("<span/>", this.app.document).attr(this.getOpt("editableAtwhoQueryAttrs")).addClass('atwho-query');
+      range.surroundContents($query.get(0));
       lastNode = $query.contents().last().get(0);
       if (/firefox/i.test(navigator.userAgent)) {
         range.setStart(lastNode, lastNode.length);
@@ -1007,7 +1008,8 @@ $.fn.atwho["default"] = {
   maxLen: 20,
   displayTimeout: 300,
   delay: null,
-  spaceSelectsMatch: false
+  spaceSelectsMatch: false,
+  editableAtwhoQueryAttrs: {}
 };
 
 

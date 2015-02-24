@@ -42,3 +42,4 @@ $.fn.atwho.default =
   displayTimeout: 300
   delay: null
   spaceSelectsMatch: no
+  editableAtwhoQueryAttrs: {}

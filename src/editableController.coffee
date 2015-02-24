@@ -86,7 +86,10 @@ class EditableController extends Controller
     if $query.length == 0 and typeof matched is 'string' \
         and (index = range.startOffset - @at.length - matched.length) >= 0
       range.setStart range.startContainer, index
-      range.surroundContents ($query = $ "<span class='atwho-query'/>", @app.document)[0]
+      $query = $ "<span/>", @app.document
+        .attr @getOpt "editableAtwhoQueryAttrs"
+        .addClass 'atwho-query'
+      range.surroundContents $query.get 0
       lastNode = $query.contents().last().get(0)
       if /firefox/i.test navigator.userAgent
         range.setStart lastNode, lastNode.length

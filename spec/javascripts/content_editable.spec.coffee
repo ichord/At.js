@@ -4,7 +4,10 @@ describe "content editable", ->
 
 	beforeEach ->
 		loadFixtures "inputors.html"
-		$inputor = $("#editable").atwho(at: "@", data: ["Jobs"])
+		$inputor = $("#editable").atwho
+			at: "@",
+			data: ["Jobs"]
+			editableAtwhoQueryAttrs: {class: "hello", "data-editor-verified":true}
 		app = getAppOf $inputor
   afterEach ->
     $inputor.atwho 'destroy'
@@ -19,7 +22,7 @@ describe "content editable", ->
 		app.controller().view.$el.find('ul').children().first().trigger('click')
 		expect($inputor.text()).toContain('@Jobs')
 
-	it "unwrapp span.atwho-query after match failed", ->
+	it "unwrap span.atwho-query after match failed", ->
 		simulateTypingIn $inputor
 		expect $('.atwho-query').length
 			.toBe 1
@@ -27,3 +30,9 @@ describe "content editable", ->
 		simulateTypingIn $inputor, "@", 3
 		expect $('.atwho-query').length
 			.toBe 0
+
+	it "wrap span.atwho-query with customize attrs", ->
+		# for #235
+		simulateTypingIn $inputor
+		expect $('.atwho-query').data('editor-verified')
+			.toBe true
