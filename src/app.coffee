@@ -29,7 +29,7 @@ class App
         @iframe = null
         throw new Error """
           iframe auto-discovery is failed.
-          Please use `serIframe` to set the target iframe manually.
+          Please use `setIframe` to set the target iframe manually.
         """
         # throws error in cross-domain iframes
     this.createContainer if @iframeAsRoot = asRoot then @document else document
