@@ -919,9 +919,13 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error;
+    var error, template;
+    template = tpl;
     try {
-      return tpl.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+      if (typeof tpl !== 'string') {
+        template = tpl(map);
+      }
+      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
         return map[key];
       });
     } catch (_error) {
