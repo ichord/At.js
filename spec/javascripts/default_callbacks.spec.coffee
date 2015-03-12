@@ -80,6 +80,14 @@ describe "default callbacks", ->
     result = callbacks.tplEval.call(app, tpl, map)
     expect(result).toBe(html)
 
+  it "can evaluate template as a function", ->
+    map = {name: "username", nick: "nick_name"}
+    tpl = (map)-> '<li data-value="'+map.name+'">'+map.nick+'</li>'
+    html = '<li data-value="username">nick_name</li>'
+    result = callbacks.tplEval.call(app, tpl, map)
+    expect(result).toBe(html)
+
+
   it "can highlight the query", ->
     html = '<li data-value="username">Ethan</li>'
     highlighted = callbacks.highlighter.call(app, html, "e")
