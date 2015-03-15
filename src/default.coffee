@@ -98,15 +98,20 @@ DEFAULT_CALLBACKS =
 
     _results.sort (a,b) -> a.atwho_order - b.atwho_order
 
-  # Eval template for every single item in display list.
+  # Evaluate the template either as a string or as a function
+  # this allows someone to pass in a set of data that needs a
+  # different template for different data results
   #
-  # @param tpl [String] The template string.
+  # @param tpl [function] the template function or string
   # @param map [Hash] Data map to eval.
   tplEval: (tpl, map) ->
+    template = tpl
     try
-      tpl.replace /\$\{([^\}]*)\}/g, (tag, key, pos) -> map[key]
+      template = tpl(map) unless typeof tpl == 'string'
+      template.replace /\$\{([^\}]*)\}/g, (tag, key, pos) -> map[key]
     catch error
       ""
+
 
   # Highlight the `matched query` string.
   #
