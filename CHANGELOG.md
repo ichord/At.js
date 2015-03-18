@@ -1,3 +1,9 @@
+### v1.1.0
+
+* lisafeather/displyTplCallBack - #259
+* ADD: `editableAtwhoQueryAttrs` options
+*  Added setting for 'spaceSelectsMatch' (default false/off)
+
 ### v1.0.0
 
 **The naming convention are using camel case**.  

@@ -1,17 +1,17 @@
-/*! jquery.atwho - v1.0.1 %>
+/*! jquery.atwho - v1.1.0 %>
 * Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
 */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
-    define(["jquery"], function (a0) {
-      return (factory(a0));
+    // AMD. Register as an anonymous module.
+    define(["jquery"], function (jquery) {
+      return (root.returnExportsGlobal = factory(jquery));
     });
   } else if (typeof exports === 'object') {
     // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
+    // only CommonJS-like enviroments that support module.exports,
     // like Node.
     module.exports = factory(require("jquery"));
   } else {
@@ -1015,6 +1015,7 @@ $.fn.atwho["default"] = {
   spaceSelectsMatch: false,
   editableAtwhoQueryAttrs: {}
 };
+
 
 
 }));
