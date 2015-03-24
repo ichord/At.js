@@ -963,6 +963,10 @@ Api = {
     var _ref;
     return (_ref = this.controller()) != null ? _ref.view.visible() : void 0;
   },
+  hide: function() {
+    var _ref;
+    return (_ref = this.controller()) != null ? _ref.view.hide() : void 0;
+  },
   setIframe: function(iframe, asRoot) {
     this.setupRootElement(iframe, asRoot);
     return null;
