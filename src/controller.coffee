@@ -73,7 +73,7 @@ class Controller
   insertContentFor: ($li) ->
     tpl = this.getOpt('insertTpl')
     data = $.extend {}, $li.data('item-data'), {'atwho-at': @at}
-    this.callbacks("tplEval").call(this, tpl, data)
+    this.callbacks("tplEval").call(this, tpl, data, "onInsert")
 
   # Render list view
   #

@@ -328,7 +328,7 @@ Controller = (function() {
     data = $.extend({}, $li.data('item-data'), {
       'atwho-at': this.at
     });
-    return this.callbacks("tplEval").call(this, tpl, data);
+    return this.callbacks("tplEval").call(this, tpl, data, "onInsert");
   };
 
   Controller.prototype.renderView = function(data) {
@@ -837,7 +837,7 @@ View = (function() {
       item = $.extend({}, item, {
         'atwho-at': this.context.at
       });
-      li = this.context.callbacks("tplEval").call(this.context, tpl, item);
+      li = this.context.callbacks("tplEval").call(this.context, tpl, item, "onDisplay");
       $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
       $li.data("item-data", item);
       $ul.append($li);

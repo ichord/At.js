@@ -103,7 +103,7 @@ class View
 
     for item in list
       item = $.extend {}, item, {'atwho-at': @context.at}
-      li = @context.callbacks("tplEval").call(@context, tpl, item)
+      li = @context.callbacks("tplEval").call(@context, tpl, item, "onDisplay")
       $li = $ @context.callbacks("highlighter").call(@context, li, @context.query.text)
       $li.data("item-data", item)
       $ul.append $li
