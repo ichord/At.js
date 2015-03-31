@@ -154,23 +154,14 @@ App = (function() {
   };
 
   App.prototype.dispatch = function(e) {
-    return $.map(this.controllers, (function(_this) {
-      return function(c) {
-        var delay;
-        if (delay = c.getOpt('delay')) {
-          clearTimeout(_this.delayedCallback);
-          return _this.delayedCallback = setTimeout(function() {
-            if (c.lookUp(e)) {
-              return _this.setContextFor(c.at);
-            }
-          }, delay);
-        } else {
-          if (c.lookUp(e)) {
-            return _this.setContextFor(c.at);
-          }
-        }
-      };
-    })(this));
+    var c, _, _ref, _results;
+    _ref = this.controllers;
+    _results = [];
+    for (_ in _ref) {
+      c = _ref[_];
+      _results.push(c.lookUp(e));
+    }
+    return _results;
   };
 
   App.prototype.onKeyup = function(e) {
@@ -358,10 +349,25 @@ Controller = (function() {
   };
 
   Controller.prototype.lookUp = function(e) {
+    var delay;
+    if (delay = this.getOpt('delay')) {
+      clearTimeout(this.delayedCallback);
+      return this.delayedCallback = setTimeout((function(_this) {
+        return function() {
+          return _this._lookUp(e);
+        };
+      })(this), delay);
+    } else {
+      return this._lookUp(e);
+    }
+  };
+
+  Controller.prototype._lookUp = function(e) {
     var query, _callback;
     if (!(query = this.catchQuery(e))) {
       return;
     }
+    this.app.setContextFor(this.at);
     _callback = function(data) {
       if (data && data.length > 0) {
         return this.renderView(this.constructor.arrayToDefaultHash(data));

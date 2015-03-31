@@ -90,7 +90,17 @@ class Controller
 
   # Searching!
   lookUp: (e) ->
+    if delay = this.getOpt 'delay'
+      clearTimeout @delayedCallback
+      @delayedCallback = setTimeout(=>
+        @_lookUp e
+      , delay)
+    else
+      @_lookUp e
+
+  _lookUp: (e) ->
     return if not query = this.catchQuery e
+    @app.setContextFor @at
     _callback = (data) ->
       if data and data.length > 0
         this.renderView @constructor.arrayToDefaultHash data
