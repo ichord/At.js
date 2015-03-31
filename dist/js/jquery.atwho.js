@@ -967,6 +967,13 @@ Api = {
     var _ref;
     return (_ref = this.controller()) != null ? _ref.view.hide() : void 0;
   },
+  reposition: function() {
+    var c;
+    if (c = this.controller()) {
+      c.view.reposition(c.rect());
+      return console.log("reposition", c);
+    }
+  },
   setIframe: function(iframe, asRoot) {
     this.setupRootElement(iframe, asRoot);
     return null;
@@ -994,7 +1001,7 @@ $.fn.atwho = function(method) {
     } else if (Api[method] && app) {
       return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
     } else {
-      return $.error("Method " + method + " does not exist on jQuery.caret");
+      return $.error("Method " + method + " does not exist on jQuery.atwho");
     }
   });
   return result || this;
