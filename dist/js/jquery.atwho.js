@@ -349,22 +349,48 @@ Controller = (function() {
   };
 
   Controller.prototype.lookUp = function(e) {
-    var delay, query;
+    var query, wait;
     if (!(query = this.catchQuery(e))) {
       return;
     }
     this.app.setContextFor(this.at);
-    if (delay = this.getOpt('delay')) {
-      clearTimeout(this.delayedCallback);
-      this.delayedCallback = setTimeout((function(_this) {
-        return function() {
-          return _this._lookUp(query);
-        };
-      })(this), delay);
+    if (wait = this.getOpt('delay')) {
+      this._delayLookUp(query, wait);
     } else {
       this._lookUp(query);
     }
     return query;
+  };
+
+  Controller.prototype._delayLookUp = function(query, wait) {
+    var now, remaining;
+    now = Date.now ? Date.now() : new Date().getTime();
+    this.previousCallTime || (this.previousCallTime = now);
+    remaining = wait - (now - this.previousCallTime);
+    if ((0 < remaining && remaining < wait)) {
+      this.previousCallTime = now;
+      this._stopDelayedCall();
+      return this.delayedCallTimeout = setTimeout((function(_this) {
+        return function() {
+          _this.previousCallTime = 0;
+          _this.delayedCallTimeout = null;
+          return _this._lookUp(query);
+        };
+      })(this), wait);
+    } else {
+      this._stopDelayedCall();
+      if (this.previousCallTime !== now) {
+        this.previousCallTime = 0;
+      }
+      return this._lookUp(query);
+    }
+  };
+
+  Controller.prototype._stopDelayedCall = function() {
+    if (this.delayedCallTimeout) {
+      clearTimeout(this.delayedCallTimeout);
+      return this.delayedCallTimeout = null;
+    }
   };
 
   Controller.prototype._lookUp = function(query) {

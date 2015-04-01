@@ -92,14 +92,33 @@ class Controller
   lookUp: (e) ->
     return if not query = this.catchQuery e
     @app.setContextFor @at
-    if delay = this.getOpt 'delay'
-      clearTimeout @delayedCallback
-      @delayedCallback = setTimeout(=>
-        @_lookUp query
-      , delay)
+    if wait = this.getOpt('delay')
+      @_delayLookUp query, wait
     else
       @_lookUp query
     query
+
+  _delayLookUp: (query, wait) ->
+    now = if Date.now then Date.now() else new Date().getTime()
+    @previousCallTime ||= now
+    remaining = wait - (now - @previousCallTime)
+    if 0 < remaining < wait
+      @previousCallTime = now
+      @_stopDelayedCall()
+      @delayedCallTimeout = setTimeout(=>
+        @previousCallTime = 0
+        @delayedCallTimeout = null
+        @_lookUp query
+      , wait)
+    else
+      @_stopDelayedCall()
+      @previousCallTime = 0 if @previousCallTime isnt now 
+      @_lookUp query
+
+  _stopDelayedCall: ->
+    if @delayedCallTimeout
+      clearTimeout @delayedCallTimeout
+      @delayedCallTimeout = null 
 
   _lookUp: (query) ->
     _callback = (data) ->
