@@ -349,25 +349,26 @@ Controller = (function() {
   };
 
   Controller.prototype.lookUp = function(e) {
-    var delay;
-    if (delay = this.getOpt('delay')) {
-      clearTimeout(this.delayedCallback);
-      return this.delayedCallback = setTimeout((function(_this) {
-        return function() {
-          return _this._lookUp(e);
-        };
-      })(this), delay);
-    } else {
-      return this._lookUp(e);
-    }
-  };
-
-  Controller.prototype._lookUp = function(e) {
-    var query, _callback;
+    var delay, query;
     if (!(query = this.catchQuery(e))) {
       return;
     }
     this.app.setContextFor(this.at);
+    if (delay = this.getOpt('delay')) {
+      clearTimeout(this.delayedCallback);
+      this.delayedCallback = setTimeout((function(_this) {
+        return function() {
+          return _this._lookUp(query);
+        };
+      })(this), delay);
+    } else {
+      this._lookUp(query);
+    }
+    return query;
+  };
+
+  Controller.prototype._lookUp = function(query) {
+    var _callback;
     _callback = function(data) {
       if (data && data.length > 0) {
         return this.renderView(this.constructor.arrayToDefaultHash(data));
@@ -375,8 +376,7 @@ Controller = (function() {
         return this.view.hide();
       }
     };
-    this.model.query(query.text, $.proxy(_callback, this));
-    return query;
+    return this.model.query(query.text, $.proxy(_callback, this));
   };
 
   return Controller;

@@ -90,21 +90,21 @@ class Controller
 
   # Searching!
   lookUp: (e) ->
+    return if not query = this.catchQuery e
+    @app.setContextFor @at
     if delay = this.getOpt 'delay'
       clearTimeout @delayedCallback
       @delayedCallback = setTimeout(=>
-        @_lookUp e
+        @_lookUp query
       , delay)
     else
-      @_lookUp e
+      @_lookUp query
+    query
 
-  _lookUp: (e) ->
-    return if not query = this.catchQuery e
-    @app.setContextFor @at
+  _lookUp: (query) ->
     _callback = (data) ->
       if data and data.length > 0
         this.renderView @constructor.arrayToDefaultHash data
       else
         @view.hide()
     @model.query query.text, $.proxy(_callback, this)
-    query
