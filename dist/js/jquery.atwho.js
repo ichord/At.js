@@ -154,23 +154,14 @@ App = (function() {
   };
 
   App.prototype.dispatch = function(e) {
-    return $.map(this.controllers, (function(_this) {
-      return function(c) {
-        var delay;
-        if (delay = c.getOpt('delay')) {
-          clearTimeout(_this.delayedCallback);
-          return _this.delayedCallback = setTimeout(function() {
-            if (c.lookUp(e)) {
-              return _this.setContextFor(c.at);
-            }
-          }, delay);
-        } else {
-          if (c.lookUp(e)) {
-            return _this.setContextFor(c.at);
-          }
-        }
-      };
-    })(this));
+    var c, _, _ref, _results;
+    _ref = this.controllers;
+    _results = [];
+    for (_ in _ref) {
+      c = _ref[_];
+      _results.push(c.lookUp(e));
+    }
+    return _results;
   };
 
   App.prototype.onKeyup = function(e) {
@@ -358,10 +349,52 @@ Controller = (function() {
   };
 
   Controller.prototype.lookUp = function(e) {
-    var query, _callback;
+    var query, wait;
     if (!(query = this.catchQuery(e))) {
       return;
     }
+    this.app.setContextFor(this.at);
+    if (wait = this.getOpt('delay')) {
+      this._delayLookUp(query, wait);
+    } else {
+      this._lookUp(query);
+    }
+    return query;
+  };
+
+  Controller.prototype._delayLookUp = function(query, wait) {
+    var now, remaining;
+    now = Date.now ? Date.now() : new Date().getTime();
+    this.previousCallTime || (this.previousCallTime = now);
+    remaining = wait - (now - this.previousCallTime);
+    if ((0 < remaining && remaining < wait)) {
+      this.previousCallTime = now;
+      this._stopDelayedCall();
+      return this.delayedCallTimeout = setTimeout((function(_this) {
+        return function() {
+          _this.previousCallTime = 0;
+          _this.delayedCallTimeout = null;
+          return _this._lookUp(query);
+        };
+      })(this), wait);
+    } else {
+      this._stopDelayedCall();
+      if (this.previousCallTime !== now) {
+        this.previousCallTime = 0;
+      }
+      return this._lookUp(query);
+    }
+  };
+
+  Controller.prototype._stopDelayedCall = function() {
+    if (this.delayedCallTimeout) {
+      clearTimeout(this.delayedCallTimeout);
+      return this.delayedCallTimeout = null;
+    }
+  };
+
+  Controller.prototype._lookUp = function(query) {
+    var _callback;
     _callback = function(data) {
       if (data && data.length > 0) {
         return this.renderView(this.constructor.arrayToDefaultHash(data));
@@ -369,8 +402,7 @@ Controller = (function() {
         return this.view.hide();
       }
     };
-    this.model.query(query.text, $.proxy(_callback, this));
-    return query;
+    return this.model.query(query.text, $.proxy(_callback, this));
   };
 
   return Controller;

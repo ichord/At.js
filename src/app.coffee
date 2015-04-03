@@ -93,14 +93,7 @@ class App
     @$el.remove()
 
   dispatch: (e) ->
-    $.map @controllers, (c) =>
-      if delay = c.getOpt('delay')
-        clearTimeout @delayedCallback
-        @delayedCallback = setTimeout(=>
-          this.setContextFor c.at if c.lookUp e
-        , delay)
-      else
-        this.setContextFor c.at if c.lookUp e
+    c.lookUp(e) for _, c of @controllers
 
   onKeyup: (e) ->
     switch e.keyCode
