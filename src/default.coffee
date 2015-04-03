@@ -39,18 +39,22 @@ DEFAULT_CALLBACKS =
   #
   # @param flag [String] current `flag` ("@", etc)
   # @param subtext [String] Text from start to current caret position.
+  # @param should_startWithSpace [boolean] accept white space as beginning of match.
+  # @param acceptSpaceBar [boolean] accept a space bar in the center of match,
+  #                                 so you can match a first and last name, for ex.
   #
   # @return [String | null] Matched result.
-  matcher: (flag, subtext, should_startWithSpace) ->
+  matcher: (flag, subtext, should_startWithSpace, acceptSpaceBar) ->
     # escape RegExp
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
     flag = '(?:^|\\s)' + flag if should_startWithSpace
-    
+
     # À
     _a = decodeURI("%C3%80")
     # ÿ
     _y = decodeURI("%C3%BF")
-    regexp = new RegExp "#{flag}([A-Za-z#{_a}-#{_y}0-9_\.\+\-]*)$|#{flag}([^\\x00-\\xff]*)$",'gi'
+    space = if acceptSpaceBar then "\ " else ""
+    regexp = new RegExp "#{flag}([A-Za-z#{_a}-#{_y}0-9_#{space}\.\+\-]*)$|#{flag}([^\\x00-\\xff]*)$",'gi'
     match = regexp.exec subtext
     if match then match[2] || match[1] else null
 

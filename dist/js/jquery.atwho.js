@@ -873,15 +873,16 @@ DEFAULT_CALLBACKS = {
   beforeSave: function(data) {
     return Controller.arrayToDefaultHash(data);
   },
-  matcher: function(flag, subtext, should_startWithSpace) {
-    var match, regexp, _a, _y;
+  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
+    var match, regexp, space, _a, _y;
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     if (should_startWithSpace) {
       flag = '(?:^|\\s)' + flag;
     }
     _a = decodeURI("%C3%80");
     _y = decodeURI("%C3%BF");
-    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    space = acceptSpaceBar ? "\ " : "";
+    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];

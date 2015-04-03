@@ -29,6 +29,24 @@ describe "default callbacks", ->
     query = callbacks.matcher.call(app, "@", text)
     expect(query).toBe("Jobs")
 
+  it "should not match a space following @ if acceptSpaceBar flag omitted", ->
+    $inputor = $("#inputor").atwho at: "@", data: fixtures["names"]
+    text = $.trim $inputor.text()
+    query = callbacks.matcher.call(app, "@", text)
+    expect(query).toBe("Jobs")
+
+  it "should not match a space following @ if acceptSpaceBar flag false", ->
+    $inputor = $("#inputor").atwho at: "@", data: fixtures["names"], acceptSpaceBar: false
+    text = $.trim $inputor.text()
+    query = callbacks.matcher.call(app, "@", text, false, false)
+    expect(query).toBe("Jobs")
+
+  it "should match a space following @ if acceptSpaceBar flag set to true", ->
+    $inputor = $("#inputor4").atwho at: "@", data: fixtures["names"], acceptSpaceBar: true
+    text = $.trim $inputor.text()
+    query = callbacks.matcher.call(app, "@", text, false, true)
+    expect(query).toBe("Jobs Blobs")
+
   it "should match the key word fllowing @ with specials chars", ->
     $inputor = $("#special-chars").atwho at: "@", data: fixtures["names"]
     text = $.trim $inputor.text()
