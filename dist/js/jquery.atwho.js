@@ -802,9 +802,7 @@ View = (function() {
       next = this.$el.find('li:first');
     }
     next.addClass('cur');
-    return this.$el.animate({
-      scrollTop: Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height())
-    }, 150);
+    return this.scrollTop(Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height()));
   };
 
   View.prototype.prev = function() {
@@ -815,9 +813,19 @@ View = (function() {
       prev = this.$el.find('li:last');
     }
     prev.addClass('cur');
-    return this.$el.animate({
-      scrollTop: Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height())
-    }, 150);
+    return this.scrollTop(Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height()));
+  };
+
+  View.prototype.scrollTop = function(scrollTop) {
+    var scrollDuration;
+    scrollDuration = this.context.getOpt('scrollDuration');
+    if (scrollDuration) {
+      return this.$el.animate({
+        scrollTop: scrollTop
+      }, scrollDuration);
+    } else {
+      return this.$el.scrollTop(scrollTop);
+    }
   };
 
   View.prototype.show = function() {
@@ -1057,9 +1065,9 @@ $.fn.atwho["default"] = {
   displayTimeout: 300,
   delay: null,
   spaceSelectsMatch: false,
-  editableAtwhoQueryAttrs: {}
+  editableAtwhoQueryAttrs: {},
+  scrollDuration: 150
 };
-
 
 
 }));
