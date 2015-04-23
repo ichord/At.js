@@ -5,13 +5,13 @@
 */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module.
-    define(["jquery"], function (jquery) {
-      return (root.returnExportsGlobal = factory(jquery));
+    // AMD. Register as an anonymous module unless amdModuleId is set
+    define(["jquery"], function (a0) {
+      return (factory(a0));
     });
   } else if (typeof exports === 'object') {
     // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like enviroments that support module.exports,
+    // only CommonJS-like environments that support module.exports,
     // like Node.
     module.exports = factory(require("jquery"));
   } else {
@@ -231,8 +231,12 @@ App = (function() {
         if (!this.controller().getOpt('spaceSelectsMatch') && e.keyCode === KEY_CODE.SPACE) {
           return;
         }
-        e.preventDefault();
-        view.choose(e);
+        if (view.highlighted()) {
+          e.preventDefault();
+          view.choose(e);
+        } else {
+          view.hide(e);
+        }
         break;
       default:
         $.noop();
@@ -759,6 +763,10 @@ View = (function() {
 
   View.prototype.visible = function() {
     return this.$el.is(":visible");
+  };
+
+  View.prototype.highlighted = function() {
+    return this.$el.find(".cur").length > 0;
   };
 
   View.prototype.choose = function(e) {
