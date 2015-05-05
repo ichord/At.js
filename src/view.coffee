@@ -34,6 +34,9 @@ class View
   visible: ->
     @$el.is(":visible")
 
+  highlighted: ->
+    @$el.find(".cur").length > 0
+
   choose: (e) ->
     if ($li = @$el.find ".cur").length
       content = @context.insertContentFor $li

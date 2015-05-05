@@ -134,8 +134,11 @@ class App
       when KEY_CODE.TAB, KEY_CODE.ENTER, KEY_CODE.SPACE
         return if not view.visible()
         return if not this.controller().getOpt('spaceSelectsMatch') and e.keyCode == KEY_CODE.SPACE
-        e.preventDefault()
-        view.choose(e)
+        if view.highlighted()
+          e.preventDefault()
+          view.choose(e)
+        else
+          view.hide(e)
       else
         $.noop()
     return
