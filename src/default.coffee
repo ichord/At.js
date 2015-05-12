@@ -5,6 +5,7 @@ KEY_CODE =
   TAB: 9
   ENTER: 13
   CTRL: 17
+  A: 65
   P: 80
   N: 78
   LEFT: 37
@@ -144,4 +145,4 @@ DEFAULT_CALLBACKS =
   #   offset
   beforeReposition: (offset) -> offset
 
-  afterMatchFailed: (at, el) ->
+  afterMatchFailed: (at, el) -> #this, @at, $query

@@ -2,11 +2,14 @@ class EditableController extends Controller
 
   _getRange: ->
     sel = @app.window.getSelection()
+    
     sel.getRangeAt(0) if sel.rangeCount > 0
 
   _setRange: (position, node, range=@_getRange()) ->
+ 
     return unless range
     node = $(node)[0]
+
     if position == 'after'
       range.setEndAfter node
       range.setStartAfter node
@@ -18,8 +21,10 @@ class EditableController extends Controller
 
   _clearRange: (range=@_getRange()) ->
     sel = @app.window.getSelection()
-    sel.removeAllRanges()
-    sel.addRange range   
+    #ctrl+a remove defaults using the flag
+    if !@ctrl_a_pressed?
+      sel.removeAllRanges()
+      sel.addRange range
 
   _movingEvent: (e) ->
     e.type == 'click' or e.which in [KEY_CODE.RIGHT, KEY_CODE.LEFT, KEY_CODE.UP, KEY_CODE.DOWN]
@@ -34,6 +39,17 @@ class EditableController extends Controller
   catchQuery: (e) ->
     return if @app.isComposing
     return unless range = @_getRange()
+
+    #simply catch to stop default handlers on ctrl, ctrl+a events; issue#258
+    if e.which == KEY_CODE.CTRL
+      @ctrl_pressed = true
+    else if e.which == KEY_CODE.A
+      if !@ctrl_pressed? 
+        @ctrl_a_pressed = true
+    else
+      delete @ctrl_a_pressed
+      delete @ctrl_pressed
+    
 
     if e.which == KEY_CODE.ENTER
       ($query = $(range.startContainer).closest '.atwho-query')
@@ -58,7 +74,7 @@ class EditableController extends Controller
         _range.setStart range.startContainer, offset
         if $(_range.cloneContents()).contents().last().is '.atwho-inserted'
           inserted = $(range.startContainer).contents().get(offset)
-          @_setRange "after", $(inserted).contents().last()
+          @_setRange 'after', $(inserted).contents().last()
       else if e.which == KEY_CODE.LEFT and range.startContainer.nodeType == document.TEXT_NODE
         $inserted = $ range.startContainer.previousSibling
         if $inserted.is('.atwho-inserted') and range.startOffset == 0
