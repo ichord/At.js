@@ -2,7 +2,6 @@ class EditableController extends Controller
 
   _getRange: ->
     sel = @app.window.getSelection()
-    
     sel.getRangeAt(0) if sel.rangeCount > 0
 
   _setRange: (position, node, range=@_getRange()) ->
@@ -47,7 +46,6 @@ class EditableController extends Controller
     else
       delete @ctrl_a_pressed
       delete @ctrl_pressed
-    
 
     if e.which == KEY_CODE.ENTER
       ($query = $(range.startContainer).closest '.atwho-query')
