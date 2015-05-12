@@ -145,4 +145,4 @@ DEFAULT_CALLBACKS =
   #   offset
   beforeReposition: (offset) -> offset
 
-  afterMatchFailed: (at, el) -> #this, @at, $query
+  afterMatchFailed: (at, el) ->

@@ -6,10 +6,8 @@ class EditableController extends Controller
     sel.getRangeAt(0) if sel.rangeCount > 0
 
   _setRange: (position, node, range=@_getRange()) ->
- 
     return unless range
     node = $(node)[0]
-
     if position == 'after'
       range.setEndAfter node
       range.setStartAfter node
