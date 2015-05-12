@@ -98,7 +98,7 @@ class EditableController extends Controller
     if $query.length == 0 and typeof matched is 'string' \
         and (index = range.startOffset - @at.length - matched.length) >= 0
       range.setStart range.startContainer, index
-      $query = $ "<span/>", @app.document
+      $query = $ '<span contenteditable="false"/>', @app.document
         .attr @getOpt "editableAtwhoQueryAttrs"
         .addClass 'atwho-query'
       range.surroundContents $query.get 0
