@@ -27,11 +27,12 @@ class App
         @iframe = @window.frameElement
       catch error
         @iframe = null
-        throw new Error """
-          iframe auto-discovery is failed.
-          Please use `setIframe` to set the target iframe manually.
-        """
-        # throws error in cross-domain iframes
+        if $.fn.atwho.debug
+          throw new Error """
+            iframe auto-discovery is failed.
+            Please use `setIframe` to set the target iframe manually.
+            #{error}
+          """
     this.createContainer if @iframeAsRoot = asRoot then @document else document
 
   controller: (at) ->

@@ -49,3 +49,5 @@ $.fn.atwho.default =
   spaceSelectsMatch: no
   editableAtwhoQueryAttrs: {}
   scrollDuration: 150
+
+$.fn.atwho.debug = false

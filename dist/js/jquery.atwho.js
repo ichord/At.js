@@ -59,7 +59,9 @@ App = (function() {
       } catch (_error) {
         error = _error;
         this.iframe = null;
-        throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.");
+        if ($.fn.atwho.debug) {
+          throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
+        }
       }
     }
     return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
@@ -1089,6 +1091,8 @@ $.fn.atwho["default"] = {
   editableAtwhoQueryAttrs: {},
   scrollDuration: 150
 };
+
+$.fn.atwho.debug = false;
 
 
 }));
