@@ -20,9 +20,9 @@
 }(this, function (jquery) {
 
 var Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
-  __slice = [].slice,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  slice = [].slice,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 App = (function() {
   function App(inputor) {
@@ -35,9 +35,9 @@ App = (function() {
   }
 
   App.prototype.createContainer = function(doc) {
-    var _ref;
-    if ((_ref = this.$el) != null) {
-      _ref.remove();
+    var ref;
+    if ((ref = this.$el) != null) {
+      ref.remove();
     }
     return $(doc.body).append(this.$el = $("<div class='atwho-container'></div>"));
   };
@@ -66,13 +66,13 @@ App = (function() {
   };
 
   App.prototype.controller = function(at) {
-    var c, current, currentFlag, _ref;
+    var c, current, currentFlag, ref;
     if (this.aliasMaps[at]) {
       current = this.controllers[this.aliasMaps[at]];
     } else {
-      _ref = this.controllers;
-      for (currentFlag in _ref) {
-        c = _ref[currentFlag];
+      ref = this.controllers;
+      for (currentFlag in ref) {
+        c = ref[currentFlag];
         if (currentFlag === at) {
           current = c;
           break;
@@ -92,8 +92,8 @@ App = (function() {
   };
 
   App.prototype.reg = function(flag, setting) {
-    var controller, _base;
-    controller = (_base = this.controllers)[flag] || (_base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
+    var base, controller;
+    controller = (base = this.controllers)[flag] || (base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
     if (setting.alias) {
       this.aliasMaps[setting.alias] = flag;
     }
@@ -104,9 +104,9 @@ App = (function() {
   App.prototype.listen = function() {
     return this.$inputor.on('compositionstart', (function(_this) {
       return function(e) {
-        var _ref;
-        if ((_ref = _this.controller()) != null) {
-          _ref.view.hide();
+        var ref;
+        if ((ref = _this.controller()) != null) {
+          ref.view.hide();
         }
         return _this.isComposing = true;
       };
@@ -124,8 +124,8 @@ App = (function() {
       };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
-        var _ref;
-        return (_ref = _this.controller()) != null ? _ref.view.hide(e) : void 0;
+        var ref;
+        return (ref = _this.controller()) != null ? ref.view.hide(e) : void 0;
       };
     })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
@@ -142,10 +142,10 @@ App = (function() {
   };
 
   App.prototype.shutdown = function() {
-    var c, _, _ref;
-    _ref = this.controllers;
-    for (_ in _ref) {
-      c = _ref[_];
+    var _, c, ref;
+    ref = this.controllers;
+    for (_ in ref) {
+      c = ref[_];
       c.destroy();
       delete this.controllers[_];
     }
@@ -154,23 +154,23 @@ App = (function() {
   };
 
   App.prototype.dispatch = function(e) {
-    var c, _, _ref, _results;
-    _ref = this.controllers;
-    _results = [];
-    for (_ in _ref) {
-      c = _ref[_];
-      _results.push(c.lookUp(e));
+    var _, c, ref, results;
+    ref = this.controllers;
+    results = [];
+    for (_ in ref) {
+      c = ref[_];
+      results.push(c.lookUp(e));
     }
-    return _results;
+    return results;
   };
 
   App.prototype.onKeyup = function(e) {
-    var _ref;
+    var ref;
     switch (e.keyCode) {
       case KEY_CODE.ESC:
         e.preventDefault();
-        if ((_ref = this.controller()) != null) {
-          _ref.view.hide();
+        if ((ref = this.controller()) != null) {
+          ref.view.hide();
         }
         break;
       case KEY_CODE.DOWN:
@@ -190,8 +190,8 @@ App = (function() {
   };
 
   App.prototype.onKeydown = function(e) {
-    var view, _ref;
-    view = (_ref = this.controller()) != null ? _ref.view : void 0;
+    var ref, view;
+    view = (ref = this.controller()) != null ? ref.view : void 0;
     if (!(view && view.visible())) {
       return;
     }
@@ -252,9 +252,9 @@ Controller = (function() {
     return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
   };
 
-  function Controller(app, at) {
-    this.app = app;
-    this.at = at;
+  function Controller(app1, at1) {
+    this.app = app1;
+    this.at = at1;
     this.$inputor = this.app.$inputor;
     this.id = this.$inputor[0].id || this.uid();
     this.setting = null;
@@ -283,12 +283,12 @@ Controller = (function() {
 
   Controller.prototype.callDefault = function() {
     var args, error, funcName;
-    funcName = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
     } catch (_error) {
       error = _error;
-      return $.error("" + error + " Or maybe At.js doesn't have function " + funcName);
+      return $.error(error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
 
@@ -299,7 +299,7 @@ Controller = (function() {
     }
     data.push(this);
     alias = this.getOpt('alias');
-    eventName = alias ? "" + name + "-" + alias + ".atwho" : "" + name + ".atwho";
+    eventName = alias ? name + "-" + alias + ".atwho" : name + ".atwho";
     return this.$inputor.trigger(eventName, data);
   };
 
@@ -334,22 +334,22 @@ Controller = (function() {
   };
 
   Controller.arrayToDefaultHash = function(data) {
-    var item, _i, _len, _results;
+    var i, item, len, results;
     if (!$.isArray(data)) {
       return data;
     }
-    _results = [];
-    for (_i = 0, _len = data.length; _i < _len; _i++) {
-      item = data[_i];
+    results = [];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
       if ($.isPlainObject(item)) {
-        _results.push(item);
+        results.push(item);
       } else {
-        _results.push({
+        results.push({
           name: item
         });
       }
     }
-    return _results;
+    return results;
   };
 
   Controller.prototype.lookUp = function(e) {
@@ -413,8 +413,8 @@ Controller = (function() {
 
 })();
 
-TextareaController = (function(_super) {
-  __extends(TextareaController, _super);
+TextareaController = (function(superClass) {
+  extend(TextareaController, superClass);
 
   function TextareaController() {
     return TextareaController.__super__.constructor.apply(this, arguments);
@@ -487,8 +487,8 @@ TextareaController = (function(_super) {
 
 })(Controller);
 
-EditableController = (function(_super) {
-  __extends(EditableController, _super);
+EditableController = (function(superClass) {
+  extend(EditableController, superClass);
 
   function EditableController() {
     return EditableController.__super__.constructor.apply(this, arguments);
@@ -527,13 +527,15 @@ EditableController = (function(_super) {
       range = this._getRange();
     }
     sel = this.app.window.getSelection();
-    sel.removeAllRanges();
-    return sel.addRange(range);
+    if (this.ctrl_a_pressed == null) {
+      sel.removeAllRanges();
+      return sel.addRange(range);
+    }
   };
 
   EditableController.prototype._movingEvent = function(e) {
-    var _ref;
-    return e.type === 'click' || ((_ref = e.which) === KEY_CODE.RIGHT || _ref === KEY_CODE.LEFT || _ref === KEY_CODE.UP || _ref === KEY_CODE.DOWN);
+    var ref;
+    return e.type === 'click' || ((ref = e.which) === KEY_CODE.RIGHT || ref === KEY_CODE.LEFT || ref === KEY_CODE.UP || ref === KEY_CODE.DOWN);
   };
 
   EditableController.prototype._unwrap = function(node) {
@@ -547,12 +549,22 @@ EditableController = (function(_super) {
   };
 
   EditableController.prototype.catchQuery = function(e) {
-    var $inserted, $query, index, inserted, lastNode, matched, offset, query, range, _range;
+    var $inserted, $query, _range, index, inserted, lastNode, matched, offset, query, range;
     if (this.app.isComposing) {
       return;
     }
     if (!(range = this._getRange())) {
       return;
+    }
+    if (e.which === KEY_CODE.CTRL) {
+      this.ctrl_pressed = true;
+    } else if (e.which === KEY_CODE.A) {
+      if (this.ctrl_pressed == null) {
+        this.ctrl_a_pressed = true;
+      }
+    } else {
+      delete this.ctrl_a_pressed;
+      delete this.ctrl_pressed;
     }
     if (e.which === KEY_CODE.ENTER) {
       ($query = $(range.startContainer).closest('.atwho-query')).contents().unwrap();
@@ -573,7 +585,7 @@ EditableController = (function(_super) {
         _range.setStart(range.startContainer, offset);
         if ($(_range.cloneContents()).contents().last().is('.atwho-inserted')) {
           inserted = $(range.startContainer).contents().get(offset);
-          this._setRange("after", $(inserted).contents().last());
+          this._setRange('after', $(inserted).contents().last());
         }
       } else if (e.which === KEY_CODE.LEFT && range.startContainer.nodeType === document.TEXT_NODE) {
         $inserted = $(range.startContainer.previousSibling);
@@ -594,7 +606,7 @@ EditableController = (function(_super) {
     matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
     if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
       range.setStart(range.startContainer, index);
-      $query = $("<span/>", this.app.document).attr(this.getOpt("editableAtwhoQueryAttrs")).addClass('atwho-query');
+      $query = $('<span contenteditable="false"/>', this.app.document).attr(this.getOpt("editableAtwhoQueryAttrs")).addClass('atwho-query');
       range.surroundContents($query.get(0));
       lastNode = $query.contents().last().get(0);
       if (/firefox/i.test(navigator.userAgent)) {
@@ -676,7 +688,7 @@ Model = (function() {
   };
 
   Model.prototype.query = function(query, callback) {
-    var data, searchKey, _remoteFilter;
+    var _remoteFilter, data, searchKey;
     data = this.fetch();
     searchKey = this.context.getOpt("searchKey");
     data = this.context.callbacks('filter').call(this.context, query, data, searchKey) || [];
@@ -783,7 +795,7 @@ View = (function() {
   };
 
   View.prototype.reposition = function(rect) {
-    var offset, overflowOffset, _ref, _window;
+    var _window, offset, overflowOffset, ref;
     _window = this.context.app.iframeAsRoot ? this.context.app.window : window;
     if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
       rect.bottom = rect.top - this.$el.height();
@@ -795,8 +807,8 @@ View = (function() {
       left: rect.left,
       top: rect.bottom
     };
-    if ((_ref = this.context.callbacks("beforeReposition")) != null) {
-      _ref.call(this.context, offset);
+    if ((ref = this.context.callbacks("beforeReposition")) != null) {
+      ref.call(this.context, offset);
     }
     this.$el.offset(offset);
     return this.context.trigger("reposition", [offset]);
@@ -872,7 +884,7 @@ View = (function() {
   };
 
   View.prototype.render = function(list) {
-    var $li, $ul, item, li, tpl, _i, _len;
+    var $li, $ul, i, item, len, li, tpl;
     if (!($.isArray(list) && list.length > 0)) {
       this.hide();
       return;
@@ -880,8 +892,8 @@ View = (function() {
     this.$el.find('ul').empty();
     $ul = this.$el.find('ul');
     tpl = this.context.getOpt('displayTpl');
-    for (_i = 0, _len = list.length; _i < _len; _i++) {
-      item = list[_i];
+    for (i = 0, len = list.length; i < len; i++) {
+      item = list[i];
       item = $.extend({}, item, {
         'atwho-at': this.context.at
       });
@@ -907,6 +919,7 @@ KEY_CODE = {
   TAB: 9,
   ENTER: 13,
   CTRL: 17,
+  A: 65,
   P: 80,
   N: 78,
   LEFT: 37,
@@ -922,7 +935,7 @@ DEFAULT_CALLBACKS = {
     return Controller.arrayToDefaultHash(data);
   },
   matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
-    var match, regexp, space, _a, _y;
+    var _a, _y, match, regexp, space;
     flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     if (should_startWithSpace) {
       flag = '(?:^|\\s)' + flag;
@@ -930,7 +943,7 @@ DEFAULT_CALLBACKS = {
     _a = decodeURI("%C3%80");
     _y = decodeURI("%C3%BF");
     space = acceptSpaceBar ? "\ " : "";
-    regexp = new RegExp("" + flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];
@@ -939,10 +952,10 @@ DEFAULT_CALLBACKS = {
     }
   },
   filter: function(query, data, searchKey) {
-    var item, _i, _len, _results;
+    var _results, i, item, len;
     _results = [];
-    for (_i = 0, _len = data.length; _i < _len; _i++) {
-      item = data[_i];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
       if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
         _results.push(item);
       }
@@ -951,13 +964,13 @@ DEFAULT_CALLBACKS = {
   },
   remoteFilter: null,
   sorter: function(query, items, searchKey) {
-    var item, _i, _len, _results;
+    var _results, i, item, len;
     if (!query) {
       return items;
     }
     _results = [];
-    for (_i = 0, _len = items.length; _i < _len; _i++) {
-      item = items[_i];
+    for (i = 0, len = items.length; i < len; i++) {
+      item = items[i];
       item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
       if (item.atwho_order > -1) {
         _results.push(item);
@@ -1009,12 +1022,12 @@ Api = {
     }
   },
   isSelecting: function() {
-    var _ref;
-    return (_ref = this.controller()) != null ? _ref.view.visible() : void 0;
+    var ref;
+    return (ref = this.controller()) != null ? ref.view.visible() : void 0;
   },
   hide: function() {
-    var _ref;
-    return (_ref = this.controller()) != null ? _ref.view.hide() : void 0;
+    var ref;
+    return (ref = this.controller()) != null ? ref.view.hide() : void 0;
   },
   reposition: function() {
     var c;
@@ -1037,7 +1050,7 @@ Api = {
 };
 
 $.fn.atwho = function(method) {
-  var result, _args;
+  var _args, result;
   _args = arguments;
   result = null;
   this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
