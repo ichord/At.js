@@ -1,3 +1,15 @@
+### v1.2.0
+
+db09ac7 -> 886613f
+
+* 886613f - add `$.fn.atwho.debug = false` to trigger debug mode
+* 6567af9 - Enable default events when nothing is highlighted - Teemu
+* 752ad4a - Add scrollDuration option. - Takuru
+* bf17d43 - add parameter to allow for a spacebar in the middle of a search so that you can match a first + last name, for example - Feather Knee
+* a1d5fe7 - add `reposition` API - ichord
+* 9bcb06e - add "onInsert", "onDispaly" arguments to `tplEval` - ichord
+* db09ac7 - add `hide` api - ichord
+
 ### v1.1.0
 
 * lisafeather/displyTplCallBack - #259

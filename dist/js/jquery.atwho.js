@@ -1,4 +1,4 @@
-/*! jquery.atwho - v1.1.0 %>
+/*! jquery.atwho - v1.2.0 %>
 * Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
