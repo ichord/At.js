@@ -233,6 +233,9 @@ App = (function() {
         if (!this.controller().getOpt('spaceSelectsMatch') && e.keyCode === KEY_CODE.SPACE) {
           return;
         }
+        if (!this.controller().getOpt('tabSelectsMatch') && e.keyCode === KEY_CODE.TAB) {
+          return;
+        }
         if (view.highlighted()) {
           e.preventDefault();
           view.choose(e);
@@ -1088,6 +1091,7 @@ $.fn.atwho["default"] = {
   displayTimeout: 300,
   delay: null,
   spaceSelectsMatch: false,
+  tabSelectsMatch: true,
   editableAtwhoQueryAttrs: {},
   scrollDuration: 150
 };
