@@ -4,10 +4,10 @@
   <meta http-equiv="x-ua-compatible" content="IE=Edge"/>
   <title>At.js</title>
   <link rel="stylesheet" href="dist/css/jquery.atwho.css" />
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-  <script type="text/javascript" src="http://ichord.github.io/Caret.js/src/jquery.caret.js"></script>
-  <!-- // <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script> -->
-  <!-- // <script type="text/javascript" src="bower_components/Caret.js/dist/jquery.caret.js"></script> -->
+  <!-- // <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
+  <!-- // <script type="text/javascript" src="http://ichord.github.io/Caret.js/src/jquery.caret.js"></script> -->
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+  <script type="text/javascript" src="bower_components/Caret.js/dist/jquery.caret.js"></script>
   <script type="text/javascript" src="dist/js/jquery.atwho.js"></script>
   <script type="text/javascript">
   $(function(){
@@ -42,10 +42,12 @@
     var emojis = $.map(emojis, function(value, i) {return {key: value, name:value}});
 
     var at_config = {
-      at: "@",
+      at: "[",
       data: names,
+      // insertTpl: '[${name}',
       displayTpl: "<li>${name} <small>${email}</small></li>",
-      limit: 200
+      limit: 200,
+      suffix: "]"
     }
     var emoji_config = {
       at: ":",

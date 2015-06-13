@@ -1,3 +1,10 @@
+### v1.3.0
+
+* 7f2189d - fix #294 inserts "" suffix in contenteditable
+* bae95d9 - add `tabSelectsMatch` setting to make tab selection optional 
+* e966aba - Merge pull request #298 from kkirsche/patch-1 - Harold.Luo
+* 9f78239 - Remove moot `version` property from bower.json - Kevin Kirsche
+
 ### v1.2.0
 
 db09ac7 -> 886613f
