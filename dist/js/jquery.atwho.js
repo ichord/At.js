@@ -1037,8 +1037,7 @@ Api = {
   reposition: function() {
     var c;
     if (c = this.controller()) {
-      c.view.reposition(c.rect());
-      return console.log("reposition", c);
+      return c.view.reposition(c.rect());
     }
   },
   setIframe: function(iframe, asRoot) {

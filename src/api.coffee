@@ -9,7 +9,6 @@ Api =
   reposition: () ->
     if c = this.controller()
       c.view.reposition(c.rect()) 
-      console.log "reposition", c
   setIframe: (iframe, asRoot) -> this.setupRootElement(iframe, asRoot); null;
   run: -> this.dispatch()
   destroy: ->
