@@ -5,6 +5,7 @@ class Controller
   constructor: (@app, @at) ->
     @$inputor = @app.$inputor
     @id = @$inputor[0].id || this.uid()
+    @expectedQueryCBId = null
 
     @setting  = null
     @query    = null
@@ -121,9 +122,13 @@ class Controller
       @delayedCallTimeout = null 
 
   _lookUp: (query) ->
-    _callback = (data) ->
+    _callback = (queryCBId, data) ->
+      # ensure only the latest instance of this function perform actions
+      if queryCBId isnt @expectedQueryCBId
+        return
       if data and data.length > 0
         this.renderView @constructor.arrayToDefaultHash data
       else
         @view.hide()
-    @model.query query.text, $.proxy(_callback, this)
+    @expectedQueryCBId = {};
+    @model.query query.text, $.proxy(_callback, this, @expectedQueryCBId)
