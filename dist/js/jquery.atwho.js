@@ -659,7 +659,7 @@ EditableController = (function(superClass) {
 
   EditableController.prototype.insert = function(content, $li) {
     var range, suffix, suffixNode;
-    suffix = (suffix = this.getOpt('suffix')) ? suffix : suffix || "\u00A0";
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
     this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
     if (range = this._getRange()) {
       range.setEndAfter(this.query.el[0]);

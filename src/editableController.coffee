@@ -141,7 +141,7 @@ class EditableController extends Controller
   #
   # @param content [String] string to insert
   insert: (content, $li) ->
-    suffix = if suffix = @getOpt 'suffix' then suffix else suffix or "\u00A0" 
+    suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0" 
     @query.el
       .removeClass 'atwho-query'
       .addClass 'atwho-inserted'
