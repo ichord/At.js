@@ -91,7 +91,10 @@ class Controller
 
   # Searching!
   lookUp: (e) ->
-    return if not query = this.catchQuery e
+    query = @catchQuery e
+    if not query
+      @expectedQueryCBId = null
+      return query
     @app.setContextFor @at
     if wait = this.getOpt('delay')
       @_delayLookUp query, wait
@@ -113,13 +116,13 @@ class Controller
       , wait)
     else
       @_stopDelayedCall()
-      @previousCallTime = 0 if @previousCallTime isnt now 
+      @previousCallTime = 0 if @previousCallTime isnt now
       @_lookUp query
 
   _stopDelayedCall: ->
     if @delayedCallTimeout
       clearTimeout @delayedCallTimeout
-      @delayedCallTimeout = null 
+      @delayedCallTimeout = null
 
   _lookUp: (query) ->
     _callback = (queryCBId, data) ->

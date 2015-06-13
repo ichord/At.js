@@ -36,3 +36,29 @@ describe "custom callbacks", ->
 
       callbackList.shift()(['render'])
       expect(controller.renderView).toHaveBeenCalled()
+
+    it "does not attempt to render the view after query has been cleared", ->
+      remoteFilterCb = null
+
+      remoteFilter = jasmine.createSpy("remoteFilter").and.callFake (_, cb) ->
+        remoteFilterCb = cb
+
+      $inputor = $("#inputor").atwho({
+        at: "@",
+        data: [],
+        callbacks: {
+          remoteFilter
+        }
+      })
+
+      app = getAppOf $inputor
+      controller = app.controller()
+      spyOn controller, 'renderView'
+
+      simulateTypingIn $inputor
+      expect(remoteFilter).toHaveBeenCalled()
+      $inputor.val ''
+      simulateTypingIn $inputor
+      expect(remoteFilter.calls.count()).toEqual(1)
+      remoteFilterCb ['should not render']
+      expect(controller.renderView).not.toHaveBeenCalled()
