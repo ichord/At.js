@@ -262,6 +262,7 @@ Controller = (function() {
     this.at = at1;
     this.$inputor = this.app.$inputor;
     this.id = this.$inputor[0].id || this.uid();
+    this.expectedQueryCBId = null;
     this.setting = null;
     this.query = null;
     this.pos = 0;
@@ -359,8 +360,10 @@ Controller = (function() {
 
   Controller.prototype.lookUp = function(e) {
     var query, wait;
-    if (!(query = this.catchQuery(e))) {
-      return;
+    query = this.catchQuery(e);
+    if (!query) {
+      this.expectedQueryCBId = null;
+      return query;
     }
     this.app.setContextFor(this.at);
     if (wait = this.getOpt('delay')) {
@@ -404,14 +407,18 @@ Controller = (function() {
 
   Controller.prototype._lookUp = function(query) {
     var _callback;
-    _callback = function(data) {
+    _callback = function(queryCBId, data) {
+      if (queryCBId !== this.expectedQueryCBId) {
+        return;
+      }
       if (data && data.length > 0) {
         return this.renderView(this.constructor.arrayToDefaultHash(data));
       } else {
         return this.view.hide();
       }
     };
-    return this.model.query(query.text, $.proxy(_callback, this));
+    this.expectedQueryCBId = {};
+    return this.model.query(query.text, $.proxy(_callback, this, this.expectedQueryCBId));
   };
 
   return Controller;
