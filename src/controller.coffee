@@ -5,6 +5,7 @@ class Controller
   constructor: (@app, @at) ->
     @$inputor = @app.$inputor
     @id = @$inputor[0].id || this.uid()
+    @expectedQueryCBId = null
 
     @setting  = null
     @query    = null
@@ -90,7 +91,10 @@ class Controller
 
   # Searching!
   lookUp: (e) ->
-    return if not query = this.catchQuery e
+    query = @catchQuery e
+    if not query
+      @expectedQueryCBId = null
+      return query
     @app.setContextFor @at
     if wait = this.getOpt('delay')
       @_delayLookUp query, wait
@@ -112,18 +116,25 @@ class Controller
       , wait)
     else
       @_stopDelayedCall()
-      @previousCallTime = 0 if @previousCallTime isnt now 
+      @previousCallTime = 0 if @previousCallTime isnt now
       @_lookUp query
 
   _stopDelayedCall: ->
     if @delayedCallTimeout
       clearTimeout @delayedCallTimeout
-      @delayedCallTimeout = null 
+      @delayedCallTimeout = null
+
+  _generateQueryCBId: ->
+    return {};
 
   _lookUp: (query) ->
-    _callback = (data) ->
+    _callback = (queryCBId, data) ->
+      # ensure only the latest instance of this function perform actions
+      if queryCBId isnt @expectedQueryCBId
+        return
       if data and data.length > 0
         this.renderView @constructor.arrayToDefaultHash data
       else
         @view.hide()
-    @model.query query.text, $.proxy(_callback, this)
+    @expectedQueryCBId = @_generateQueryCBId()
+    @model.query query.text, $.proxy(_callback, this, @expectedQueryCBId)
