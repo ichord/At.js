@@ -406,6 +406,10 @@ Controller = (function() {
     }
   };
 
+  Controller.prototype._generateQueryCBId = function() {
+    return {};
+  };
+
   Controller.prototype._lookUp = function(query) {
     var _callback;
     _callback = function(queryCBId, data) {
@@ -418,7 +422,7 @@ Controller = (function() {
         return this.view.hide();
       }
     };
-    this.expectedQueryCBId = {};
+    this.expectedQueryCBId = this._generateQueryCBId();
     return this.model.query(query.text, $.proxy(_callback, this, this.expectedQueryCBId));
   };
 

@@ -124,6 +124,9 @@ class Controller
       clearTimeout @delayedCallTimeout
       @delayedCallTimeout = null
 
+  _generateQueryCBId: ->
+    return {};
+
   _lookUp: (query) ->
     _callback = (queryCBId, data) ->
       # ensure only the latest instance of this function perform actions
@@ -133,5 +136,5 @@ class Controller
         this.renderView @constructor.arrayToDefaultHash data
       else
         @view.hide()
-    @expectedQueryCBId = {};
+    @expectedQueryCBId = @_generateQueryCBId()
     @model.query query.text, $.proxy(_callback, this, @expectedQueryCBId)
