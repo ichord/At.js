@@ -82,7 +82,9 @@ class App
       .on 'scroll.atwhoInner', (e) =>
         this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
-        c.view.hide(e,c.getOpt("displayTimeout")) if c = this.controller()
+        if c = this.controller()
+          c.expectedQueryCBId = null
+          c.view.hide(e,c.getOpt("displayTimeout"))
       .on 'click.atwhoInner', (e) =>
         this.dispatch e
 

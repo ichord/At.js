@@ -62,3 +62,27 @@ describe "custom callbacks", ->
       expect(remoteFilter.calls.count()).toEqual(1)
       remoteFilterCb ['should not render']
       expect(controller.renderView).not.toHaveBeenCalled()
+
+    it "does not attempt to render the view after focus has been lost", ->
+      remoteFilterCb = null
+
+      remoteFilter = jasmine.createSpy("remoteFilter").and.callFake (_, cb) ->
+        remoteFilterCb = cb
+
+      $inputor = $("#inputor").atwho({
+        at: "@",
+        data: [],
+        callbacks: {
+          remoteFilter
+        }
+      })
+
+      app = getAppOf $inputor
+      controller = app.controller()
+      spyOn controller, 'renderView'
+
+      simulateTypingIn $inputor
+      expect(remoteFilter).toHaveBeenCalled()
+      $inputor.blur();
+      remoteFilterCb ['should not render']
+      expect(controller.renderView).not.toHaveBeenCalled()
