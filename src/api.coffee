@@ -8,7 +8,7 @@ Api =
   hide: () -> this.controller()?.view.hide()
   reposition: () ->
     if c = this.controller()
-      c.view.reposition(c.rect()) 
+      c.view.reposition(c.rect())
   setIframe: (iframe, asRoot) -> this.setupRootElement(iframe, asRoot); null;
   run: -> this.dispatch()
   destroy: ->
@@ -27,7 +27,7 @@ $.fn.atwho = (method) ->
       result = Api[method].apply app, Array::slice.call(_args, 1)
     else
       $.error "Method #{method} does not exist on jQuery.atwho"
-  result || this
+  if result? then result else this
 
 $.fn.atwho.default =
   at: undefined
