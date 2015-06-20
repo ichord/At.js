@@ -120,3 +120,24 @@ describe "settings", ->
         responseText: JSON.stringify(response_data)
 
       expect(controller.model.fetch().length).toBe 3
+
+  describe "hide on scroll", ->
+    it "should be on by default", ->
+      $inputor.atwho at: "@"
+      simulateTypingIn $inputor
+      expect(controller.view.visible()).toBe true
+      $inputor.trigger "scroll"
+      expect(controller.view.visible()).toBe false
+
+    it "can be turned off", ->
+      $inputor.atwho {
+        at: "!",
+        data: ["foo"],
+        hideOnScroll: false
+      }
+      $inputor.val("!")
+      controller = $inputor.data('atwho').setContextFor("!").controller()
+      simulateTypingIn $inputor, "!"
+      expect(controller.view.visible()).toBe true
+      $inputor.trigger "scroll"
+      expect(controller.view.visible()).toBe true

@@ -126,8 +126,12 @@ App = (function() {
       };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function(e) {
-        var ref;
-        return (ref = _this.controller()) != null ? ref.view.hide(e) : void 0;
+        var c;
+        c = _this.controller();
+        if ((c != null) && c.getOpt('hideOnScroll')) {
+          c.view.hide(e);
+        }
+        return true;
       };
     })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
@@ -1104,7 +1108,8 @@ $.fn.atwho["default"] = {
   spaceSelectsMatch: false,
   tabSelectsMatch: true,
   editableAtwhoQueryAttrs: {},
-  scrollDuration: 150
+  scrollDuration: 150,
+  hideOnScroll: true
 };
 
 $.fn.atwho.debug = false;
