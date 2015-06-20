@@ -8,7 +8,7 @@ Api =
   hide: () -> this.controller()?.view.hide()
   reposition: () ->
     if c = this.controller()
-      c.view.reposition(c.rect()) 
+      c.view.reposition(c.rect())
   setIframe: (iframe, asRoot) -> this.setupRootElement(iframe, asRoot); null;
   run: -> this.dispatch()
   destroy: ->
@@ -49,5 +49,6 @@ $.fn.atwho.default =
   tabSelectsMatch: yes
   editableAtwhoQueryAttrs: {}
   scrollDuration: 150
+  hideOnScroll: yes
 
 $.fn.atwho.debug = false

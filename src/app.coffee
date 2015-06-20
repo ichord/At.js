@@ -80,7 +80,10 @@ class App
       .on 'keydown.atwhoInner', (e) =>
         this.onKeydown(e)
       .on 'scroll.atwhoInner', (e) =>
-        this.controller()?.view.hide(e)
+        c = @controller()
+        if c? and c.getOpt('hideOnScroll')
+          c.view.hide(e)
+        true  # ensure we never return false
       .on 'blur.atwhoInner', (e) =>
         if c = this.controller()
           c.expectedQueryCBId = null
