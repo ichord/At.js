@@ -81,3 +81,8 @@ describe "api", ->
       expect($("##{view_id}").length).toBe 0
       expect($inputor.data('atwho')).toBe null
       expect($inputor.data('~')).toBe null
+
+    it 'isSelecting correctness', ->
+      expect($inputor.atwho 'isSelecting').toBe false
+      simulateTypingIn $inputor
+      expect($inputor.atwho 'isSelecting').toBe true

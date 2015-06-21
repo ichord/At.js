@@ -1082,7 +1082,11 @@ $.fn.atwho = function(method) {
       return $.error("Method " + method + " does not exist on jQuery.atwho");
     }
   });
-  return result || this;
+  if (result != null) {
+    return result;
+  } else {
+    return this;
+  }
 };
 
 $.fn.atwho["default"] = {
