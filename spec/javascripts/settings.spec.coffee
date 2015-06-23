@@ -4,6 +4,7 @@ describe "settings", ->
   app = null
   controller = null
   callbacks = null
+  $ = jQuery
 
   beforeEach ->
     loadFixtures("inputors.html")

@@ -3,7 +3,7 @@ $inputor = null
 app = null
 
 describe "default callbacks", ->
-  
+  $ = jQuery
   callbacks = null
   text = null
 
@@ -16,7 +16,7 @@ describe "default callbacks", ->
     text = $.trim $inputor.text()
     callbacks = $.fn.atwho.default.callbacks
     app = $inputor.data("atwho")
-    
+
   afterEach ->
     $inputor.atwho 'destroy'
 

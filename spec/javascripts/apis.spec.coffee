@@ -2,6 +2,7 @@ $inputor = null
 app = null
 
 describe "api", ->
+  $ = jQuery
 
   beforeEach ->
     loadFixtures("inputors.html")
