@@ -1,5 +1,6 @@
 describe "custom callbacks", ->
   $inputor = null
+  $ = jQuery
 
   beforeEach ->
     loadFixtures("inputors.html")

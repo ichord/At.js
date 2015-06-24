@@ -20,6 +20,7 @@ module.exports = (grunt) ->
           bare: true, join: true
         files:
           'dist/js/<%= name %>.js': [
+            'src/noConflict.coffee',
             'src/app.coffee',
             'src/controller.coffee',
             'src/textareaController.coffee',

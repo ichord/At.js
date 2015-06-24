@@ -3,7 +3,7 @@ describe "views", ->
 
   $inputor = null
   app = null
-
+  $ = jQuery
   beforeEach ->
     loadFixtures "inputors.html"
     $inputor = $ "#inputor"

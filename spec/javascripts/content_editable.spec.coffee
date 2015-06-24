@@ -1,6 +1,7 @@
 describe "content editable", ->
 	$inputor = null
 	app = null
+	$ = jQuery
 
 	beforeEach ->
 		loadFixtures "inputors.html"
@@ -9,8 +10,9 @@ describe "content editable", ->
 			data: ["Jobs"]
 			editableAtwhoQueryAttrs: {class: "hello", "data-editor-verified":true}
 		app = getAppOf $inputor
-  afterEach ->
-    $inputor.atwho 'destroy'
+
+	afterEach ->
+        $inputor.atwho 'destroy'
 
 	it "can insert content", ->
 		triggerAtwhoAt $inputor

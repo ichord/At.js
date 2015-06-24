@@ -1,3 +1,5 @@
+$ = jQuery
+
 @KEY_CODE =
   DOWN: 40
   UP: 38
