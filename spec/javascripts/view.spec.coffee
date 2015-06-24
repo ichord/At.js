@@ -30,3 +30,9 @@ describe "views", ->
       targetLi.trigger clickEvent = $.Event("click.atwho-view")
       expect targetLi
         .toHaveClass 'cur'
+
+    it "only hides on scroll if scrollTop is changed (github issue #305)", ->
+      simulateTypingIn $inputor
+      expect(controller.view.visible()).toBe true
+      $inputor.trigger 'scroll'
+      expect(controller.view.visible()).toBe true

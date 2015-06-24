@@ -79,14 +79,21 @@ class App
         this.onKeyup(e)
       .on 'keydown.atwhoInner', (e) =>
         this.onKeydown(e)
-      .on 'scroll.atwhoInner', (e) =>
-        this.controller()?.view.hide(e)
       .on 'blur.atwhoInner', (e) =>
         if c = this.controller()
           c.expectedQueryCBId = null
           c.view.hide(e,c.getOpt("displayTimeout"))
       .on 'click.atwhoInner', (e) =>
         this.dispatch e
+      .on 'scroll.atwhoInner', do =>
+        # make returned handler handle the very first call properly
+        lastScrollTop = @$inputor.scrollTop()
+        (e) =>
+          currentScrollTop = e.target.scrollTop
+          if lastScrollTop != currentScrollTop
+            @controller()?.view.hide(e)
+          lastScrollTop = currentScrollTop
+          true  # ensure we don't stop bubbling
 
   shutdown: ->
     for _, c of @controllers

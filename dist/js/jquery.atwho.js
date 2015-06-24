@@ -126,11 +126,6 @@ App = (function() {
       return function(e) {
         return _this.onKeydown(e);
       };
-    })(this)).on('scroll.atwhoInner', (function(_this) {
-      return function(e) {
-        var ref;
-        return (ref = _this.controller()) != null ? ref.view.hide(e) : void 0;
-      };
     })(this)).on('blur.atwhoInner', (function(_this) {
       return function(e) {
         var c;
@@ -143,7 +138,23 @@ App = (function() {
       return function(e) {
         return _this.dispatch(e);
       };
-    })(this));
+    })(this)).on('scroll.atwhoInner', (function(_this) {
+      return function() {
+        var lastScrollTop;
+        lastScrollTop = _this.$inputor.scrollTop();
+        return function(e) {
+          var currentScrollTop, ref;
+          currentScrollTop = e.target.scrollTop;
+          if (lastScrollTop !== currentScrollTop) {
+            if ((ref = _this.controller()) != null) {
+              ref.view.hide(e);
+            }
+          }
+          lastScrollTop = currentScrollTop;
+          return true;
+        };
+      };
+    })(this)());
   };
 
   App.prototype.shutdown = function() {
