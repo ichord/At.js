@@ -72,9 +72,13 @@ class App
     @$inputor
       .on 'compositionstart', (e) =>
         this.controller()?.view.hide()
+        console.log "compositionstart"
         @isComposing = true
+        null
       .on 'compositionend', (e) =>
+        console.log "compositionend"
         @isComposing = false
+        null
       .on 'keyup.atwhoInner', (e) =>
         this.onKeyup(e)
       .on 'keydown.atwhoInner', (e) =>
@@ -110,7 +114,7 @@ class App
       when KEY_CODE.ESC
         e.preventDefault()
         this.controller()?.view.hide()
-      when KEY_CODE.DOWN, KEY_CODE.UP, KEY_CODE.CTRL
+      when KEY_CODE.DOWN, KEY_CODE.UP, KEY_CODE.CTRL, KEY_CODE.ENTER
         $.noop()
       when KEY_CODE.P, KEY_CODE.N
         this.dispatch e if not e.ctrlKey
