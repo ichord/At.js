@@ -1058,7 +1058,7 @@ Api = {
   },
   isSelecting: function() {
     var ref;
-    return (ref = this.controller()) != null ? ref.view.visible() : void 0;
+    return !!((ref = this.controller()) != null ? ref.view.visible() : void 0);
   },
   hide: function() {
     var ref;

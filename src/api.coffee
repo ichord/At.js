@@ -4,7 +4,7 @@ Api =
   # @params at[String] the flag
   # @params data [Array] data to storage.
   load: (at, data) -> c.model.load data if c = this.controller(at)
-  isSelecting: () -> this.controller()?.view.visible()
+  isSelecting: () -> !!this.controller()?.view.visible()
   hide: () -> this.controller()?.view.hide()
   reposition: () ->
     if c = this.controller()
