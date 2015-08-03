@@ -34,7 +34,7 @@
       "-1"
     ]
     var jeremy = decodeURI("J%C3%A9r%C3%A9my") // Jérémy
-    var names = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","你好","你你你", jeremy];
+    var names = ["Jacob","Isabella","Ethan","Emma","Michael","Olivia","Alexander","Sophia","William","Ava","Joshua","Emily","Daniel","Madison","Jayden","Abigail","Noah","Chloe","你好","你你你", jeremy, "가"];
 
     var names = $.map(names,function(value,i) {
       return {'id':i,'name':value,'email':value+"@email.com"};
@@ -42,12 +42,10 @@
     var emojis = $.map(emojis, function(value, i) {return {key: value, name:value}});
 
     var at_config = {
-      at: "[",
+      at: "@",
       data: names,
-      // insertTpl: '[${name}',
       displayTpl: "<li>${name} <small>${email}</small></li>",
-      limit: 200,
-      suffix: "]"
+      limit: 200
     }
     var emoji_config = {
       at: ":",
@@ -69,7 +67,7 @@
       // For IE
       doc.write("<body></body>")
       ifrBody = doc.body
-    } 
+    }
     ifrBody.contentEditable = true
     ifrBody.id = 'ifrBody'
     ifrBody.innerHTML = 'For <strong>WYSIWYG</strong> which using <strong>iframe</strong> such as <strong>ckeditor</strong>'

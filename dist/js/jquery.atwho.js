@@ -112,11 +112,15 @@ App = (function() {
         if ((ref = _this.controller()) != null) {
           ref.view.hide();
         }
-        return _this.isComposing = true;
+        console.log("compositionstart");
+        _this.isComposing = true;
+        return null;
       };
     })(this)).on('compositionend', (function(_this) {
       return function(e) {
-        return _this.isComposing = false;
+        console.log("compositionend");
+        _this.isComposing = false;
+        return null;
       };
     })(this)).on('keyup.atwhoInner', (function(_this) {
       return function(e) {
@@ -192,6 +196,7 @@ App = (function() {
       case KEY_CODE.DOWN:
       case KEY_CODE.UP:
       case KEY_CODE.CTRL:
+      case KEY_CODE.ENTER:
         $.noop();
         break;
       case KEY_CODE.P:
@@ -374,6 +379,9 @@ Controller = (function() {
 
   Controller.prototype.lookUp = function(e) {
     var query, wait;
+    if (this.getOpt('suspendOnComposing') && this.app.isComposing) {
+      return;
+    }
     query = this.catchQuery(e);
     if (!query) {
       this.expectedQueryCBId = null;
@@ -580,9 +588,6 @@ EditableController = (function(superClass) {
 
   EditableController.prototype.catchQuery = function(e) {
     var $inserted, $query, _range, index, inserted, lastNode, matched, offset, query, range;
-    if (this.app.isComposing) {
-      return;
-    }
     if (!(range = this._getRange())) {
       return;
     }
@@ -973,7 +978,7 @@ DEFAULT_CALLBACKS = {
     _a = decodeURI("%C3%80");
     _y = decodeURI("%C3%BF");
     space = acceptSpaceBar ? "\ " : "";
-    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
     match = regexp.exec(subtext);
     if (match) {
       return match[2] || match[1];
@@ -1121,7 +1126,8 @@ $.fn.atwho["default"] = {
   spaceSelectsMatch: false,
   tabSelectsMatch: true,
   editableAtwhoQueryAttrs: {},
-  scrollDuration: 150
+  scrollDuration: 150,
+  suspendOnComposing: true
 };
 
 $.fn.atwho.debug = false;

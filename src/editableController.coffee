@@ -34,14 +34,13 @@ class EditableController extends Controller
     node
 
   catchQuery: (e) ->
-    return if @app.isComposing
     return unless range = @_getRange()
 
     #simply catch to stop default handlers on ctrl, ctrl+a events; issue#258
     if e.which == KEY_CODE.CTRL
       @ctrl_pressed = true
     else if e.which == KEY_CODE.A
-      if !@ctrl_pressed? 
+      if !@ctrl_pressed?
         @ctrl_a_pressed = true
     else
       delete @ctrl_a_pressed
@@ -141,7 +140,7 @@ class EditableController extends Controller
   #
   # @param content [String] string to insert
   insert: (content, $li) ->
-    suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0" 
+    suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
     @query.el
       .removeClass 'atwho-query'
       .addClass 'atwho-inserted'
