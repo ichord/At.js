@@ -110,7 +110,8 @@ class EditableController extends Controller
         @_setRange 'after', lastNode, range
 
     # handle the matched result
-    if typeof matched is 'string' and matched.length <= @getOpt 'maxLen', 20
+    if typeof matched is 'string' and matched.length <= @getOpt 'maxLen', 20 \
+        and matched.length >= @getOpt 'minLen', 0
       query = text: matched, el: $query
       @trigger "matched", [@at, query.text]
       @query = query
