@@ -459,14 +459,18 @@ TextareaController = (function(superClass) {
   }
 
   TextareaController.prototype.catchQuery = function() {
-    var caretPos, content, end, query, start, subtext;
+    var caretPos, content, end, isString, query, start, subtext;
     content = this.$inputor.val();
     caretPos = this.$inputor.caret('pos', {
       iframe: this.app.iframe
     });
     subtext = content.slice(0, caretPos);
     query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
-    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20) && query.length >= this.getOpt('minLen', 0)) {
+    isString = typeof query === 'string';
+    if (isString && query.length < this.getOpt('minLen', 0)) {
+      return;
+    }
+    if (isString && query.length <= this.getOpt('maxLen', 20)) {
       start = caretPos - query.length;
       end = start + query.length;
       this.pos = start;
@@ -587,7 +591,7 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.catchQuery = function(e) {
-    var $inserted, $query, _range, index, inserted, lastNode, matched, offset, query, range;
+    var $inserted, $query, _range, index, inserted, isString, lastNode, matched, offset, query, range;
     if (!(range = this._getRange())) {
       return;
     }
@@ -639,7 +643,8 @@ EditableController = (function(superClass) {
     _range = range.cloneRange();
     _range.setStart(range.startContainer, 0);
     matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
-    if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
+    isString = typeof matched === 'string';
+    if ($query.length === 0 && isString && (index = range.startOffset - this.at.length - matched.length) >= 0) {
       range.setStart(range.startContainer, index);
       $query = $('<span/>', this.app.document).attr(this.getOpt("editableAtwhoQueryAttrs")).addClass('atwho-query');
       range.surroundContents($query.get(0));
@@ -652,7 +657,10 @@ EditableController = (function(superClass) {
         this._setRange('after', lastNode, range);
       }
     }
-    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20 && matched.length >= this.getOpt('minLen', 0))) {
+    if (isString && matched.length < this.getOpt('minLen', 0)) {
+      return;
+    }
+    if (isString && matched.length <= this.getOpt('maxLen', 20)) {
       query = {
         text: matched,
         el: $query

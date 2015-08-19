@@ -98,12 +98,17 @@ describe "settings", ->
     simulateTypingIn $inputor
     expect(controller.query).toBe null
 
-  it 'query out of minLen', ->
-    $inputor.atwho
+  it 'should not build query or run afterMatchFailed callback when out of minLen', ->
+    $inputor = $('#editable').atwho
       at: '@'
       minLen: 2
+      callbacks:
+        afterMatchFailed: (at, $el) ->
+          $el.replaceWith('<div id="failed-match"></div>')
+
     simulateTypingIn $inputor
     expect(controller.query).toBe null
+    expect($('#failed-match').length).toBe 0
 
   describe "`data` as url and load remote data", ->
 
