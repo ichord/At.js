@@ -62,7 +62,7 @@ class View
     next = @$el.find('li:first') if not next.length
     next.addClass 'cur'
 
-    @scrollTop Math.max(0, cur.innerHeight() * (next.index() + 2) - @$el.height())
+    @scrollTop @getPositionToScroll @$el, next
 
   prev: ->
     cur = @$el.find('.cur').removeClass('cur')
@@ -70,7 +70,22 @@ class View
     prev = @$el.find('li:last') if not prev.length
     prev.addClass 'cur'
 
-    @scrollTop Math.max(0, cur.innerHeight() * (prev.index() + 2) - @$el.height())
+    @scrollTop @getPositionToScroll @$el, prev
+
+  getPositionToScroll: ($wrapper, $item) ->
+    wrapperHeight           = $wrapper.height()
+    elOffsetTop             = $item[0].offsetTop
+    elOffsetTopInWrapper    = $item.position().top
+    elHeight                = $item.outerHeight(true)
+
+    if elOffsetTopInWrapper + elHeight > wrapperHeight
+      newScrollTop = elOffsetTop
+    else if elOffsetTopInWrapper < 0
+      newScrollTop = elOffsetTop + elHeight - wrapperHeight
+    else if elOffsetTopInWrapper = 0
+      newScrollTop = 0
+
+    newScrollTop
 
   scrollTop: (scrollTop) ->
     scrollDuration = @context.getOpt('scrollDuration')

@@ -81,7 +81,7 @@ class Controller
   # @param data [Array] The data
   renderView: (data) ->
     searchKey = this.getOpt("searchKey")
-    data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , searchKey)
+    if this.getOpt("sorter") then data = this.callbacks("sorter").call(this, @query.text, data[0..1000] , searchKey)
     @view.render data[0...this.getOpt('limit')]
 
   @arrayToDefaultHash: (data) ->
