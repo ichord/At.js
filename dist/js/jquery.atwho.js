@@ -354,7 +354,9 @@ Controller = (function() {
   Controller.prototype.renderView = function(data) {
     var searchKey;
     searchKey = this.getOpt("searchKey");
-    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), searchKey);
+    if (this.getOpt("sorter")) {
+      data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), searchKey);
+    }
     return this.view.render(data.slice(0, this.getOpt('limit')));
   };
 
@@ -1131,6 +1133,7 @@ $.fn.atwho["default"] = {
   insertTpl: "${atwho-at}${name}",
   callbacks: DEFAULT_CALLBACKS,
   searchKey: "name",
+  sorter: true,
   suffix: void 0,
   hideWithoutSuffix: false,
   startWithSpace: true,
