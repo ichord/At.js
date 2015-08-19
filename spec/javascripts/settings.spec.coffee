@@ -98,6 +98,13 @@ describe "settings", ->
     simulateTypingIn $inputor
     expect(controller.query).toBe null
 
+  it 'query out of minLen', ->
+    $inputor.atwho
+      at: '@'
+      minLen: 2
+    simulateTypingIn $inputor
+    expect(controller.query).toBe null
+
   describe "`data` as url and load remote data", ->
 
     beforeEach ->

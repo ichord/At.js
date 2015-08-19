@@ -43,6 +43,7 @@ $.fn.atwho.default =
   highlightFirst: yes
   limit: 5
   maxLen: 20
+  minLen: 0
   displayTimeout: 300
   delay: null
   spaceSelectsMatch: no

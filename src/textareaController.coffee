@@ -7,7 +7,8 @@ class TextareaController extends Controller
     caretPos = @$inputor.caret('pos', {iframe: @app.iframe})
     subtext = content.slice(0, caretPos)
     query = this.callbacks("matcher").call(this, @at, subtext, this.getOpt('startWithSpace'))
-    if typeof query is "string" and query.length <= this.getOpt('maxLen', 20)
+    if typeof query is "string" and query.length <= this.getOpt('maxLen', 20) \
+        and query.length >= this.getOpt('minLen', 0)
       start = caretPos - query.length
       end = start + query.length
       @pos = start
@@ -38,7 +39,7 @@ class TextareaController extends Controller
     $inputor = @$inputor
     source = $inputor.val()
     startStr = source.slice 0, Math.max(@query.headPos - @at.length, 0)
-    suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or " " 
+    suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or " "
     content += suffix
     text = "#{startStr}#{content}#{source.slice @query['endPos'] || 0}"
     $inputor.val text

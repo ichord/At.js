@@ -466,7 +466,7 @@ TextareaController = (function(superClass) {
     });
     subtext = content.slice(0, caretPos);
     query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
-    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20)) {
+    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20) && query.length >= this.getOpt('minLen', 0)) {
       start = caretPos - query.length;
       end = start + query.length;
       this.pos = start;
@@ -652,7 +652,7 @@ EditableController = (function(superClass) {
         this._setRange('after', lastNode, range);
       }
     }
-    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20)) {
+    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20 && matched.length >= this.getOpt('minLen', 0))) {
       query = {
         text: matched,
         el: $query
@@ -1121,6 +1121,7 @@ $.fn.atwho["default"] = {
   highlightFirst: true,
   limit: 5,
   maxLen: 20,
+  minLen: 0,
   displayTimeout: 300,
   delay: null,
   spaceSelectsMatch: false,
