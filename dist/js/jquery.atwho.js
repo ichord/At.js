@@ -857,7 +857,7 @@ View = (function() {
       next = this.$el.find('li:first');
     }
     next.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height()));
+    return this.scrollTop(this.getPositionToScroll(this.$el, next));
   };
 
   View.prototype.prev = function() {
@@ -868,7 +868,23 @@ View = (function() {
       prev = this.$el.find('li:last');
     }
     prev.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height()));
+    return this.scrollTop(this.getPositionToScroll(this.$el, prev));
+  };
+
+  View.prototype.getPositionToScroll = function($wrapper, $item) {
+    var elHeight, elOffsetTop, elOffsetTopInWrapper, newScrollTop, wrapperHeight;
+    wrapperHeight = $wrapper.height();
+    elOffsetTop = $item[0].offsetTop;
+    elOffsetTopInWrapper = $item.position().top;
+    elHeight = $item.outerHeight(true);
+    if (elOffsetTopInWrapper + elHeight > wrapperHeight) {
+      newScrollTop = elOffsetTop;
+    } else if (elOffsetTopInWrapper < 0) {
+      newScrollTop = elOffsetTop + elHeight - wrapperHeight;
+    } else if (elOffsetTopInWrapper = 0) {
+      newScrollTop = 0;
+    }
+    return newScrollTop;
   };
 
   View.prototype.scrollTop = function(scrollTop) {
