@@ -92,9 +92,10 @@ class EditableController extends Controller
     _range = range.cloneRange()
     _range.setStart range.startContainer, 0
     matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt 'startWithSpace')
+    isString = typeof matched is 'string'
 
     # wrapping query with .atwho-query
-    if $query.length == 0 and typeof matched is 'string' \
+    if $query.length == 0 and isString \
         and (index = range.startOffset - @at.length - matched.length) >= 0
       range.setStart range.startContainer, index
       $query = $ '<span/>', @app.document
@@ -109,9 +110,10 @@ class EditableController extends Controller
       else
         @_setRange 'after', lastNode, range
 
+    return if isString and matched.length < @getOpt('minLen', 0)
+
     # handle the matched result
-    if typeof matched is 'string' and matched.length <= @getOpt 'maxLen', 20 \
-        and matched.length >= @getOpt 'minLen', 0
+    if isString and matched.length <= @getOpt('maxLen', 20)
       query = text: matched, el: $query
       @trigger "matched", [@at, query.text]
       @query = query
