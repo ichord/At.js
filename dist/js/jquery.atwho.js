@@ -819,23 +819,31 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.insert = function(content, $li) {
-    var data, range, suffix, suffixNode;
+    var data, overrides, range, suffix, suffixNode;
     if (!this.$inputor.is(':focus')) {
       this.$inputor.focus();
     }
-    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
-    data = $li.data('item-data');
-    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
-    if (range = this._getRange()) {
-      range.setEndAfter(this.query.el[0]);
-      range.collapse(false);
-      range.insertNode(suffixNode = this.app.document.createTextNode("\u200D" + suffix));
-      this._setRange('after', suffixNode, range);
+    overrides = this.getOpt("functionOverrides");
+    if (overrides.insert) {
+      return overrides.insert.bind(this)(content, $li);
+    } else {
+      if (!this.$inputor.is(':focus')) {
+        this.$inputor.focus();
+      }
+      suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
+      data = $li.data('item-data');
+      this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
+      if (range = this._getRange()) {
+        range.setEndAfter(this.query.el[0]);
+        range.collapse(false);
+        range.insertNode(suffixNode = this.app.document.createTextNode("\u200D" + suffix));
+        this._setRange('after', suffixNode, range);
+      }
+      if (!this.$inputor.is(':focus')) {
+        this.$inputor.focus();
+      }
+      return this.$inputor.change();
     }
-    if (!this.$inputor.is(':focus')) {
-      this.$inputor.focus();
-    }
-    return this.$inputor.change();
   };
 
   return EditableController;
@@ -1178,6 +1186,7 @@ $.fn.atwho["default"] = {
   insertTpl: "${atwho-at}${name}",
   headerTpl: null,
   callbacks: DEFAULT_CALLBACKS,
+  functionOverrides: {},
   searchKey: "name",
   suffix: void 0,
   hideWithoutSuffix: false,
