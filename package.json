@@ -1,5 +1,6 @@
 {
   "name": "at.js",
+  "main": "dist/js/jquery.atwho.js",
   "author": {
     "name": "chord.luo",
     "email": "chord.luo@gmail.com"
