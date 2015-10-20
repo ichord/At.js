@@ -91,6 +91,7 @@ class Controller
 
   # Searching!
   lookUp: (e) ->
+    return if e == 'click' && !this.setting.lookUpOnClick
     return if @getOpt('suspendOnComposing') and @app.isComposing 
     query = @catchQuery e
     if not query
