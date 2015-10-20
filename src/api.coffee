@@ -51,5 +51,6 @@ $.fn.atwho.default =
   editableAtwhoQueryAttrs: {}
   scrollDuration: 150
   suspendOnComposing: true
+  lookUpOnClick: true
 
 $.fn.atwho.debug = false
