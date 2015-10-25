@@ -379,6 +379,9 @@ Controller = (function() {
 
   Controller.prototype.lookUp = function(e) {
     var query, wait;
+    if (e && e.type === 'click' && !this.getOpt('lookUpOnClick')) {
+      return;
+    }
     if (this.getOpt('suspendOnComposing') && this.app.isComposing) {
       return;
     }
@@ -1136,7 +1139,8 @@ $.fn.atwho["default"] = {
   tabSelectsMatch: true,
   editableAtwhoQueryAttrs: {},
   scrollDuration: 150,
-  suspendOnComposing: true
+  suspendOnComposing: true,
+  lookUpOnClick: true
 };
 
 $.fn.atwho.debug = false;
