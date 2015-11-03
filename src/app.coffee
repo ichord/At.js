@@ -72,11 +72,9 @@ class App
     @$inputor
       .on 'compositionstart', (e) =>
         this.controller()?.view.hide()
-        console.log "compositionstart"
         @isComposing = true
         null
       .on 'compositionend', (e) =>
-        console.log "compositionend"
         @isComposing = false
         null
       .on 'keyup.atwhoInner', (e) =>

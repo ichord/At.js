@@ -112,13 +112,11 @@ App = (function() {
         if ((ref = _this.controller()) != null) {
           ref.view.hide();
         }
-        console.log("compositionstart");
         _this.isComposing = true;
         return null;
       };
     })(this)).on('compositionend', (function(_this) {
       return function(e) {
-        console.log("compositionend");
         _this.isComposing = false;
         return null;
       };
@@ -594,7 +592,7 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.catchQuery = function(e) {
-    var $inserted, $query, _range, index, inserted, isString, lastNode, matched, offset, query, range;
+    var $inserted, $query, _range, index, inserted, isString, lastNode, matched, offset, query, query_content, range;
     if (!(range = this._getRange())) {
       return;
     }
@@ -642,6 +640,10 @@ EditableController = (function(superClass) {
     }
     if (!this._movingEvent(e)) {
       $query.removeClass('atwho-inserted');
+    }
+    if ($query.length > 0 && (query_content = $query.attr('data-atwho-at-query'))) {
+      $query.empty().html(query_content).attr('data-atwho-at-query', null);
+      this._setRange('after', $query.get(0), range);
     }
     _range = range.cloneRange();
     _range.setStart(range.startContainer, 0);
@@ -699,9 +701,10 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.insert = function(content, $li) {
-    var range, suffix, suffixNode;
+    var data, range, suffix, suffixNode;
     suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
-    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
+    data = $li.data('item-data');
+    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
     if (range = this._getRange()) {
       range.setEndAfter(this.query.el[0]);
       range.collapse(false);
@@ -831,6 +834,7 @@ View = (function() {
     var $li, content;
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insertContentFor($li);
+      this.context._stopDelayedCall();
       this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);

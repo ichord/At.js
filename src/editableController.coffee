@@ -89,6 +89,9 @@ class EditableController extends Controller
       $query.removeClass 'atwho-inserted'
 
     # matching
+    if $query.length > 0 && query_content = $query.attr('data-atwho-at-query')
+      $query.empty().html(query_content).attr('data-atwho-at-query', null)
+      @_setRange 'after', $query.get(0), range
     _range = range.cloneRange()
     _range.setStart range.startContainer, 0
     matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt 'startWithSpace')
@@ -144,10 +147,12 @@ class EditableController extends Controller
   # @param content [String] string to insert
   insert: (content, $li) ->
     suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
+    data = $li.data('item-data')
     @query.el
       .removeClass 'atwho-query'
       .addClass 'atwho-inserted'
       .html content
+      .attr 'data-atwho-at-query', "" + data['atwho-at'] + @query.text
     if range = @_getRange()
       range.setEndAfter @query.el[0]
       range.collapse false
