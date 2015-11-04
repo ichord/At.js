@@ -35,16 +35,7 @@ class EditableController extends Controller
 
   catchQuery: (e) ->
     return unless range = @_getRange()
-
-    #simply catch to stop default handlers on ctrl, ctrl+a events; issue#258
-    if e.which == KEY_CODE.CTRL
-      @ctrl_pressed = true
-    else if e.which == KEY_CODE.A
-      if !@ctrl_pressed?
-        @ctrl_a_pressed = true
-    else
-      delete @ctrl_a_pressed
-      delete @ctrl_pressed
+    return unless range.collapsed
 
     if e.which == KEY_CODE.ENTER
       ($query = $(range.startContainer).closest '.atwho-query')
@@ -89,6 +80,9 @@ class EditableController extends Controller
       $query.removeClass 'atwho-inserted'
 
     # matching
+    if $query.length > 0 && query_content = $query.attr('data-atwho-at-query')
+      $query.empty().html(query_content).attr('data-atwho-at-query', null)
+      @_setRange 'after', $query.get(0), range
     _range = range.cloneRange()
     _range.setStart range.startContainer, 0
     matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt 'startWithSpace')
@@ -144,10 +138,12 @@ class EditableController extends Controller
   # @param content [String] string to insert
   insert: (content, $li) ->
     suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
+    data = $li.data('item-data')
     @query.el
       .removeClass 'atwho-query'
       .addClass 'atwho-inserted'
       .html content
+      .attr 'data-atwho-at-query', "" + data['atwho-at'] + @query.text
     if range = @_getRange()
       range.setEndAfter @query.el[0]
       range.collapse false

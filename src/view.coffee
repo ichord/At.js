@@ -40,6 +40,8 @@ class View
   choose: (e) ->
     if ($li = @$el.find ".cur").length
       content = @context.insertContentFor $li
+
+      @context._stopDelayedCall()
       @context.insert @context.callbacks("beforeInsert").call(@context, content, $li), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
