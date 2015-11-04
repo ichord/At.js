@@ -35,16 +35,7 @@ class EditableController extends Controller
 
   catchQuery: (e) ->
     return unless range = @_getRange()
-
-    #simply catch to stop default handlers on ctrl, ctrl+a events; issue#258
-    if e.which == KEY_CODE.CTRL
-      @ctrl_pressed = true
-    else if e.which == KEY_CODE.A
-      if !@ctrl_pressed?
-        @ctrl_a_pressed = true
-    else
-      delete @ctrl_a_pressed
-      delete @ctrl_pressed
+    return unless range.collapsed
 
     if e.which == KEY_CODE.ENTER
       ($query = $(range.startContainer).closest '.atwho-query')

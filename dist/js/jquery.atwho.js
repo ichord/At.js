@@ -596,15 +596,8 @@ EditableController = (function(superClass) {
     if (!(range = this._getRange())) {
       return;
     }
-    if (e.which === KEY_CODE.CTRL) {
-      this.ctrl_pressed = true;
-    } else if (e.which === KEY_CODE.A) {
-      if (this.ctrl_pressed == null) {
-        this.ctrl_a_pressed = true;
-      }
-    } else {
-      delete this.ctrl_a_pressed;
-      delete this.ctrl_pressed;
+    if (!range.collapsed) {
+      return;
     }
     if (e.which === KEY_CODE.ENTER) {
       ($query = $(range.startContainer).closest('.atwho-query')).contents().unwrap();
