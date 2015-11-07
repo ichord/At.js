@@ -15,7 +15,7 @@
     "test": "grunt test --verbose"
   },
   "dependencies": {
-    "jQuery": "~1.7.0"
+    "jquery": "~1.7.0"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
