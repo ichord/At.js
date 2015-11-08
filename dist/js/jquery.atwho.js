@@ -634,6 +634,18 @@ EditableController = (function(superClass) {
     if (!this._movingEvent(e)) {
       $query.removeClass('atwho-inserted');
     }
+    if ($query.length > 0) {
+      switch (e.which) {
+        case KEY_CODE.LEFT:
+          this._setRange('before', $query.get(0), range);
+          $query.removeClass('atwho-query');
+          return;
+        case KEY_CODE.RIGHT:
+          this._setRange('after', $query.get(0).nextSibling, range);
+          $query.removeClass('atwho-query');
+          return;
+      }
+    }
     if ($query.length > 0 && (query_content = $query.attr('data-atwho-at-query'))) {
       $query.empty().html(query_content).attr('data-atwho-at-query', null);
       this._setRange('after', $query.get(0), range);
@@ -701,7 +713,7 @@ EditableController = (function(superClass) {
     if (range = this._getRange()) {
       range.setEndAfter(this.query.el[0]);
       range.collapse(false);
-      range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
+      range.insertNode(suffixNode = this.app.document.createTextNode("\u2060" + suffix));
       this._setRange('after', suffixNode, range);
     }
     if (!this.$inputor.is(':focus')) {

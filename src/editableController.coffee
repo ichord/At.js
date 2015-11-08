@@ -79,8 +79,19 @@ class EditableController extends Controller
     if not @_movingEvent e
       $query.removeClass 'atwho-inserted'
 
+    if $query.length > 0
+      switch e.which
+        when KEY_CODE.LEFT
+          @_setRange 'before', $query.get(0), range
+          $query.removeClass 'atwho-query'
+          return
+        when KEY_CODE.RIGHT
+          @_setRange 'after', $query.get(0).nextSibling, range
+          $query.removeClass 'atwho-query'
+          return
+
     # matching
-    if $query.length > 0 && query_content = $query.attr('data-atwho-at-query')
+    if $query.length > 0 and query_content = $query.attr('data-atwho-at-query')
       $query.empty().html(query_content).attr('data-atwho-at-query', null)
       @_setRange 'after', $query.get(0), range
     _range = range.cloneRange()
@@ -147,7 +158,7 @@ class EditableController extends Controller
     if range = @_getRange()
       range.setEndAfter @query.el[0]
       range.collapse false
-      range.insertNode suffixNode = @app.document.createTextNode suffix
+      range.insertNode suffixNode = @app.document.createTextNode "\u2060" + suffix
       @_setRange 'after', suffixNode, range
     @$inputor.focus() unless @$inputor.is ':focus'
     @$inputor.change()
