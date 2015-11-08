@@ -1,3 +1,24 @@
+### v1.4.0
+
+#### Contenteditable
+
+Pressing `Backspace` will turn the inserted element back to the origin query 'moment'.
+
+* 84edc9f - skip inserted element when moving left or right - ichord
+* 25a61d3 - the jQuery npm package is now called jquery. Fixes #338 - Mick Staugaard
+* 03ed71f - Merge pull request #351 from mociepka/master - Harold.Luo
+* ae00dc3 - Point main script in package json - Michał Ociepka
+* c5f31f5 - Merge branch 'dev' into HEAD - ichord
+* c399397 - fix contenteditable cursor bug when typing "a" into query - ichord
+* 7f4295a - fix previous replacements get clobbered when re-intering the inserted element - ichord
+* f00fabd - Merge pull request #354 from lvegerano/master - Harold.Luo
+* a42065e - Adds guard to event and dist file - Luis Vegerano
+* e4aaa30 - Add option to disable loopUp on click - Luis Vegerano
+* c9b7609 - Fix bug where callbacks would run before reaching minLen. Fixes #329. - Mike Leone
+* f8692dc - Add support for minLen.  Connects to issue #316. - Mike Leone
+* fd7d298 - FIX: the value of `isSelecting` - ichord
+* c374c93 - FIX: IME typing error - ichord
+
 ### v1.3.0
 
 * 7f2189d - fix #294 inserts "" suffix in contenteditable
