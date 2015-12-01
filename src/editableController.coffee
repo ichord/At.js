@@ -158,7 +158,7 @@ class EditableController extends Controller
     if range = @_getRange()
       range.setEndAfter @query.el[0]
       range.collapse false
-      range.insertNode suffixNode = @app.document.createTextNode "\u2060" + suffix
+      range.insertNode suffixNode = @app.document.createTextNode "\u200D" + suffix
       @_setRange 'after', suffixNode, range
     @$inputor.focus() unless @$inputor.is ':focus'
     @$inputor.change()
