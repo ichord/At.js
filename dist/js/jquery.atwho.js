@@ -1,5 +1,5 @@
 /*! jquery.atwho - v1.4.0 %>
-* Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
+* Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
 */
@@ -581,18 +581,8 @@ EditableController = (function(superClass) {
     return e.type === 'click' || ((ref = e.which) === KEY_CODE.RIGHT || ref === KEY_CODE.LEFT || ref === KEY_CODE.UP || ref === KEY_CODE.DOWN);
   };
 
-  EditableController.prototype._unwrap = function(node) {
-    var next;
-    node = $(node).unwrap().get(0);
-    if ((next = node.nextSibling) && next.nodeValue) {
-      node.nodeValue += next.nodeValue;
-      $(next).remove();
-    }
-    return node;
-  };
-
   EditableController.prototype.catchQuery = function(e) {
-    var $inserted, $query, _range, index, inserted, isString, lastNode, matched, offset, query, query_content, range;
+    var $inserted, $query, _range, index, inserted, isString, lastNode, matched, offset, parentNode, query, query_content, range;
     if (!(range = this._getRange())) {
       return;
     }
@@ -686,7 +676,9 @@ EditableController = (function(superClass) {
         if (this._movingEvent(e) && $query.hasClass('atwho-inserted')) {
           $query.removeClass('atwho-query');
         } else if (false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
-          this._setRange("after", this._unwrap($query.text($query.text()).contents().first()));
+          parentNode = $query[0].parentNode;
+          this._setRange("after", $query.text($query.text()).contents().first().unwrap());
+          parentNode.normalize();
         }
       }
       return null;
