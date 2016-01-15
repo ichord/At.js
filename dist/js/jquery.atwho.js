@@ -1,5 +1,5 @@
 /*! jquery.atwho - v1.4.0 %>
-* Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
+* Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
 * homepage: http://ichord.github.com/At.js
 * Licensed MIT
 */
@@ -812,12 +812,26 @@ View = (function() {
   };
 
   View.prototype.bindEvent = function() {
-    var $menu;
+    var $menu, lastCoordX, lastCoordY;
     $menu = this.$el.find('ul');
-    return $menu.on('mouseenter.atwho-view', 'li', function(e) {
-      $menu.find('.cur').removeClass('cur');
-      return $(e.currentTarget).addClass('cur');
-    }).on('click.atwho-view', 'li', (function(_this) {
+    lastCoordX = 0;
+    lastCoordY = 0;
+    return $menu.on('mousemove.atwho-view', 'li', (function(_this) {
+      return function(e) {
+        var $cur;
+        if (lastCoordX === e.clientX && lastCoordY === e.clientY) {
+          return;
+        }
+        lastCoordX = e.clientX;
+        lastCoordY = e.clientY;
+        $cur = $(e.currentTarget);
+        if ($cur.hasClass('cur')) {
+          return;
+        }
+        $menu.find('.cur').removeClass('cur');
+        return $cur.addClass('cur');
+      };
+    })(this)).on('click.atwho-view', 'li', (function(_this) {
       return function(e) {
         $menu.find('.cur').removeClass('cur');
         $(e.currentTarget).addClass('cur');

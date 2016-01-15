@@ -19,9 +19,17 @@ class View
 
   bindEvent: ->
     $menu = @$el.find('ul')
-    $menu.on 'mouseenter.atwho-view','li', (e) ->
+    lastCoordX = 0
+    lastCoordY = 0
+    $menu.on 'mousemove.atwho-view','li', (e) =>
+      # If the mouse hasn't actually moved then exit.
+      return if lastCoordX == e.clientX and lastCoordY == e.clientY
+      lastCoordX = e.clientX
+      lastCoordY = e.clientY
+      $cur = $(e.currentTarget)
+      return if $cur.hasClass('cur')
       $menu.find('.cur').removeClass 'cur'
-      $(e.currentTarget).addClass 'cur'
+      $cur.addClass 'cur'
     .on 'click.atwho-view', 'li', (e) =>
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
