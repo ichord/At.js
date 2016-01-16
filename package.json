@@ -28,7 +28,8 @@
     "grunt-contrib-uglify": "^0.9.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-json-replace": "^0.1.2",
-    "grunt-umd": "^2.3.3"
+    "grunt-umd": "^2.3.3",
+    "gulp": "^3.9.0"
   },
   "spm": {
     "main": "dist/js/jquery.atwho.js",
