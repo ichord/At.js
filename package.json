@@ -8,28 +8,31 @@
   "homepage": "http://ichord.github.com/At.js",
   "license": "MIT",
   "version": "1.4.0",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/ichord/At.js"
+  },
   "engines": {
     "node": ">= 0.6.0"
   },
   "scripts": {
-    "test": "grunt test --verbose"
+    "test": "gulp test --verbose"
   },
   "dependencies": {
     "jquery": "~1.7.0"
   },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-coffee": "^0.13.0",
-    "grunt-contrib-concat": "^0.5.1",
-    "grunt-contrib-connect": "^0.10.1",
-    "grunt-contrib-copy": "^0.8.0",
-    "grunt-contrib-cssmin": "^0.12.3",
-    "grunt-contrib-jasmine": "^0.8.2",
-    "grunt-contrib-uglify": "^0.9.1",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-json-replace": "^0.1.2",
-    "grunt-umd": "^2.3.3",
-    "gulp": "^3.9.0"
+    "gulp": "^3.9.0",
+    "gulp-coffee": "^2.3.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-cssmin": "^0.1.7",
+    "gulp-jasmine": "^2.2.1",
+    "gulp-jasmine-phantom": "^2.0.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.1",
+    "gulp-umd": "^0.2.0",
+    "gulp-util": "^3.0.7",
+    "umd-templates": "0.0.3"
   },
   "spm": {
     "main": "dist/js/jquery.atwho.js",

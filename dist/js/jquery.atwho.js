@@ -1,30 +1,13 @@
-/*! jquery.atwho - v1.4.0 %>
-* Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
-* homepage: http://ichord.github.com/At.js
-* Licensed MIT
-*/
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
-    define(["jquery"], function (a0) {
-      return (factory(a0));
-    });
-  } else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory(require("jquery"));
-  } else {
-    factory(jQuery);
-  }
-}(this, function (jquery) {
-
-var $, Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
-  slice = [].slice,
-  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
-
-$ = jquery;
+(function(factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(jQuery);
+    }
+}(function($) {
+var App;
 
 App = (function() {
   function App(inputor) {
@@ -45,7 +28,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error;
+    var error, error1;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -58,8 +41,8 @@ App = (function() {
       this.window = this.document.defaultView || this.document.parentWindow;
       try {
         this.iframe = this.window.frameElement;
-      } catch (_error) {
-        error = _error;
+      } catch (error1) {
+        error = error1;
         this.iframe = null;
         if ($.fn.atwho.debug) {
           throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
@@ -269,13 +252,16 @@ App = (function() {
 
 })();
 
+var Controller,
+  slice = [].slice;
+
 Controller = (function() {
   Controller.prototype.uid = function() {
     return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
   };
 
-  function Controller(app1, at1) {
-    this.app = app1;
+  function Controller(app, at1) {
+    this.app = app;
     this.at = at1;
     this.$inputor = this.app.$inputor;
     this.id = this.$inputor[0].id || this.uid();
@@ -305,12 +291,12 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, funcName;
+    var args, error, error1, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
-    } catch (_error) {
-      error = _error;
+    } catch (error1) {
+      error = error1;
       return $.error(error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
@@ -331,11 +317,11 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e;
+    var e, error1;
     try {
       return this.setting[at];
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       return null;
     }
   };
@@ -452,6 +438,10 @@ Controller = (function() {
 
 })();
 
+var TextareaController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
 TextareaController = (function(superClass) {
   extend(TextareaController, superClass);
 
@@ -529,6 +519,10 @@ TextareaController = (function(superClass) {
   return TextareaController;
 
 })(Controller);
+
+var EditableController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 EditableController = (function(superClass) {
   extend(EditableController, superClass);
@@ -726,6 +720,8 @@ EditableController = (function(superClass) {
 
 })(Controller);
 
+var Model;
+
 Model = (function() {
   function Model(context) {
     this.context = context;
@@ -789,6 +785,8 @@ Model = (function() {
   return Model;
 
 })();
+
+var View;
 
 View = (function() {
   function View(context) {
@@ -986,6 +984,8 @@ View = (function() {
 
 })();
 
+var DEFAULT_CALLBACKS, KEY_CODE;
+
 KEY_CODE = {
   DOWN: 40,
   UP: 38,
@@ -1055,7 +1055,7 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error, template;
+    var error, error1, template;
     template = tpl;
     try {
       if (typeof tpl !== 'string') {
@@ -1064,8 +1064,8 @@ DEFAULT_CALLBACKS = {
       return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
         return map[key];
       });
-    } catch (_error) {
-      error = _error;
+    } catch (error1) {
+      error = error1;
       return "";
     }
   },
@@ -1087,6 +1087,8 @@ DEFAULT_CALLBACKS = {
   },
   afterMatchFailed: function(at, el) {}
 };
+
+var Api;
 
 Api = {
   load: function(at, data) {
@@ -1174,4 +1176,5 @@ $.fn.atwho["default"] = {
 $.fn.atwho.debug = false;
 
 
+$.fn.Jquery.atwho = Jquery.atwho;
 }));
