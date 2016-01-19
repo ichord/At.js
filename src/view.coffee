@@ -5,6 +5,7 @@ class View
   # @param controller [Object] The Controller.
   constructor: (@context) ->
     @$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>")
+    @$elUl = @$el.children();
     @timeoutID = null
     # create HTML DOM of list view if it does not exist
     @context.$el.append(@$el)
@@ -12,6 +13,9 @@ class View
 
   init: ->
     id = @context.getOpt("alias") || @context.at.charCodeAt(0)
+    header_tpl = this.context.getOpt("headerTpl")
+    if (header_tpl && this.$el.children().length == 1)
+      this.$el.prepend(header_tpl)
     @$el.attr('id': "at-view-#{id}")
 
   destroy: ->
@@ -64,7 +68,7 @@ class View
     next = @$el.find('li:first') if not next.length
     next.addClass 'cur'
 
-    @scrollTop Math.max(0, cur.innerHeight() * (next.index() + 2) - @$el.height())
+    @scrollTop Math.max(0, cur.outerHeight(true) * (next.index() + 2) - @$el.height())
 
   prev: ->
     cur = @$el.find('.cur').removeClass('cur')
@@ -72,14 +76,14 @@ class View
     prev = @$el.find('li:last') if not prev.length
     prev.addClass 'cur'
 
-    @scrollTop Math.max(0, cur.innerHeight() * (prev.index() + 2) - @$el.height())
+    @scrollTop Math.max(0, cur.outerHeight(true) * (prev.index() + 2) - @$el.height())
 
   scrollTop: (scrollTop) ->
     scrollDuration = @context.getOpt('scrollDuration')
     if scrollDuration
-      @$el.animate {scrollTop: scrollTop}, scrollDuration
+      @$elUl.animate {scrollTop: scrollTop}, scrollDuration
     else
-      @$el.scrollTop(scrollTop)
+      @$elUl.scrollTop(scrollTop)
 
   show: ->
     if @stopShowing

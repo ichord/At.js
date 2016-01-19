@@ -26,6 +26,13 @@ class EditableController extends Controller
   _movingEvent: (e) ->
     e.type == 'click' or e.which in [KEY_CODE.RIGHT, KEY_CODE.LEFT, KEY_CODE.UP, KEY_CODE.DOWN]
 
+  _unwrap: (node) ->
+    node = $(node).unwrap().get 0
+    if (next = node.nextSibling) and next.nodeValue
+      node.nodeValue += next.nodeValue
+      $(next).remove()
+    node
+
   catchQuery: (e) ->
     return unless range = @_getRange()
     return unless range.collapsed
@@ -122,9 +129,7 @@ class EditableController extends Controller
         if @_movingEvent(e) and $query.hasClass 'atwho-inserted'
           $query.removeClass('atwho-query')
         else if false != @callbacks('afterMatchFailed').call this, @at, $query
-          parentNode = $query[0].parentNode
-          @_setRange "after", $query.text($query.text()).contents().first().unwrap()
-          parentNode.normalize()
+          @_setRange "after", @_unwrap $query.text($query.text()).contents().first()
       null
 
   # Get offset of current at char(`flag`)
