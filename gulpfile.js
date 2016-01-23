@@ -24,7 +24,6 @@ gulp.task('coffee', function() {
 
 gulp.task('concat', function() {
     fileList = [
-        //'build/js/noConflict.js',
         'build/js/default.js',
         'build/js/app.js',
         'build/js/controller.js',
