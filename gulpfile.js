@@ -24,13 +24,13 @@ gulp.task('coffee', function() {
 gulp.task('concat', function() {
     fileList = [
         //'build/js/noConflict.js',
+        'build/js/default.js',
         'build/js/app.js',
         'build/js/controller.js',
         'build/js/textareaController.js',
         'build/js/editableController.js',
         'build/js/model.js',
         'build/js/view.js',
-        'build/js/default.js',
         'build/js/api.js'
     ]
     gulp.src(fileList)
@@ -60,17 +60,21 @@ gulp.task('compress', function() {
 
 
 gulp.task('jasmine', function () {
-    gulp.src('spec/build/javascripts/*.js')
+    gulp.src('spec/build/javascripts/*.spec.js')
         .pipe(jasmine({
             integration: true,
+            specHtml: "specRunner.html"
+            /* TODO: have to add css to spec
             vendor: [
                 'bower_components/jquery/dist/jquery.js',
-                'bower_components/Caret.js/src/*.js',
-                'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
-                'spec/build/spec_helper.js',
-                'spec/helpers/*.js'
+                'bower_components/Caret.js/dist/jquery.caret.js',
+                'dist/js/jquery.atwho.js',
+                'node_modules/jasmine-jquery/lib/*.js',
+                'node_modules/jasmine-ajax/lib/*.js',
+                'spec/helpers/*.js',
+                'spec/build/spec_helper.js'
             ],
-
+            */
         }));
 });
 
