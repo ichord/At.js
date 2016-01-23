@@ -19,6 +19,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "gulp-bump": "^1.0.0",
     "jquery": "~1.7.0"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ var gulp = require('gulp'),
     rename = require("gulp-rename"),
     cssmin = require('gulp-cssmin'),
     jasmine = require('gulp-jasmine-phantom'),
+    bump = require('gulp-bump'),
     util = require('gulp-util');
 
 var name = 'jquery.atwho';
@@ -76,6 +77,12 @@ gulp.task('jasmine', function () {
         }));
 });
 
+gulp.task('bump', function() {
+    gulp.src(['bower.json', 'component.json', 'package.json'])
+        .pipe(bump({version: "1.4.0"}))
+        .pipe(gulp.dest('./'));
+});
+
 gulp.task('compile', ['coffee', 'umd', 'concat']);
 gulp.task('test', ['compile', 'jasmine']);
-gulp.task('default', ['compile', 'compress']);
+gulp.task('default', ['compile', 'compress', 'bump']);
