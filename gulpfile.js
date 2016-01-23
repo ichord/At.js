@@ -2,7 +2,6 @@ var gulp = require('gulp'),
     coffee = require('gulp-coffee'),
     concat = require('gulp-concat'),
     umd = require('gulp-umd'),
-    umdTempl = require('umd-templates'),
     uglify = require('gulp-uglify'),
     rename = require("gulp-rename"),
     cssmin = require('gulp-cssmin'),
@@ -40,9 +39,8 @@ gulp.task('concat', function() {
 
 gulp.task('umd', function() {
   gulp.src('build/' + name + ".js")
-    .pipe(umd({
-        template: umdTempl.jqueryPluginCommonjs.path
-    })).pipe(gulp.dest('dist/js'));
+    .pipe(umd({template: "umd.template.js"}))
+    .pipe(gulp.dest('dist/js'));
 });
 
 gulp.task('compress', function() {
