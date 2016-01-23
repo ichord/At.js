@@ -7,6 +7,7 @@ var gulp = require('gulp'),
     cssmin = require('gulp-cssmin'),
     jasmine = require('gulp-jasmine-phantom'),
     bump = require('gulp-bump'),
+    header = require('gulp-header'),
     util = require('gulp-util');
 
 var name = 'jquery.atwho';
@@ -41,7 +42,28 @@ gulp.task('concat', function() {
 gulp.task('umd', function() {
   gulp.src('build/' + name + ".js")
     .pipe(umd({template: "umd.template.js"}))
-    .pipe(gulp.dest('dist/js'));
+    .pipe(gulp.dest('build/js'));
+});
+
+gulp.task('bump', function() {
+    gulp.src(['bower.json', 'component.json', 'package.json'])
+        .pipe(bump({version: "1.4.0"}))
+        .pipe(gulp.dest('./'));
+});
+
+gulp.task("mark", function() {
+    var pkg = require('./package.json');
+    var banner = ['/**',
+      ' * <%= pkg.name %> - <%= pkg.version %>',
+      ' * Copyright (c) <%= year %> <%= pkg.author.name %> <<%= pkg.author.email %>>;',
+      ' * Homepage: <%= pkg.homepage %>',
+      ' * License: <%= pkg.license %>',
+      ' */',
+      ''].join('\n');
+
+    gulp.src('build/js/' + name + '.js')
+      .pipe(header(banner, { pkg : pkg, year: (new Date).getFullYear()}))
+      .pipe(gulp.dest('dist/js/'))
 });
 
 gulp.task('compress', function() {
@@ -56,7 +78,6 @@ gulp.task('compress', function() {
         .pipe(rename({suffix: '.min'}))
         .pipe(gulp.dest('dist/css'));
 });
-
 
 gulp.task('jasmine', function () {
     gulp.src('spec/build/javascripts/*.spec.js')
@@ -77,12 +98,6 @@ gulp.task('jasmine', function () {
         }));
 });
 
-gulp.task('bump', function() {
-    gulp.src(['bower.json', 'component.json', 'package.json'])
-        .pipe(bump({version: "1.4.0"}))
-        .pipe(gulp.dest('./'));
-});
-
 gulp.task('compile', ['coffee', 'umd', 'concat']);
 gulp.task('test', ['compile', 'jasmine']);
-gulp.task('default', ['compile', 'compress', 'bump']);
+gulp.task('default', ['compile', 'bump', 'mark', 'compress']);
