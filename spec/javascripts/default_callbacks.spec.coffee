@@ -52,7 +52,7 @@ describe "default callbacks", ->
     text = $.trim $inputor.text()
 
     query = callbacks.matcher.call(app, "@", text)
-    expect(query).toBe("Jérémÿ")
+    expect(query).toBe(decodeURI("J%C3%A9r%C3%A9m%C3%BF"))
 
   it "can filter data", ->
     names = callbacks.beforeSave.call(app.controller(), fixtures["names"])

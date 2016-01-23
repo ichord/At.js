@@ -17,7 +17,11 @@ describe "api", ->
     callbacks = null
 
     beforeEach ->
+      jasmine.Ajax.install()
       controller = app.controller()
+
+    afterEach ->
+      jasmine.Ajax.uninstall()
 
     it "can get current data", ->
       simulateTypingIn $inputor
@@ -30,7 +34,6 @@ describe "api", ->
       expect(controller.model.fetch().length).toBe 2
 
     it "don't change data setting while using remote filter", ->
-      jasmine.Ajax.install()
       $inputor.atwho
         at: "@"
         data: "/atwho.json"
@@ -39,7 +42,7 @@ describe "api", ->
 
       request = jasmine.Ajax.requests.mostRecent()
       response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
-      request.response
+      request.respondWith
         status: 200
         responseText: JSON.stringify(response_data)
 
