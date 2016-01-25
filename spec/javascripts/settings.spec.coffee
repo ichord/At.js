@@ -120,6 +120,9 @@ describe "settings", ->
         at: "@"
         data: "/atwho.json"
 
+    afterEach ->
+      jasmine.Ajax.uninstall()
+
     it "data should be empty at first", ->
       expect(controller.model.fetch().length).toBe 0
 
@@ -128,7 +131,7 @@ describe "settings", ->
 
       request = jasmine.Ajax.requests.mostRecent()
       response_data = [{"name":"Jacob"}, {"name":"Joshua"}, {"name":"Jayden"}]
-      request.response
+      request.respondWith
         status: 200
         responseText: JSON.stringify(response_data)
 

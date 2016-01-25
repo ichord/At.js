@@ -1,8 +1,9 @@
-/*! jquery.atwho - v1.4.0 %>
-* Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
-* homepage: http://ichord.github.com/At.js
-* Licensed MIT
-*/
+/**
+ * at.js - 1.4.0
+ * Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
+ * Homepage: http://ichord.github.com/At.js
+ * License: MIT
+ */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module unless amdModuleId is set
@@ -17,14 +18,112 @@
   } else {
     factory(jQuery);
   }
-}(this, function (jquery) {
+}(this, function ($) {
+var DEFAULT_CALLBACKS, KEY_CODE;
 
-var $, Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
-  slice = [].slice,
-  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
+KEY_CODE = {
+  DOWN: 40,
+  UP: 38,
+  ESC: 27,
+  TAB: 9,
+  ENTER: 13,
+  CTRL: 17,
+  A: 65,
+  P: 80,
+  N: 78,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  BACKSPACE: 8,
+  SPACE: 32
+};
 
-$ = jquery;
+DEFAULT_CALLBACKS = {
+  beforeSave: function(data) {
+    return Controller.arrayToDefaultHash(data);
+  },
+  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
+    var _a, _y, match, regexp, space;
+    flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    if (should_startWithSpace) {
+      flag = '(?:^|\\s)' + flag;
+    }
+    _a = decodeURI("%C3%80");
+    _y = decodeURI("%C3%BF");
+    space = acceptSpaceBar ? "\ " : "";
+    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    match = regexp.exec(subtext);
+    if (match) {
+      return match[2] || match[1];
+    } else {
+      return null;
+    }
+  },
+  filter: function(query, data, searchKey) {
+    var _results, i, item, len;
+    _results = [];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
+      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  },
+  remoteFilter: null,
+  sorter: function(query, items, searchKey) {
+    var _results, i, item, len;
+    if (!query) {
+      return items;
+    }
+    _results = [];
+    for (i = 0, len = items.length; i < len; i++) {
+      item = items[i];
+      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
+      if (item.atwho_order > -1) {
+        _results.push(item);
+      }
+    }
+    return _results.sort(function(a, b) {
+      return a.atwho_order - b.atwho_order;
+    });
+  },
+  tplEval: function(tpl, map) {
+    var error, error1, template;
+    template = tpl;
+    try {
+      if (typeof tpl !== 'string') {
+        template = tpl(map);
+      }
+      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+        return map[key];
+      });
+    } catch (error1) {
+      error = error1;
+      return "";
+    }
+  },
+  highlighter: function(li, query) {
+    var regexp;
+    if (!query) {
+      return li;
+    }
+    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    return li.replace(regexp, function(str, $1, $2, $3) {
+      return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
+    });
+  },
+  beforeInsert: function(value, $li) {
+    return value;
+  },
+  beforeReposition: function(offset) {
+    return offset;
+  },
+  afterMatchFailed: function(at, el) {}
+};
+
+var App;
 
 App = (function() {
   function App(inputor) {
@@ -45,7 +144,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error;
+    var error, error1;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -58,8 +157,8 @@ App = (function() {
       this.window = this.document.defaultView || this.document.parentWindow;
       try {
         this.iframe = this.window.frameElement;
-      } catch (_error) {
-        error = _error;
+      } catch (error1) {
+        error = error1;
         this.iframe = null;
         if ($.fn.atwho.debug) {
           throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
@@ -269,13 +368,16 @@ App = (function() {
 
 })();
 
+var Controller,
+  slice = [].slice;
+
 Controller = (function() {
   Controller.prototype.uid = function() {
     return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
   };
 
-  function Controller(app1, at1) {
-    this.app = app1;
+  function Controller(app, at1) {
+    this.app = app;
     this.at = at1;
     this.$inputor = this.app.$inputor;
     this.id = this.$inputor[0].id || this.uid();
@@ -305,12 +407,12 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, funcName;
+    var args, error, error1, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
-    } catch (_error) {
-      error = _error;
+    } catch (error1) {
+      error = error1;
       return $.error(error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
@@ -331,11 +433,11 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e;
+    var e, error1;
     try {
       return this.setting[at];
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       return null;
     }
   };
@@ -452,6 +554,10 @@ Controller = (function() {
 
 })();
 
+var TextareaController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
 TextareaController = (function(superClass) {
   extend(TextareaController, superClass);
 
@@ -529,6 +635,10 @@ TextareaController = (function(superClass) {
   return TextareaController;
 
 })(Controller);
+
+var EditableController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 EditableController = (function(superClass) {
   extend(EditableController, superClass);
@@ -726,6 +836,8 @@ EditableController = (function(superClass) {
 
 })(Controller);
 
+var Model;
+
 Model = (function() {
   function Model(context) {
     this.context = context;
@@ -790,6 +902,8 @@ Model = (function() {
 
 })();
 
+var View;
+
 View = (function() {
   function View(context) {
     this.context = context;
@@ -817,12 +931,26 @@ View = (function() {
   };
 
   View.prototype.bindEvent = function() {
-    var $menu;
+    var $menu, lastCoordX, lastCoordY;
     $menu = this.$el.find('ul');
-    return $menu.on('mouseenter.atwho-view', 'li', function(e) {
-      $menu.find('.cur').removeClass('cur');
-      return $(e.currentTarget).addClass('cur');
-    }).on('click.atwho-view', 'li', (function(_this) {
+    lastCoordX = 0;
+    lastCoordY = 0;
+    return $menu.on('mousemove.atwho-view', 'li', (function(_this) {
+      return function(e) {
+        var $cur;
+        if (lastCoordX === e.clientX && lastCoordY === e.clientY) {
+          return;
+        }
+        lastCoordX = e.clientX;
+        lastCoordY = e.clientY;
+        $cur = $(e.currentTarget);
+        if ($cur.hasClass('cur')) {
+          return;
+        }
+        $menu.find('.cur').removeClass('cur');
+        return $cur.addClass('cur');
+      };
+    })(this)).on('click.atwho-view', 'li', (function(_this) {
       return function(e) {
         $menu.find('.cur').removeClass('cur');
         $(e.currentTarget).addClass('cur');
@@ -976,107 +1104,7 @@ View = (function() {
 
 })();
 
-KEY_CODE = {
-  DOWN: 40,
-  UP: 38,
-  ESC: 27,
-  TAB: 9,
-  ENTER: 13,
-  CTRL: 17,
-  A: 65,
-  P: 80,
-  N: 78,
-  LEFT: 37,
-  UP: 38,
-  RIGHT: 39,
-  DOWN: 40,
-  BACKSPACE: 8,
-  SPACE: 32
-};
-
-DEFAULT_CALLBACKS = {
-  beforeSave: function(data) {
-    return Controller.arrayToDefaultHash(data);
-  },
-  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
-    var _a, _y, match, regexp, space;
-    flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    if (should_startWithSpace) {
-      flag = '(?:^|\\s)' + flag;
-    }
-    _a = decodeURI("%C3%80");
-    _y = decodeURI("%C3%BF");
-    space = acceptSpaceBar ? "\ " : "";
-    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
-    match = regexp.exec(subtext);
-    if (match) {
-      return match[2] || match[1];
-    } else {
-      return null;
-    }
-  },
-  filter: function(query, data, searchKey) {
-    var _results, i, item, len;
-    _results = [];
-    for (i = 0, len = data.length; i < len; i++) {
-      item = data[i];
-      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
-        _results.push(item);
-      }
-    }
-    return _results;
-  },
-  remoteFilter: null,
-  sorter: function(query, items, searchKey) {
-    var _results, i, item, len;
-    if (!query) {
-      return items;
-    }
-    _results = [];
-    for (i = 0, len = items.length; i < len; i++) {
-      item = items[i];
-      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
-      if (item.atwho_order > -1) {
-        _results.push(item);
-      }
-    }
-    return _results.sort(function(a, b) {
-      return a.atwho_order - b.atwho_order;
-    });
-  },
-  tplEval: function(tpl, map) {
-    var error, template;
-    template = tpl;
-    try {
-      if (typeof tpl !== 'string') {
-        template = tpl(map);
-      }
-      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
-        return map[key];
-      });
-    } catch (_error) {
-      error = _error;
-      return "";
-    }
-  },
-  highlighter: function(li, query) {
-    var regexp;
-    if (!query) {
-      return li;
-    }
-    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
-    return li.replace(regexp, function(str, $1, $2, $3) {
-      return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
-    });
-  },
-  beforeInsert: function(value, $li) {
-    return value;
-  },
-  beforeReposition: function(offset) {
-    return offset;
-  },
-  afterMatchFailed: function(at, el) {}
-};
+var Api;
 
 Api = {
   load: function(at, data) {
@@ -1162,6 +1190,5 @@ $.fn.atwho["default"] = {
 };
 
 $.fn.atwho.debug = false;
-
 
 }));
