@@ -1003,25 +1003,29 @@ View = (function() {
   };
 
   View.prototype.next = function() {
-    var cur, next;
+    var cur, next, nextEl, offset;
     cur = this.$el.find('.cur').removeClass('cur');
     next = cur.next();
     if (!next.length) {
       next = this.$el.find('li:first');
     }
     next.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.outerHeight(true) * (next.index() + 2) - this.$el.height()));
+    nextEl = next[0];
+    offset = nextEl.offsetTop + nextEl.offsetHeight + (nextEl.nextSibling ? nextEl.nextSibling.offsetHeight : 0);
+    return this.scrollTop(Math.max(0, offset - this.$el.height()));
   };
 
   View.prototype.prev = function() {
-    var cur, prev;
+    var cur, offset, prev, prevEl;
     cur = this.$el.find('.cur').removeClass('cur');
     prev = cur.prev();
     if (!prev.length) {
       prev = this.$el.find('li:last');
     }
     prev.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.outerHeight(true) * (prev.index() + 2) - this.$el.height()));
+    prevEl = prev[0];
+    offset = prevEl.offsetTop + prevEl.offsetHeight + (prevEl.nextSibling ? prevEl.nextSibling.offsetHeight : 0);
+    return this.scrollTop(Math.max(0, offset - this.$el.height()));
   };
 
   View.prototype.scrollTop = function(scrollTop) {

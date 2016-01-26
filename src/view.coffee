@@ -75,16 +75,18 @@ class View
     next = cur.next()
     next = @$el.find('li:first') if not next.length
     next.addClass 'cur'
-
-    @scrollTop Math.max(0, cur.outerHeight(true) * (next.index() + 2) - @$el.height())
+    nextEl = next[0]
+    offset = nextEl.offsetTop + nextEl.offsetHeight + (if nextEl.nextSibling then nextEl.nextSibling.offsetHeight else 0)
+    @scrollTop Math.max(0, offset - this.$el.height())
 
   prev: ->
     cur = @$el.find('.cur').removeClass('cur')
     prev = cur.prev()
     prev = @$el.find('li:last') if not prev.length
     prev.addClass 'cur'
-
-    @scrollTop Math.max(0, cur.outerHeight(true) * (prev.index() + 2) - @$el.height())
+    prevEl = prev[0]
+    offset = prevEl.offsetTop + prevEl.offsetHeight + (if prevEl.nextSibling then prevEl.nextSibling.offsetHeight else 0)
+    @scrollTop Math.max(0, offset - this.$el.height())
 
   scrollTop: (scrollTop) ->
     scrollDuration = @context.getOpt('scrollDuration')
