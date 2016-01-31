@@ -8,6 +8,7 @@ var gulp = require('gulp'),
     jasmine = require('gulp-jasmine-phantom'),
     bump = require('gulp-bump'),
     header = require('gulp-header'),
+    debug = require('gulp-debug'),
     util = require('gulp-util');
 
 var name = 'jquery.atwho';
@@ -16,10 +17,6 @@ gulp.task('coffee', function() {
     gulp.src('src/*.coffee')
         .pipe(coffee({bare: true}).on('error', util.log))
         .pipe(gulp.dest('./build/js'));
-
-    gulp.src('spec/**/*.coffee')
-        .pipe(coffee({bare: true}).on('error', util.log))
-        .pipe(gulp.dest('spec/build'))
 });
 
 gulp.task('concat', function() {
@@ -78,7 +75,12 @@ gulp.task('compress', function() {
         .pipe(gulp.dest('dist/css'));
 });
 
-gulp.task('jasmine', function () {
+gulp.task('test', function () {
+    gulp.src('spec/**/*.coffee')
+        .pipe(coffee({bare: true}).on('error', util.log))
+        .pipe(debug({title: "compiled specs"}))
+        .pipe(gulp.dest('spec/build'))
+
     gulp.src('spec/build/javascripts/*.spec.js')
         .pipe(jasmine({
             integration: true,
@@ -98,5 +100,4 @@ gulp.task('jasmine', function () {
 });
 
 gulp.task('compile', ['coffee', 'umd', 'concat']);
-gulp.task('test', ['compile', 'jasmine']);
 gulp.task('default', ['compile', 'bump', 'mark', 'compress']);
