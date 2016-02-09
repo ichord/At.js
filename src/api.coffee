@@ -52,5 +52,9 @@ $.fn.atwho.default =
   scrollDuration: 150
   suspendOnComposing: true
   lookUpOnClick: true
+  classCurrentItem: "cur"
+  classDivContainer: ""
+  classUlContainer: ""
+
 
 $.fn.atwho.debug = false
