@@ -149,24 +149,25 @@ App = (function() {
       asRoot = false;
     }
     if (iframe && iframe != true) {
-        this.window = iframe.contentWindow;
-        this.document = iframe.contentDocument || this.window.document;
-        this.iframe = iframe;
-      } else if (iframe == true) {
-      	 this.document = this.$inputor[0].ownerDocument;
-           this.window = this.document.defaultView || this.document.parentWindow;
-           this.iframe = null;
-              	
-      } else {
+      this.window = iframe.contentWindow;
+      this.document = iframe.contentDocument || this.window.document;
+      this.iframe = iframe;
+    } else if (iframe == true) {
+      this.document = this.$inputor[0].ownerDocument;
+      this.window = this.document.defaultView || this.document.parentWindow;
+      this.iframe = null;              	
+    } else {
       	this.document = this.$inputor[0].ownerDocument;
-          this.window = this.document.defaultView || this.document.parentWindow;
-          try {
-              this.iframe = this.window.frameElement;
-            } catch (_error) {
-              error = _error;
-              this.iframe = null;
-              throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
+        this.window = this.document.defaultView || this.document.parentWindow;
+        try {
+        	this.iframe = this.window.frameElement;
+        } catch (error1) {
+            error = error1;
+            this.iframe = null;
+            if ($.fn.atwho.debug){
+            	throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
             }
+        }
       }
     return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
   };
@@ -1196,3 +1197,4 @@ $.fn.atwho["default"] = {
 $.fn.atwho.debug = false;
 
 }));
+
