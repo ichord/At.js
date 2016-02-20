@@ -1,3 +1,14 @@
+### v1.5.0
+
+add `headerTpl` settings
+
+* 7a41d93 - #375 from vcekov/fix_scroll_position - Valentin Cekov
+* ecbf34f - #373 from vcekov/val/fix_key_navigation_interefence_with_mouse - Valentin Cekov
+* b68cf84 - #364 from WorktileTech/master - Harold.Luo
+* f836f04 - #372 from vcekov/fix_caret_for_space_after_@ - Harold.Luo
+* 06cf6bb - Properly set caret position after failed match - Valentin Cekov
+* c9ed2e2 - support header template. - htz
+
 ### v1.4.0
 
 #### Contenteditable

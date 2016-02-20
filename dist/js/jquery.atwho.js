@@ -1,5 +1,5 @@
 /**
- * at.js - 1.4.0
+ * at.js - 1.5.0
  * Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
