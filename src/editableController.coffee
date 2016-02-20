@@ -148,6 +148,7 @@ class EditableController extends Controller
   #
   # @param content [String] string to insert
   insert: (content, $li) ->
+    @$inputor.focus() unless @$inputor.is ':focus'
     suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
     data = $li.data('item-data')
     @query.el

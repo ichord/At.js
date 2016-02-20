@@ -817,6 +817,9 @@ EditableController = (function(superClass) {
 
   EditableController.prototype.insert = function(content, $li) {
     var data, range, suffix, suffixNode;
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
     suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
     data = $li.data('item-data');
     this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
