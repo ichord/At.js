@@ -1170,6 +1170,7 @@ $.fn.atwho["default"] = {
   data: null,
   displayTpl: "<li>${name}</li>",
   insertTpl: "${atwho-at}${name}",
+  headerTpl: null,
   callbacks: DEFAULT_CALLBACKS,
   searchKey: "name",
   suffix: void 0,
