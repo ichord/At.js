@@ -54,7 +54,7 @@ class View
       content = @context.insertContentFor $li
 
       @context._stopDelayedCall()
-      @context.insert @context.callbacks("beforeInsert").call(@context, content, $li), $li
+      @context.insert @context.callbacks("beforeInsert").call(@context, content, $li, e), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
     @stopShowing = yes if @context.getOpt("hideWithoutSuffix")

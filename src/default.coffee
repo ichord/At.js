@@ -133,7 +133,8 @@ DEFAULT_CALLBACKS =
   #
   # @param value [String] content to insert
   # @param $li [jQuery Object] the chosen item
-  beforeInsert: (value, $li) ->
+  # @param e [event Object] from the user selection (keyDown or click)
+  beforeInsert: (value, $li, e) ->
     value
 
   # You can adjust the menu's offset here.

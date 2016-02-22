@@ -114,7 +114,7 @@ DEFAULT_CALLBACKS = {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
   },
-  beforeInsert: function(value, $li) {
+  beforeInsert: function(value, $li, e) {
     return value;
   },
   beforeReposition: function(offset) {
@@ -976,7 +976,7 @@ View = (function() {
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insertContentFor($li);
       this.context._stopDelayedCall();
-      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
+      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li, e), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);
     }
