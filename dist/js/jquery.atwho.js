@@ -148,23 +148,27 @@ App = (function() {
     if (asRoot == null) {
       asRoot = false;
     }
-    if (iframe) {
+    if (iframe && iframe != true) {
       this.window = iframe.contentWindow;
       this.document = iframe.contentDocument || this.window.document;
       this.iframe = iframe;
-    } else {
+    } else if (iframe == true) {
       this.document = this.$inputor[0].ownerDocument;
       this.window = this.document.defaultView || this.document.parentWindow;
-      try {
-        this.iframe = this.window.frameElement;
-      } catch (error1) {
-        error = error1;
-        this.iframe = null;
-        if ($.fn.atwho.debug) {
-          throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
+      this.iframe = null;              	
+    } else {
+      	this.document = this.$inputor[0].ownerDocument;
+        this.window = this.document.defaultView || this.document.parentWindow;
+        try {
+        	this.iframe = this.window.frameElement;
+        } catch (error1) {
+            error = error1;
+            this.iframe = null;
+            if ($.fn.atwho.debug){
+            	throw new Error("iframe auto-discovery is failed.\nPlease use `serIframe` to set the target iframe manually.");
+            }
         }
       }
-    }
     return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
   };
 
@@ -572,7 +576,7 @@ TextareaController = (function(superClass) {
       iframe: this.app.iframe
     });
     subtext = content.slice(0, caretPos);
-    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'), this.getOpt('acceptSpaceBar'));
     isString = typeof query === 'string';
     if (isString && query.length < this.getOpt('minLen', 0)) {
       return;
@@ -762,7 +766,7 @@ EditableController = (function(superClass) {
     }
     _range = range.cloneRange();
     _range.setStart(range.startContainer, 0);
-    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
+    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'), this.getOpt('acceptSpaceBar'));
     isString = typeof matched === 'string';
     if ($query.length === 0 && isString && (index = range.startOffset - this.at.length - matched.length) >= 0) {
       range.setStart(range.startContainer, index);
@@ -1178,6 +1182,7 @@ $.fn.atwho["default"] = {
   searchKey: "name",
   suffix: void 0,
   hideWithoutSuffix: false,
+  acceptSpaceBar : true,
   startWithSpace: true,
   highlightFirst: true,
   limit: 5,
@@ -1196,3 +1201,4 @@ $.fn.atwho["default"] = {
 $.fn.atwho.debug = false;
 
 }));
+
