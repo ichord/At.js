@@ -41,6 +41,7 @@ $.fn.atwho.default =
   suffix: undefined
   hideWithoutSuffix: no
   startWithSpace: yes
+  acceptSpaceBar: false
   highlightFirst: yes
   limit: 5
   maxLen: 20

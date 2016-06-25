@@ -96,7 +96,7 @@ class EditableController extends Controller
       @_setRange 'after', $query.get(0), range
     _range = range.cloneRange()
     _range.setStart range.startContainer, 0
-    matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt 'startWithSpace')
+    matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt('startWithSpace'), @getOpt("acceptSpaceBar"))
     isString = typeof matched is 'string'
 
     # wrapping query with .atwho-query
