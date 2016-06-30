@@ -21,7 +21,7 @@
   "dependencies": {
     "gulp-bump": "^1.0.0",
     "gulp-header": "^1.7.1",
-    "jquery": "^1.7.0"
+    "jquery": "^2.2.0"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
