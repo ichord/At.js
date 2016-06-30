@@ -217,7 +217,7 @@ App = (function() {
     })(this)).on('compositionend', (function(_this) {
       return function(e) {
         _this.isComposing = false;
-        setTimeout(function(e) {
+        setTimeout(function() {
           return _this.dispatch(e);
         });
         return null;
