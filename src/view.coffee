@@ -44,7 +44,7 @@ class View
   #
   # @return [Boolean]
   visible: ->
-    @this.$el.style.display == "block"
+    @$el.is(":visible")
 
   highlighted: ->
     @$el.find(".cur").length > 0
