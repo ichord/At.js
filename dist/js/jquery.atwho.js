@@ -1,5 +1,5 @@
 /**
- * at.js - 1.5.1
+ * at.js - 1.5.2
  * Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
@@ -296,7 +296,6 @@ App = (function() {
       case KEY_CODE.DOWN:
       case KEY_CODE.UP:
       case KEY_CODE.CTRL:
-      case KEY_CODE.ENTER:
         $.noop();
         break;
       case KEY_CODE.P:
