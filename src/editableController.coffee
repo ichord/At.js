@@ -79,13 +79,24 @@ class EditableController extends Controller
     if not @_movingEvent e
       $query.removeClass 'atwho-inserted'
 
+    if $query.length > 0
+      switch e.which
+        when KEY_CODE.LEFT
+          @_setRange 'before', $query.get(0), range
+          $query.removeClass 'atwho-query'
+          return
+        when KEY_CODE.RIGHT
+          @_setRange 'after', $query.get(0).nextSibling, range
+          $query.removeClass 'atwho-query'
+          return
+
     # matching
-    if $query.length > 0 && query_content = $query.attr('data-atwho-at-query')
+    if $query.length > 0 and query_content = $query.attr('data-atwho-at-query')
       $query.empty().html(query_content).attr('data-atwho-at-query', null)
       @_setRange 'after', $query.get(0), range
     _range = range.cloneRange()
     _range.setStart range.startContainer, 0
-    matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt 'startWithSpace')
+    matched = @callbacks("matcher").call(this, @at, _range.toString(), @getOpt('startWithSpace'), @getOpt("acceptSpaceBar"))
     isString = typeof matched is 'string'
 
     # wrapping query with .atwho-query
@@ -137,6 +148,7 @@ class EditableController extends Controller
   #
   # @param content [String] string to insert
   insert: (content, $li) ->
+    @$inputor.focus() unless @$inputor.is ':focus'
     suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
     data = $li.data('item-data')
     @query.el
@@ -147,7 +159,7 @@ class EditableController extends Controller
     if range = @_getRange()
       range.setEndAfter @query.el[0]
       range.collapse false
-      range.insertNode suffixNode = @app.document.createTextNode suffix
+      range.insertNode suffixNode = @app.document.createTextNode "\u200D" + suffix
       @_setRange 'after', suffixNode, range
     @$inputor.focus() unless @$inputor.is ':focus'
     @$inputor.change()

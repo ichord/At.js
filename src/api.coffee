@@ -35,11 +35,13 @@ $.fn.atwho.default =
   data: null
   displayTpl: "<li>${name}</li>"
   insertTpl: "${atwho-at}${name}"
+  headerTpl: null
   callbacks: DEFAULT_CALLBACKS
   searchKey: "name"
   suffix: undefined
   hideWithoutSuffix: no
   startWithSpace: yes
+  acceptSpaceBar: false
   highlightFirst: yes
   limit: 5
   maxLen: 20

@@ -6,7 +6,7 @@ class TextareaController extends Controller
     content = @$inputor.val()
     caretPos = @$inputor.caret('pos', {iframe: @app.iframe})
     subtext = content.slice(0, caretPos)
-    query = this.callbacks("matcher").call(this, @at, subtext, this.getOpt('startWithSpace'))
+    query = this.callbacks("matcher").call(this, @at, subtext, this.getOpt('startWithSpace'), @getOpt("acceptSpaceBar"))
     isString = typeof query is 'string'
 
     return if isString and query.length < this.getOpt('minLen', 0)

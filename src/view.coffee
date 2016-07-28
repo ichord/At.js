@@ -5,6 +5,7 @@ class View
   # @param controller [Object] The Controller.
   constructor: (@context) ->
     @$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>")
+    @$elUl = @$el.children();
     @timeoutID = null
     # create HTML DOM of list view if it does not exist
     @context.$el.append(@$el)
@@ -12,6 +13,9 @@ class View
 
   init: ->
     id = @context.getOpt("alias") || @context.at.charCodeAt(0)
+    header_tpl = this.context.getOpt("headerTpl")
+    if (header_tpl && this.$el.children().length == 1)
+      this.$el.prepend(header_tpl)
     @$el.attr('id': "at-view-#{id}")
 
   destroy: ->
@@ -19,9 +23,17 @@ class View
 
   bindEvent: ->
     $menu = @$el.find('ul')
-    $menu.on 'mouseenter.atwho-view','li', (e) ->
+    lastCoordX = 0
+    lastCoordY = 0
+    $menu.on 'mousemove.atwho-view','li', (e) =>
+      # If the mouse hasn't actually moved then exit.
+      return if lastCoordX == e.clientX and lastCoordY == e.clientY
+      lastCoordX = e.clientX
+      lastCoordY = e.clientY
+      $cur = $(e.currentTarget)
+      return if $cur.hasClass('cur')
       $menu.find('.cur').removeClass 'cur'
-      $(e.currentTarget).addClass 'cur'
+      $cur.addClass 'cur'
     .on 'click.atwho-view', 'li', (e) =>
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
@@ -42,7 +54,7 @@ class View
       content = @context.insertContentFor $li
 
       @context._stopDelayedCall()
-      @context.insert @context.callbacks("beforeInsert").call(@context, content, $li), $li
+      @context.insert @context.callbacks("beforeInsert").call(@context, content, $li, e), $li
       @context.trigger "inserted", [$li, e]
       this.hide(e)
     @stopShowing = yes if @context.getOpt("hideWithoutSuffix")
@@ -63,23 +75,25 @@ class View
     next = cur.next()
     next = @$el.find('li:first') if not next.length
     next.addClass 'cur'
-
-    @scrollTop Math.max(0, cur.innerHeight() * (next.index() + 2) - @$el.height())
+    nextEl = next[0]
+    offset = nextEl.offsetTop + nextEl.offsetHeight + (if nextEl.nextSibling then nextEl.nextSibling.offsetHeight else 0)
+    @scrollTop Math.max(0, offset - this.$el.height())
 
   prev: ->
     cur = @$el.find('.cur').removeClass('cur')
     prev = cur.prev()
     prev = @$el.find('li:last') if not prev.length
     prev.addClass 'cur'
-
-    @scrollTop Math.max(0, cur.innerHeight() * (prev.index() + 2) - @$el.height())
+    prevEl = prev[0]
+    offset = prevEl.offsetTop + prevEl.offsetHeight + (if prevEl.nextSibling then prevEl.nextSibling.offsetHeight else 0)
+    @scrollTop Math.max(0, offset - this.$el.height())
 
   scrollTop: (scrollTop) ->
     scrollDuration = @context.getOpt('scrollDuration')
     if scrollDuration
-      @$el.animate {scrollTop: scrollTop}, scrollDuration
+      @$elUl.animate {scrollTop: scrollTop}, scrollDuration
     else
-      @$el.scrollTop(scrollTop)
+      @$elUl.scrollTop(scrollTop)
 
   show: ->
     if @stopShowing

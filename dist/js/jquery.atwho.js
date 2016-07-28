@@ -1,8 +1,9 @@
-/*! jquery.atwho - v1.3.2 %>
-* Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
-* homepage: http://ichord.github.com/At.js
-* Licensed MIT
-*/
+/**
+ * at.js - 1.5.1
+ * Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
+ * Homepage: http://ichord.github.com/At.js
+ * License: MIT
+ */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module unless amdModuleId is set
@@ -17,14 +18,112 @@
   } else {
     factory(jQuery);
   }
-}(this, function (jquery) {
+}(this, function ($) {
+var DEFAULT_CALLBACKS, KEY_CODE;
 
-var $, Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
-  slice = [].slice,
-  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
+KEY_CODE = {
+  DOWN: 40,
+  UP: 38,
+  ESC: 27,
+  TAB: 9,
+  ENTER: 13,
+  CTRL: 17,
+  A: 65,
+  P: 80,
+  N: 78,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  BACKSPACE: 8,
+  SPACE: 32
+};
 
-$ = jquery;
+DEFAULT_CALLBACKS = {
+  beforeSave: function(data) {
+    return Controller.arrayToDefaultHash(data);
+  },
+  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
+    var _a, _y, match, regexp, space;
+    flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    if (should_startWithSpace) {
+      flag = '(?:^|\\s)' + flag;
+    }
+    _a = decodeURI("%C3%80");
+    _y = decodeURI("%C3%BF");
+    space = acceptSpaceBar ? "\ " : "";
+    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    match = regexp.exec(subtext);
+    if (match) {
+      return match[2] || match[1];
+    } else {
+      return null;
+    }
+  },
+  filter: function(query, data, searchKey) {
+    var _results, i, item, len;
+    _results = [];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
+      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  },
+  remoteFilter: null,
+  sorter: function(query, items, searchKey) {
+    var _results, i, item, len;
+    if (!query) {
+      return items;
+    }
+    _results = [];
+    for (i = 0, len = items.length; i < len; i++) {
+      item = items[i];
+      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
+      if (item.atwho_order > -1) {
+        _results.push(item);
+      }
+    }
+    return _results.sort(function(a, b) {
+      return a.atwho_order - b.atwho_order;
+    });
+  },
+  tplEval: function(tpl, map) {
+    var error, error1, template;
+    template = tpl;
+    try {
+      if (typeof tpl !== 'string') {
+        template = tpl(map);
+      }
+      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+        return map[key];
+      });
+    } catch (error1) {
+      error = error1;
+      return "";
+    }
+  },
+  highlighter: function(li, query) {
+    var regexp;
+    if (!query) {
+      return li;
+    }
+    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    return li.replace(regexp, function(str, $1, $2, $3) {
+      return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
+    });
+  },
+  beforeInsert: function(value, $li, e) {
+    return value;
+  },
+  beforeReposition: function(offset) {
+    return offset;
+  },
+  afterMatchFailed: function(at, el) {}
+};
+
+var App;
 
 App = (function() {
   function App(inputor) {
@@ -45,7 +144,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error;
+    var error, error1;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -58,8 +157,8 @@ App = (function() {
       this.window = this.document.defaultView || this.document.parentWindow;
       try {
         this.iframe = this.window.frameElement;
-      } catch (_error) {
-        error = _error;
+      } catch (error1) {
+        error = error1;
         this.iframe = null;
         if ($.fn.atwho.debug) {
           throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
@@ -118,6 +217,9 @@ App = (function() {
     })(this)).on('compositionend', (function(_this) {
       return function(e) {
         _this.isComposing = false;
+        setTimeout(function(e) {
+          return _this.dispatch(e);
+        });
         return null;
       };
     })(this)).on('keyup.atwhoInner', (function(_this) {
@@ -269,13 +371,16 @@ App = (function() {
 
 })();
 
+var Controller,
+  slice = [].slice;
+
 Controller = (function() {
   Controller.prototype.uid = function() {
     return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
   };
 
-  function Controller(app1, at1) {
-    this.app = app1;
+  function Controller(app, at1) {
+    this.app = app;
     this.at = at1;
     this.$inputor = this.app.$inputor;
     this.id = this.$inputor[0].id || this.uid();
@@ -305,12 +410,12 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, funcName;
+    var args, error, error1, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
-    } catch (_error) {
-      error = _error;
+    } catch (error1) {
+      error = error1;
       return $.error(error + " Or maybe At.js doesn't have function " + funcName);
     }
   };
@@ -331,11 +436,11 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e;
+    var e, error1;
     try {
       return this.setting[at];
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       return null;
     }
   };
@@ -452,6 +557,10 @@ Controller = (function() {
 
 })();
 
+var TextareaController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
 TextareaController = (function(superClass) {
   extend(TextareaController, superClass);
 
@@ -466,7 +575,7 @@ TextareaController = (function(superClass) {
       iframe: this.app.iframe
     });
     subtext = content.slice(0, caretPos);
-    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'), this.getOpt("acceptSpaceBar"));
     isString = typeof query === 'string';
     if (isString && query.length < this.getOpt('minLen', 0)) {
       return;
@@ -529,6 +638,10 @@ TextareaController = (function(superClass) {
   return TextareaController;
 
 })(Controller);
+
+var EditableController,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 EditableController = (function(superClass) {
   extend(EditableController, superClass);
@@ -634,13 +747,25 @@ EditableController = (function(superClass) {
     if (!this._movingEvent(e)) {
       $query.removeClass('atwho-inserted');
     }
+    if ($query.length > 0) {
+      switch (e.which) {
+        case KEY_CODE.LEFT:
+          this._setRange('before', $query.get(0), range);
+          $query.removeClass('atwho-query');
+          return;
+        case KEY_CODE.RIGHT:
+          this._setRange('after', $query.get(0).nextSibling, range);
+          $query.removeClass('atwho-query');
+          return;
+      }
+    }
     if ($query.length > 0 && (query_content = $query.attr('data-atwho-at-query'))) {
       $query.empty().html(query_content).attr('data-atwho-at-query', null);
       this._setRange('after', $query.get(0), range);
     }
     _range = range.cloneRange();
     _range.setStart(range.startContainer, 0);
-    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
+    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'), this.getOpt("acceptSpaceBar"));
     isString = typeof matched === 'string';
     if ($query.length === 0 && isString && (index = range.startOffset - this.at.length - matched.length) >= 0) {
       range.setStart(range.startContainer, index);
@@ -695,13 +820,16 @@ EditableController = (function(superClass) {
 
   EditableController.prototype.insert = function(content, $li) {
     var data, range, suffix, suffixNode;
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
     suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
     data = $li.data('item-data');
     this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
     if (range = this._getRange()) {
       range.setEndAfter(this.query.el[0]);
       range.collapse(false);
-      range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
+      range.insertNode(suffixNode = this.app.document.createTextNode("\u200D" + suffix));
       this._setRange('after', suffixNode, range);
     }
     if (!this.$inputor.is(':focus')) {
@@ -713,6 +841,8 @@ EditableController = (function(superClass) {
   return EditableController;
 
 })(Controller);
+
+var Model;
 
 Model = (function() {
   function Model(context) {
@@ -778,18 +908,25 @@ Model = (function() {
 
 })();
 
+var View;
+
 View = (function() {
   function View(context) {
     this.context = context;
     this.$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>");
+    this.$elUl = this.$el.children();
     this.timeoutID = null;
     this.context.$el.append(this.$el);
     this.bindEvent();
   }
 
   View.prototype.init = function() {
-    var id;
+    var header_tpl, id;
     id = this.context.getOpt("alias") || this.context.at.charCodeAt(0);
+    header_tpl = this.context.getOpt("headerTpl");
+    if (header_tpl && this.$el.children().length === 1) {
+      this.$el.prepend(header_tpl);
+    }
     return this.$el.attr({
       'id': "at-view-" + id
     });
@@ -800,12 +937,26 @@ View = (function() {
   };
 
   View.prototype.bindEvent = function() {
-    var $menu;
+    var $menu, lastCoordX, lastCoordY;
     $menu = this.$el.find('ul');
-    return $menu.on('mouseenter.atwho-view', 'li', function(e) {
-      $menu.find('.cur').removeClass('cur');
-      return $(e.currentTarget).addClass('cur');
-    }).on('click.atwho-view', 'li', (function(_this) {
+    lastCoordX = 0;
+    lastCoordY = 0;
+    return $menu.on('mousemove.atwho-view', 'li', (function(_this) {
+      return function(e) {
+        var $cur;
+        if (lastCoordX === e.clientX && lastCoordY === e.clientY) {
+          return;
+        }
+        lastCoordX = e.clientX;
+        lastCoordY = e.clientY;
+        $cur = $(e.currentTarget);
+        if ($cur.hasClass('cur')) {
+          return;
+        }
+        $menu.find('.cur').removeClass('cur');
+        return $cur.addClass('cur');
+      };
+    })(this)).on('click.atwho-view', 'li', (function(_this) {
       return function(e) {
         $menu.find('.cur').removeClass('cur');
         $(e.currentTarget).addClass('cur');
@@ -828,7 +979,7 @@ View = (function() {
     if (($li = this.$el.find(".cur")).length) {
       content = this.context.insertContentFor($li);
       this.context._stopDelayedCall();
-      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
+      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li, e), $li);
       this.context.trigger("inserted", [$li, e]);
       this.hide(e);
     }
@@ -858,36 +1009,40 @@ View = (function() {
   };
 
   View.prototype.next = function() {
-    var cur, next;
+    var cur, next, nextEl, offset;
     cur = this.$el.find('.cur').removeClass('cur');
     next = cur.next();
     if (!next.length) {
       next = this.$el.find('li:first');
     }
     next.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height()));
+    nextEl = next[0];
+    offset = nextEl.offsetTop + nextEl.offsetHeight + (nextEl.nextSibling ? nextEl.nextSibling.offsetHeight : 0);
+    return this.scrollTop(Math.max(0, offset - this.$el.height()));
   };
 
   View.prototype.prev = function() {
-    var cur, prev;
+    var cur, offset, prev, prevEl;
     cur = this.$el.find('.cur').removeClass('cur');
     prev = cur.prev();
     if (!prev.length) {
       prev = this.$el.find('li:last');
     }
     prev.addClass('cur');
-    return this.scrollTop(Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height()));
+    prevEl = prev[0];
+    offset = prevEl.offsetTop + prevEl.offsetHeight + (prevEl.nextSibling ? prevEl.nextSibling.offsetHeight : 0);
+    return this.scrollTop(Math.max(0, offset - this.$el.height()));
   };
 
   View.prototype.scrollTop = function(scrollTop) {
     var scrollDuration;
     scrollDuration = this.context.getOpt('scrollDuration');
     if (scrollDuration) {
-      return this.$el.animate({
+      return this.$elUl.animate({
         scrollTop: scrollTop
       }, scrollDuration);
     } else {
-      return this.$el.scrollTop(scrollTop);
+      return this.$elUl.scrollTop(scrollTop);
     }
   };
 
@@ -955,107 +1110,7 @@ View = (function() {
 
 })();
 
-KEY_CODE = {
-  DOWN: 40,
-  UP: 38,
-  ESC: 27,
-  TAB: 9,
-  ENTER: 13,
-  CTRL: 17,
-  A: 65,
-  P: 80,
-  N: 78,
-  LEFT: 37,
-  UP: 38,
-  RIGHT: 39,
-  DOWN: 40,
-  BACKSPACE: 8,
-  SPACE: 32
-};
-
-DEFAULT_CALLBACKS = {
-  beforeSave: function(data) {
-    return Controller.arrayToDefaultHash(data);
-  },
-  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
-    var _a, _y, match, regexp, space;
-    flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    if (should_startWithSpace) {
-      flag = '(?:^|\\s)' + flag;
-    }
-    _a = decodeURI("%C3%80");
-    _y = decodeURI("%C3%BF");
-    space = acceptSpaceBar ? "\ " : "";
-    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\'\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
-    match = regexp.exec(subtext);
-    if (match) {
-      return match[2] || match[1];
-    } else {
-      return null;
-    }
-  },
-  filter: function(query, data, searchKey) {
-    var _results, i, item, len;
-    _results = [];
-    for (i = 0, len = data.length; i < len; i++) {
-      item = data[i];
-      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
-        _results.push(item);
-      }
-    }
-    return _results;
-  },
-  remoteFilter: null,
-  sorter: function(query, items, searchKey) {
-    var _results, i, item, len;
-    if (!query) {
-      return items;
-    }
-    _results = [];
-    for (i = 0, len = items.length; i < len; i++) {
-      item = items[i];
-      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
-      if (item.atwho_order > -1) {
-        _results.push(item);
-      }
-    }
-    return _results.sort(function(a, b) {
-      return a.atwho_order - b.atwho_order;
-    });
-  },
-  tplEval: function(tpl, map) {
-    var error, template;
-    template = tpl;
-    try {
-      if (typeof tpl !== 'string') {
-        template = tpl(map);
-      }
-      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
-        return map[key];
-      });
-    } catch (_error) {
-      error = _error;
-      return "";
-    }
-  },
-  highlighter: function(li, query) {
-    var regexp;
-    if (!query) {
-      return li;
-    }
-    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
-    return li.replace(regexp, function(str, $1, $2, $3) {
-      return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
-    });
-  },
-  beforeInsert: function(value, $li) {
-    return value;
-  },
-  beforeReposition: function(offset) {
-    return offset;
-  },
-  afterMatchFailed: function(at, el) {}
-};
+var Api;
 
 Api = {
   load: function(at, data) {
@@ -1121,11 +1176,13 @@ $.fn.atwho["default"] = {
   data: null,
   displayTpl: "<li>${name}</li>",
   insertTpl: "${atwho-at}${name}",
+  headerTpl: null,
   callbacks: DEFAULT_CALLBACKS,
   searchKey: "name",
   suffix: void 0,
   hideWithoutSuffix: false,
   startWithSpace: true,
+  acceptSpaceBar: false,
   highlightFirst: true,
   limit: 5,
   maxLen: 20,
@@ -1141,6 +1198,5 @@ $.fn.atwho["default"] = {
 };
 
 $.fn.atwho.debug = false;
-
 
 }));
