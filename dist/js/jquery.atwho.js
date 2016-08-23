@@ -22,8 +22,6 @@
 var DEFAULT_CALLBACKS, KEY_CODE;
 
 KEY_CODE = {
-  DOWN: 40,
-  UP: 38,
   ESC: 27,
   TAB: 9,
   ENTER: 13,
@@ -109,7 +107,7 @@ DEFAULT_CALLBACKS = {
     if (!query) {
       return li;
     }
-    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    regexp = new RegExp(">\\s*([^\<]*?)(" + query.replace("+", "\\+") + ")([^\<]*)\\s*<", 'ig');
     return li.replace(regexp, function(str, $1, $2, $3) {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
@@ -967,7 +965,7 @@ View = (function() {
   };
 
   View.prototype.visible = function() {
-    return this.$el.is(":visible");
+    return $.expr.filters.visible(this.$el[0]);
   };
 
   View.prototype.highlighted = function() {
