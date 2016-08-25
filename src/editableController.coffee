@@ -160,6 +160,7 @@ class EditableController extends Controller
         .addClass 'atwho-inserted'
         .html content
         .attr 'data-atwho-at-query', "" + data['atwho-at'] + @query.text
+        .attr 'contenteditable', "false"
       if range = @_getRange()
         range.setEndAfter @query.el[0]
         range.collapse false

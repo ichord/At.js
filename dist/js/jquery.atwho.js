@@ -22,8 +22,6 @@
 var DEFAULT_CALLBACKS, KEY_CODE;
 
 KEY_CODE = {
-  DOWN: 40,
-  UP: 38,
   ESC: 27,
   TAB: 9,
   ENTER: 13,
@@ -109,7 +107,7 @@ DEFAULT_CALLBACKS = {
     if (!query) {
       return li;
     }
-    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    regexp = new RegExp(">\\s*([^\<]*?)(" + query.replace("+", "\\+") + ")([^\<]*)\\s*<", 'ig');
     return li.replace(regexp, function(str, $1, $2, $3) {
       return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
     });
@@ -827,12 +825,9 @@ EditableController = (function(superClass) {
     if (overrides.insert) {
       return overrides.insert.bind(this)(content, $li);
     } else {
-      if (!this.$inputor.is(':focus')) {
-        this.$inputor.focus();
-      }
       suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
       data = $li.data('item-data');
-      this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
+      this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text).attr('contenteditable', "false");
       if (range = this._getRange()) {
         range.setEndAfter(this.query.el[0]);
         range.collapse(false);
@@ -975,7 +970,7 @@ View = (function() {
   };
 
   View.prototype.visible = function() {
-    return this.$el.is(":visible");
+    return $.expr.filters.visible(this.$el[0]);
   };
 
   View.prototype.highlighted = function() {
