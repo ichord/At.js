@@ -44,7 +44,7 @@ class View
   #
   # @return [Boolean]
   visible: ->
-    @$el.is(":visible")
+    $.expr.filters.visible(@$el[0])
 
   highlighted: ->
     @$el.find(".cur").length > 0

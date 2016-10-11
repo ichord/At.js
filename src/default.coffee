@@ -1,6 +1,4 @@
 KEY_CODE =
-  DOWN: 40
-  UP: 38
   ESC: 27
   TAB: 9
   ENTER: 13
@@ -11,7 +9,7 @@ KEY_CODE =
   LEFT: 37
   UP:38
   RIGHT: 39
-  DOWN:40
+  DOWN: 40
   BACKSPACE: 8
   SPACE: 32
 
@@ -126,7 +124,7 @@ DEFAULT_CALLBACKS =
   # @return [String] highlighted string.
   highlighter: (li, query) ->
     return li if not query
-    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+","\\+") + ")(\\w*)\\s*<", 'ig')
+    regexp = new RegExp(">\\s*([^\<]*?)(" + query.replace("+","\\+") + ")([^\<]*)\\s*<", 'ig')
     li.replace regexp, (str, $1, $2, $3) -> '> '+$1+'<strong>' + $2 + '</strong>'+$3+' <'
 
   # What to do before inserting item's value into inputor.
