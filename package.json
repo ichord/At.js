@@ -28,6 +28,7 @@
     "gulp-concat": "^2.6.0",
     "gulp-cssmin": "^0.1.7",
     "gulp-debug": "^2.1.2",
+    "gulp-header": "^1.7.1",
     "gulp-jasmine": "^2.2.1",
     "gulp-jasmine-phantom": "^2.0.1",
     "gulp-rename": "^1.2.2",
