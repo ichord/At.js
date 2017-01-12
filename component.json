@@ -5,7 +5,7 @@
   "version": "1.5.1",
   "demo": "http://ichord.github.com/At.js",
   "dependencies": {
-    "ichord/Caret.js": "~0.2.2",
+    "ichord/Caret.js": "~0.3.1",
     "component/jquery": ">= 1.7.0"
   },
   "main": [
