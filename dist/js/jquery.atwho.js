@@ -1,6 +1,6 @@
 /**
  * at.js - 1.5.1
- * Copyright (c) 2016 chord.luo <chord.luo@gmail.com>;
+ * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
  */
@@ -115,6 +115,7 @@ DEFAULT_CALLBACKS = {
   beforeInsert: function(value, $li, e) {
     return value;
   },
+  afterInsert: function(value, $li, e) {},
   beforeReposition: function(offset) {
     return offset;
   },
@@ -822,30 +823,25 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.insert = function(content, $li) {
-    var data, overrides, range, suffix, suffixNode;
+    var data, range, suffix, suffixNode;
     if (!this.$inputor.is(':focus')) {
       this.$inputor.focus();
     }
-    overrides = this.getOpt("functionOverrides");
-    if (overrides.insert) {
-      return overrides.insert.bind(this)(content, $li);
-    } else {
-      suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
-      data = $li.data('item-data');
-      this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text).attr('contenteditable', "false");
-      if (range = this._getRange()) {
-        if (this.query.el.length) {
-          range.setEndAfter(this.query.el[0]);
-        }
-        range.collapse(false);
-        range.insertNode(suffixNode = this.app.document.createTextNode("\u200D" + suffix));
-        this._setRange('after', suffixNode, range);
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
+    data = $li.data('item-data');
+    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text).attr('contenteditable', "false");
+    if (range = this._getRange()) {
+      if (this.query.el.length) {
+        range.setEndAfter(this.query.el[0]);
       }
-      if (!this.$inputor.is(':focus')) {
-        this.$inputor.focus();
-      }
-      return this.$inputor.change();
+      range.collapse(false);
+      range.insertNode(suffixNode = this.app.document.createTextNode("" + suffix));
+      this._setRange('after', suffixNode, range);
     }
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
+    return this.$inputor.change();
   };
 
   return EditableController;
@@ -991,6 +987,7 @@ View = (function() {
       this.context._stopDelayedCall();
       this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li, e), $li);
       this.context.trigger("inserted", [$li, e]);
+      this.context.callbacks("afterInsert").call(this.context, content, $li, e);
       this.hide(e);
     }
     if (this.context.getOpt("hideWithoutSuffix")) {
@@ -1188,7 +1185,6 @@ $.fn.atwho["default"] = {
   insertTpl: "${atwho-at}${name}",
   headerTpl: null,
   callbacks: DEFAULT_CALLBACKS,
-  functionOverrides: {},
   searchKey: "name",
   suffix: void 0,
   hideWithoutSuffix: false,

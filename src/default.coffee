@@ -21,7 +21,7 @@ KEY_CODE =
 #
 # The context of these functions is `$.atwho.Controller` object and they are called in this sequences:
 #
-# [beforeSave, matcher, filter, remoteFilter, sorter, tplEvl, highlighter, beforeInsert, afterMatchFailed]
+# [beforeSave, matcher, filter, remoteFilter, sorter, tplEvl, highlighter, beforeInsert, afterInsert, afterMatchFailed]
 #
 DEFAULT_CALLBACKS =
 
@@ -134,6 +134,13 @@ DEFAULT_CALLBACKS =
   # @param e [event Object] from the user selection (keyDown or click)
   beforeInsert: (value, $li, e) ->
     value
+
+  # What to do after inserting item's value into inputor.
+  #
+  # @param value [String] content to insert
+  # @param $li [jQuery Object] the chosen item
+  # @param e [event Object] from the user selection (keyDown or click)
+  afterInsert: (value, $li, e) ->
 
   # You can adjust the menu's offset here.
   #
