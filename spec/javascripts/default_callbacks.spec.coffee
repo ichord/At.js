@@ -117,6 +117,11 @@ describe "default callbacks", ->
     triggerAtwhoAt $inputor
     expect(callbacks.beforeInsert).toHaveBeenCalled()
 
+  it "can run code after the text has been inserted", ->
+    spyOn(callbacks, "afterInsert").and.callThrough()
+    triggerAtwhoAt $inputor
+    expect(callbacks.afterInsert).toHaveBeenCalled()
+
   it "can adjust offset before reposition", ->
     spyOn(callbacks, "beforeReposition").and.callThrough()
     triggerAtwhoAt $inputor

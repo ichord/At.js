@@ -56,6 +56,7 @@ class View
       @context._stopDelayedCall()
       @context.insert @context.callbacks("beforeInsert").call(@context, content, $li, e), $li
       @context.trigger "inserted", [$li, e]
+      @context.callbacks("afterInsert").call(@context, content, $li, e)
       this.hide(e)
     @stopShowing = yes if @context.getOpt("hideWithoutSuffix")
 
