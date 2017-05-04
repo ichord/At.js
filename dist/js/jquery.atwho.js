@@ -88,7 +88,7 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error, error1, template;
+    var error, template;
     template = tpl;
     try {
       if (typeof tpl !== 'string') {
@@ -142,7 +142,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error, error1;
+    var error;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -408,7 +408,7 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, error1, funcName;
+    var args, error, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
@@ -434,7 +434,7 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e, error1;
+    var e;
     try {
       return this.setting[at];
     } catch (error1) {
@@ -822,9 +822,13 @@ EditableController = (function(superClass) {
   };
 
   EditableController.prototype.insert = function(content, $li) {
-    var data, range, suffix, suffixNode;
+    var data, overrides, range, suffix, suffixNode;
     if (!this.$inputor.is(':focus')) {
       this.$inputor.focus();
+    }
+    overrides = this.getOpt('functionOverrides');
+    if (overrides.insert) {
+      return overrides.insert.call(this, content, $li);
     }
     suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
     data = $li.data('item-data');
@@ -1183,6 +1187,7 @@ $.fn.atwho["default"] = {
   insertTpl: "${atwho-at}${name}",
   headerTpl: null,
   callbacks: DEFAULT_CALLBACKS,
+  functionOverrides: {},
   searchKey: "name",
   suffix: void 0,
   hideWithoutSuffix: false,
