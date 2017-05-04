@@ -138,7 +138,9 @@ class EditableController extends Controller
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
     rect = @query.el.offset()
-    return unless rect
+    # do not use {top: 0, left: 0} from jQuery when element is hidden
+    # happens every other time the menu is displayed on click in contenteditable
+    return unless rect and @query.el[0].getClientRects().length
     if @app.iframe and not @app.iframeAsRoot
       iframeOffset = ($iframe = $ @app.iframe).offset()
       rect.left += iframeOffset.left - @$inputor.scrollLeft()

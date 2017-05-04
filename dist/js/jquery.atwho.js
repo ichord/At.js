@@ -809,7 +809,7 @@ EditableController = (function(superClass) {
   EditableController.prototype.rect = function() {
     var $iframe, iframeOffset, rect;
     rect = this.query.el.offset();
-    if (!rect) {
+    if (!(rect && this.query.el[0].getClientRects().length)) {
       return;
     }
     if (this.app.iframe && !this.app.iframeAsRoot) {
