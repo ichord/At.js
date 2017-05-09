@@ -9,13 +9,15 @@ class View
     @timeoutID = null
     # create HTML DOM of list view if it does not exist
     @context.$el.append(@$el)
-    this.bindEvent()
 
   init: ->
     id = @context.getOpt("alias") || @context.at.charCodeAt(0)
     header_tpl = this.context.getOpt("headerTpl")
     if (header_tpl && this.$el.children().length == 1)
       this.$el.prepend(header_tpl)
+    this.bindEvent()
+    this.$el.addClass this.context.getOpt("classDivContainer")
+    this.$el.find('ul').addClass this.context.getOpt("classUlContainer")
     @$el.attr('id': "at-view-#{id}")
 
   destroy: ->
@@ -25,18 +27,19 @@ class View
     $menu = @$el.find('ul')
     lastCoordX = 0
     lastCoordY = 0
+    curItem = @context.getOpt('classCurrentItem')
     $menu.on 'mousemove.atwho-view','li', (e) =>
       # If the mouse hasn't actually moved then exit.
       return if lastCoordX == e.clientX and lastCoordY == e.clientY
       lastCoordX = e.clientX
       lastCoordY = e.clientY
       $cur = $(e.currentTarget)
-      return if $cur.hasClass('cur')
-      $menu.find('.cur').removeClass 'cur'
-      $cur.addClass 'cur'
+      return if $cur.hasClass(curItem)
+      $menu.find('.' + curItem).removeClass curItem
+      $cur.addClass curItem
     .on 'click.atwho-view', 'li', (e) =>
-      $menu.find('.cur').removeClass 'cur'
-      $(e.currentTarget).addClass 'cur'
+      $menu.find('.' + curItem).removeClass curItem
+      $(e.currentTarget).addClass curItem
       this.choose(e)
       e.preventDefault()
 
@@ -47,10 +50,10 @@ class View
     $.expr.filters.visible(@$el[0])
 
   highlighted: ->
-    @$el.find(".cur").length > 0
+    @$el.find("." + @context.getOpt('classCurrentItem')).length > 0
 
   choose: (e) ->
-    if ($li = @$el.find ".cur").length
+    if ($li = @$el.find "." + @context.getOpt('classCurrentItem')).length
       content = @context.insertContentFor $li
 
       @context._stopDelayedCall()
@@ -71,19 +74,21 @@ class View
     @context.trigger "reposition", [offset]
 
   next: ->
-    cur = @$el.find('.cur').removeClass('cur')
+    curItem = @context.getOpt('classCurrentItem')
+    cur = @$el.find('.' + curItem).removeClass(curItem)
     next = cur.next()
     next = @$el.find('li:first') if not next.length
-    next.addClass 'cur'
+    next.addClass curItem
     nextEl = next[0]
     offset = nextEl.offsetTop + nextEl.offsetHeight + (if nextEl.nextSibling then nextEl.nextSibling.offsetHeight else 0)
     @scrollTop Math.max(0, offset - this.$el.height())
 
   prev: ->
-    cur = @$el.find('.cur').removeClass('cur')
+    curItem = @context.getOpt('classCurrentItem')
+    cur = @$el.find('.' + curItem).removeClass(curItem)
     prev = cur.prev()
     prev = @$el.find('li:last') if not prev.length
-    prev.addClass 'cur'
+    prev.addClass curItem
     prevEl = prev[0]
     offset = prevEl.offsetTop + prevEl.offsetHeight + (if prevEl.nextSibling then prevEl.nextSibling.offsetHeight else 0)
     @scrollTop Math.max(0, offset - this.$el.height())
@@ -133,4 +138,4 @@ class View
       $ul.append $li
 
     this.show()
-    $ul.find("li:first").addClass "cur" if @context.getOpt('highlightFirst')
+    $ul.find("li:first").addClass @context.getOpt('classCurrentItem') if @context.getOpt('highlightFirst')
