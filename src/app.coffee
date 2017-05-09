@@ -148,6 +148,7 @@ class App
         return if not view.visible()
         return if not this.controller().getOpt('spaceSelectsMatch') and e.keyCode == KEY_CODE.SPACE
         return if not this.controller().getOpt('tabSelectsMatch') and e.keyCode == KEY_CODE.TAB
+        return if not this.controller().getOpt('enterSelectsMatch') and e.keyCode == KEY_CODE.ENTER
         if view.highlighted()
           e.preventDefault()
           view.choose(e)

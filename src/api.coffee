@@ -51,6 +51,7 @@ $.fn.atwho.default =
   delay: null
   spaceSelectsMatch: no
   tabSelectsMatch: yes
+  enterSelectsMatch: yes
   editableAtwhoQueryAttrs: {}
   scrollDuration: 150
   suspendOnComposing: true
