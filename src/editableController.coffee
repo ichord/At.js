@@ -5,7 +5,7 @@ class EditableController extends Controller
     sel.getRangeAt(0) if sel.rangeCount > 0
 
   _setRange: (position, node, range=@_getRange()) ->
-    return unless range
+    return unless range and node
     node = $(node)[0]
     if position == 'after'
       range.setEndAfter node
@@ -108,12 +108,13 @@ class EditableController extends Controller
         .addClass 'atwho-query'
       range.surroundContents $query.get 0
       lastNode = $query.contents().last().get(0)
-      if /firefox/i.test navigator.userAgent
-        range.setStart lastNode, lastNode.length
-        range.setEnd lastNode, lastNode.length
-        @_clearRange range
-      else
-        @_setRange 'after', lastNode, range
+      if lastNode
+        if /firefox/i.test navigator.userAgent
+          range.setStart lastNode, lastNode.length
+          range.setEnd lastNode, lastNode.length
+          @_clearRange range
+        else
+          @_setRange 'after', lastNode, range
 
     return if isString and matched.length < @getOpt('minLen', 0)
 
@@ -137,6 +138,9 @@ class EditableController extends Controller
   # @return [Hash] the offset which look likes this: {top: y, left: x, bottom: bottom}
   rect: ->
     rect = @query.el.offset()
+    # do not use {top: 0, left: 0} from jQuery when element is hidden
+    # happens every other time the menu is displayed on click in contenteditable
+    return unless rect and @query.el[0].getClientRects().length
     if @app.iframe and not @app.iframeAsRoot
       iframeOffset = ($iframe = $ @app.iframe).offset()
       rect.left += iframeOffset.left - @$inputor.scrollLeft()
@@ -149,6 +153,9 @@ class EditableController extends Controller
   # @param content [String] string to insert
   insert: (content, $li) ->
     @$inputor.focus() unless @$inputor.is ':focus'
+    overrides = @getOpt 'functionOverrides'
+    if overrides.insert
+      return overrides.insert.call this, content, $li
     suffix = if (suffix = @getOpt 'suffix') == "" then suffix else suffix or "\u00A0"
     data = $li.data('item-data')
     @query.el
@@ -156,10 +163,12 @@ class EditableController extends Controller
       .addClass 'atwho-inserted'
       .html content
       .attr 'data-atwho-at-query', "" + data['atwho-at'] + @query.text
+      .attr 'contenteditable', "false"
     if range = @_getRange()
-      range.setEndAfter @query.el[0]
+      if @query.el.length
+        range.setEndAfter @query.el[0]
       range.collapse false
-      range.insertNode suffixNode = @app.document.createTextNode "\u200D" + suffix
+      range.insertNode suffixNode = @app.document.createTextNode "" + suffix
       @_setRange 'after', suffixNode, range
     @$inputor.focus() unless @$inputor.is ':focus'
     @$inputor.change()

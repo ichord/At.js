@@ -7,7 +7,7 @@
   },
   "homepage": "http://ichord.github.com/At.js",
   "license": "MIT",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/ichord/At.js"
@@ -18,17 +18,17 @@
   "scripts": {
     "test": "gulp test"
   },
-  "dependencies": {
-    "gulp-bump": "^1.0.0",
-    "gulp-header": "^1.7.1",
+  "peerDependencies": {
     "jquery": "^1.7.0"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
+    "gulp-bump": "^1.0.0",
     "gulp-coffee": "^2.3.1",
     "gulp-concat": "^2.6.0",
     "gulp-cssmin": "^0.1.7",
     "gulp-debug": "^2.1.2",
+    "gulp-header": "^1.7.1",
     "gulp-jasmine": "^2.2.1",
     "gulp-jasmine-phantom": "^2.0.1",
     "gulp-rename": "^1.2.2",
