@@ -1,5 +1,5 @@
 /**
- * at.js - 1.5.3
+ * at.js - 1.5.4
  * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
@@ -88,7 +88,7 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error, template;
+    var error, error1, template;
     template = tpl;
     try {
       if (typeof tpl !== 'string') {
@@ -142,7 +142,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error;
+    var error, error1;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -408,7 +408,7 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, funcName;
+    var args, error, error1, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
@@ -434,7 +434,7 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e;
+    var e, error1;
     try {
       return this.setting[at];
     } catch (error1) {
