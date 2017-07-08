@@ -236,10 +236,16 @@ App = (function() {
           return c.view.hide(e, c.getOpt("displayTimeout"));
         }
       };
-    })(this)).on('click.atwhoInner', (function(_this) {
-      return function(e) {
-        return _this.dispatch(e);
-      };
+    // TODO: change this to be an option
+    // Remove this click handler so that nothing happens when you click on a token
+    // 
+    // })(this)).on('click.atwhoInner', (function(_this) {
+    //   return function(e) {
+    //     console.log('click2');
+
+    //     //return _this.dispatch(e);
+    //     return true;
+    //   };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function() {
         var lastScrollTop;
