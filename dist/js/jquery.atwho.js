@@ -753,13 +753,15 @@ EditableController = (function(superClass) {
     }
     if ($query.length > 0) {
       switch (e.which) {
+        // Remove the special handling for the left and right arrows.
+        // It was causing nothing but problems.
         case KEY_CODE.LEFT:
-          this._setRange('before', $query.get(0), range);
-          $query.removeClass('atwho-query');
+          // this._setRange('before', $query.get(0), range);
+          // $query.removeClass('atwho-query');
           return;
         case KEY_CODE.RIGHT:
-          this._setRange('after', $query.get(0).nextSibling, range);
-          $query.removeClass('atwho-query');
+          // this._setRange('after', $query.get(0).nextSibling, range);
+          // $query.removeClass('atwho-query');
           return;
       }
     }
