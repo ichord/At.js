@@ -86,8 +86,10 @@ class App
         if c = this.controller()
           c.expectedQueryCBId = null
           c.view.hide(e,c.getOpt("displayTimeout"))
-      .on 'click.atwhoInner', (e) =>
-        this.dispatch e
+      # TODO: change this to be an option
+      # Remove this click handler so that nothing happens when you click on a token
+      # .on 'click.atwhoInner', (e) =>
+        # this.dispatch e
       .on 'scroll.atwhoInner', do =>
         # make returned handler handle the very first call properly
         lastScrollTop = @$inputor.scrollTop()
