@@ -1,5 +1,5 @@
 /**
- * at.js - 1.5.4
+ * at.js - 1.5.6
  * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
@@ -88,7 +88,7 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error, error1, template;
+    var error, template;
     template = tpl;
     try {
       if (typeof tpl !== 'string') {
@@ -142,7 +142,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error, error1;
+    var error;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -236,16 +236,6 @@ App = (function() {
           return c.view.hide(e, c.getOpt("displayTimeout"));
         }
       };
-    // TODO: change this to be an option
-    // Remove this click handler so that nothing happens when you click on a token
-    // 
-    // })(this)).on('click.atwhoInner', (function(_this) {
-    //   return function(e) {
-    //     console.log('click2');
-
-    //     //return _this.dispatch(e);
-    //     return true;
-    //   };
     })(this)).on('scroll.atwhoInner', (function(_this) {
       return function() {
         var lastScrollTop;
@@ -414,7 +404,7 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, error1, funcName;
+    var args, error, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
@@ -440,7 +430,7 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e, error1;
+    var e;
     try {
       return this.setting[at];
     } catch (error1) {
@@ -716,16 +706,9 @@ EditableController = (function(superClass) {
     if (!range.collapsed) {
       return;
     }
-
-    /**
-     * In order to handle backspace issues on ie11, we
-     * decided it was the lesser of 2 evils to simply just
-     * delete the whole token when the backspace hits the token
-     */
     if (e.which === KEY_CODE.BACKSPACE) {
-      const target = window.getSelection().focusNode.parentNode;
       if (/atwho-inserted/.test(target.className)) {
-        target.parentNode.removeChild(target);
+        window.getSelection().focusNode.parentNode.parentNode.removeChild(target);
       }
       return;
     } else if (e.which === KEY_CODE.ENTER) {
@@ -765,15 +748,9 @@ EditableController = (function(superClass) {
     }
     if ($query.length > 0) {
       switch (e.which) {
-        // Remove the special handling for the left and right arrows.
-        // It was causing nothing but problems.
         case KEY_CODE.LEFT:
-          // this._setRange('before', $query.get(0), range);
-          // $query.removeClass('atwho-query');
           return;
         case KEY_CODE.RIGHT:
-          // this._setRange('after', $query.get(0).nextSibling, range);
-          // $query.removeClass('atwho-query');
           return;
       }
     }
@@ -852,11 +829,6 @@ EditableController = (function(superClass) {
     }
     suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
     data = $li.data('item-data');
-
-    /**
-     * Originally this next line added .attr('contenteditable', "false");  to the node
-     * however, this caused problems when backspacing over tokens in IE11
-     */
     this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content).attr('data-atwho-at-query', "" + data['atwho-at'] + this.query.text);
     if (range = this._getRange()) {
       if (this.query.el.length) {
