@@ -34,7 +34,7 @@ class View
       return if $cur.hasClass('cur')
       $menu.find('.cur').removeClass 'cur'
       $cur.addClass 'cur'
-    .on 'click.atwho-view', 'li', (e) =>
+    .on 'mousedown.atwho-view', 'li', (e) =>
       $menu.find('.cur').removeClass 'cur'
       $(e.currentTarget).addClass 'cur'
       this.choose(e)
