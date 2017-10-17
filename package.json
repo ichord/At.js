@@ -43,7 +43,7 @@
     "main": "dist/js/jquery.atwho.js",
     "dependencies": {
       "jquery": ">=1.7.2",
-      "caret.js": "~0.2.2"
+      "caret.js": "~0.3.1"
     },
     "ignore": [
       "examples",
