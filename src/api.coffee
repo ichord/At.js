@@ -14,6 +14,8 @@ Api =
   destroy: ->
     this.shutdown()
     @$inputor.data('atwho', null)
+  customRootElement: (doc) -> 
+    this.customRootElement(doc); null;
 
 $.fn.atwho = (method) ->
   _args = arguments

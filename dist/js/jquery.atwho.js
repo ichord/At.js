@@ -1,24 +1,3 @@
-/**
- * at.js - 1.5.4
- * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
- * Homepage: http://ichord.github.com/At.js
- * License: MIT
- */
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
-    define(["jquery"], function (a0) {
-      return (factory(a0));
-    });
-  } else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory(require("jquery"));
-  } else {
-    factory(jQuery);
-  }
-}(this, function ($) {
 var DEFAULT_CALLBACKS, KEY_CODE;
 
 KEY_CODE = {
@@ -88,7 +67,7 @@ DEFAULT_CALLBACKS = {
     });
   },
   tplEval: function(tpl, map) {
-    var error, error1, template;
+    var error, template;
     template = tpl;
     try {
       if (typeof tpl !== 'string') {
@@ -142,7 +121,7 @@ App = (function() {
   };
 
   App.prototype.setupRootElement = function(iframe, asRoot) {
-    var error, error1;
+    var error;
     if (asRoot == null) {
       asRoot = false;
     }
@@ -164,6 +143,14 @@ App = (function() {
       }
     }
     return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
+  };
+
+  App.prototype.customRootElement = function(doc) {
+    var ref;
+    if ((ref = this.$el) != null) {
+      ref.remove();
+    }
+    return $(doc).append(this.$el = $("<div class='atwho-container'></div>"));
   };
 
   App.prototype.controller = function(at) {
@@ -408,7 +395,7 @@ Controller = (function() {
   };
 
   Controller.prototype.callDefault = function() {
-    var args, error, error1, funcName;
+    var args, error, funcName;
     funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     try {
       return DEFAULT_CALLBACKS[funcName].apply(this, args);
@@ -434,7 +421,7 @@ Controller = (function() {
   };
 
   Controller.prototype.getOpt = function(at, default_value) {
-    var e, error1;
+    var e;
     try {
       return this.setting[at];
     } catch (error1) {
@@ -1152,6 +1139,10 @@ Api = {
   destroy: function() {
     this.shutdown();
     return this.$inputor.data('atwho', null);
+  },
+  customRootElement: function(doc) {
+    this.customRootElement(doc);
+    return null;
   }
 };
 
@@ -1208,5 +1199,3 @@ $.fn.atwho["default"] = {
 };
 
 $.fn.atwho.debug = false;
-
-}));

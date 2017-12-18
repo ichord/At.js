@@ -35,6 +35,11 @@ class App
           """
     this.createContainer if @iframeAsRoot = asRoot then @document else document
 
+  customRootElement: (doc) ->
+    @$el?.remove()
+    $ doc
+      .append @$el = $ "<div class='atwho-container'></div>"
+
   controller: (at) ->
     if @aliasMaps[at]
       current = @controllers[@aliasMaps[at]]
