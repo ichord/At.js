@@ -1,6 +1,6 @@
 /**
  * at.js - 1.5.4
- * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
+ * Copyright (c) 2018 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
  */
@@ -273,6 +273,9 @@ App = (function() {
 
   App.prototype.dispatch = function(e) {
     var _, c, ref, results;
+    if (void 0 === e) {
+      return;
+    }
     ref = this.controllers;
     results = [];
     for (_ in ref) {
