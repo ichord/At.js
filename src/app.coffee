@@ -106,6 +106,8 @@ class App
     @$el.remove()
 
   dispatch: (e) ->
+    if undefined == e
+      return
     c.lookUp(e) for _, c of @controllers
 
   onKeyup: (e) ->
