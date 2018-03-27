@@ -76,7 +76,7 @@ class App
         null
       .on 'compositionend', (e) =>
         @isComposing = false
-        setTimeout((e) => @dispatch(e))
+        setTimeout(() => @dispatch(e))
         null
       .on 'keyup.atwhoInner', (e) =>
         this.onKeyup(e)
