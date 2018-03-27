@@ -1,6 +1,6 @@
 /**
  * at.js - 1.5.3
- * Copyright (c) 2017 chord.luo <chord.luo@gmail.com>;
+ * Copyright (c) 2018 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
  */
@@ -215,7 +215,7 @@ App = (function() {
     })(this)).on('compositionend', (function(_this) {
       return function(e) {
         _this.isComposing = false;
-        setTimeout(function(e) {
+        setTimeout(function() {
           return _this.dispatch(e);
         });
         return null;
@@ -294,7 +294,6 @@ App = (function() {
       case KEY_CODE.DOWN:
       case KEY_CODE.UP:
       case KEY_CODE.CTRL:
-      case KEY_CODE.ENTER:
         $.noop();
         break;
       case KEY_CODE.P:
