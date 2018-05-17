@@ -48,7 +48,7 @@
 }
 .atwho-view .cur strong {
     color: white;
-    font:bold;
+    font-weight:bold;
 }
 .atwho-view ul {
     /* width: 100px; */
