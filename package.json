@@ -18,9 +18,6 @@
   "scripts": {
     "test": "gulp test"
   },
-  "peerDependencies": {
-    "jquery": ">=1.7.0"
-  },
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-bump": "^1.0.0",
@@ -37,6 +34,7 @@
     "gulp-util": "^3.0.7",
     "jasmine-ajax": "^3.2.0",
     "jasmine-jquery": "^2.1.1",
+    "jquery": ">=1.7.0",
     "phantomjs": "^1.9.19"
   },
   "spm": {
