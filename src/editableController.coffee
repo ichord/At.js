@@ -163,12 +163,11 @@ class EditableController extends Controller
       .addClass 'atwho-inserted'
       .html content
       .attr 'data-atwho-at-query', "" + data['atwho-at'] + @query.text
-      .attr 'contenteditable', "false"
     if range = @_getRange()
       if @query.el.length
         range.setEndAfter @query.el[0]
       range.collapse false
-      range.insertNode suffixNode = @app.document.createTextNode "" + suffix
+      range.insertNode suffixNode = @app.document.createTextNode "\u200D" + suffix
       @_setRange 'after', suffixNode, range
     @$inputor.focus() unless @$inputor.is ':focus'
     @$inputor.change()
