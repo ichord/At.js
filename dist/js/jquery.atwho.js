@@ -837,7 +837,7 @@ EditableController = (function(superClass) {
         range.setEndAfter(this.query.el[0]);
       }
       range.collapse(false);
-      range.insertNode(suffixNode = this.app.document.createTextNode("\u200D" + suffix));
+      range.insertNode(suffixNode = this.app.document.createTextNode("\u200B" + suffix));
       this._setRange('after', suffixNode, range);
     }
     if (!this.$inputor.is(':focus')) {
