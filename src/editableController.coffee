@@ -36,6 +36,7 @@ class EditableController extends Controller
   catchQuery: (e) ->
     return unless range = @_getRange()
     return unless range.collapsed
+    return unless e
 
     if e.which == KEY_CODE.ENTER
       ($query = $(range.startContainer).closest '.atwho-query')
