@@ -1,5 +1,5 @@
 /**
- * at.js - 1.5.3
+ * at.js - 1.5.7
  * Copyright (c) 2018 chord.luo <chord.luo@gmail.com>;
  * Homepage: http://ichord.github.com/At.js
  * License: MIT
@@ -19,6 +19,7 @@
     factory(jQuery);
   }
 }(this, function ($) {
+
 var DEFAULT_CALLBACKS, KEY_CODE;
 
 KEY_CODE = {
@@ -707,6 +708,9 @@ EditableController = (function(superClass) {
       return;
     }
     if (!range.collapsed) {
+      return;
+    }
+    if (!e) {
       return;
     }
     if (e.which === KEY_CODE.ENTER) {
