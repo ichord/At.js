@@ -1,8 +1,9 @@
-### Announcement ###
+## ⚠️ Announcement ⚠️ ##
 
-This project was no longer maintained.
-You could use [zurb tribute](https://github.com/zurb/tribute) instead.
+**This project was no longer maintained.**
+**You could use [zurb tribute](https://github.com/zurb/tribute) instead.**
 
+------
 
 **An autocompletion library to autocomplete mentions, smileys etc. just like on Github!**  
 [![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
