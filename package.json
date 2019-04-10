@@ -39,7 +39,7 @@
     "jasmine-jquery": "^2.1.1",
     "phantomjs": "^1.9.19"
   },
-  "spm": {
+  "jspm": {
     "main": "dist/js/jquery.atwho.js",
     "dependencies": {
       "jquery": ">=1.7.2",
