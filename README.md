@@ -1,6 +1,6 @@
 **An autocompletion library to autocomplete mentions, smileys etc. just like on Github!**  
-[![Build Status](https://travis-ci.org/ichord/At.js.png)](https://travis-ci.org/ichord/At.js)
 
+![repo-checks](https://github.com/zendesk/At.js/workflows/repo-checks/badge.svg)
 #### Notice
 
 At.js now **depends on** [Caret.js](https://github.com/ichord/Caret.js).  

@@ -1,0 +1,26 @@
+name: repo-checks
+
+on:
+  push:
+    branches:
+    - master
+    - stable
+    - beta
+  pull_request:
+
+jobs:
+  main:
+    name: node_js
+    runs-on: [self-hosted, zendesk-stable]
+    steps:
+    - uses: zendesk/checkout@v2
+    - uses: zendesk/setup-node@v2.0.0
+      with:
+        node-version: '4'
+    - name: test
+      run: |
+        npm install -g gulp
+        npm install -g bower
+        bower install
+        npm test
+
